@@ -1062,7 +1062,7 @@ class Component extends DCLogic {
         goal: d.child.goal || '', notes: d.child.notes || '',
         messages: d.messages || [], progress: this._prog(d.progress), status: d.status, token: token,
         shareToken: d.report ? d.report.share_token : '', reportPartial: d.report ? !!d.report.partial : false,
-        paused: d.status === 'paused',
+        paused: d.status === 'paused', lowEngage: false, finishConfirm: false,
         resumeName: (d.status === 'active' || d.status === 'paused') ? (d.child.nickname || 'Bola') : ''
       });
       this.saveHandle();
@@ -1081,7 +1081,7 @@ class Component extends DCLogic {
       const r = (location.hash || '#/').replace(/^#/, '') || '/';
       if (r === '/admin' && this.state.admAuthed) { location.hash = '#/admin/leads'; return; }
       if (r === '/mashgulot' && this._stok) { location.hash = '#/mashgulot/' + this._stok; return; }
-      this.setState({ route: r, copied: false }, () => this.syncRoute());
+      this.setState({ route: r, copied: false, lowEngage: false }, () => this.syncRoute());
       if (!r.startsWith('/mashgulot')) window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', this._hash);
@@ -1197,10 +1197,10 @@ class Component extends DCLogic {
 
   askFinish() {
     // A report is built from the child's answers — block the finish/contact flow
-    // outright if nothing has been answered yet (mirrors the server gate).
+    // outright if nothing has been answered yet. Mirrors the server gate, which
+    // counts real (non-meta) answers only (not model-emitted [YAKUN] markers).
+    if (this._realAnswers() === 0) return this.setState({ lowEngage: true });
     const p = this.state.progress;
-    const engaged = this._realAnswers() > 0 || p.MANTIQ || p.PSIXOLOGIYA || p.HARAKAT;
-    if (!engaged) return this.setState({ lowEngage: true });
     if (p.MANTIQ && p.PSIXOLOGIYA && p.HARAKAT) this.setState({ gate: true, gateError: '' });
     else this.setState({ finishConfirm: true });
   }
@@ -1359,7 +1359,7 @@ class Component extends DCLogic {
     this.clearHandle(); this._stok = null; this._loadedSession = null; this._lastN = 0; this._loadedReportToken = null; this._busy = false;
     this.setState({
       name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
-      messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
+      messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, lowEngage: false, generating: false,
       status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
       token: '', shareToken: '', reportPartial: false, resumeName: '',
       gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false,
@@ -1537,7 +1537,7 @@ class Component extends DCLogic {
       draftVal: S.draft, onDraft: e => this.setState({ draft: e.target.value }),
       onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
       sendNow: () => this.send(),
-      sendDisabled: S.sending || S.generating || S.paused || S.gate || !!S.apiError,
+      sendDisabled: S.sending || S.generating || S.paused || S.gate || S.lowEngage || !!S.apiError,
       chipCant: () => this.send('Javob berolmadi'),
       chipSkip: () => this.send("O'tkazib yuborish"),
       chipEasier: () => this.send('Soddaroq savol bering'),

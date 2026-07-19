@@ -76,16 +76,16 @@ function buildIntro(c) {
 // Fixed report-request user turn — mirrors the original buildReportRequest.
 function buildReportRequest(name, partial) {
   const p = partial
-    ? ' Diqqat: barcha yo‘nalishlar to‘liq qamrab olinmadi. Hisobotni FAQAT bolaning shu suhbatda bergan haqiqiy javoblariga asoslang — baholanmagan yo‘nalish uchun darajani null qoldiring va u haqda kuzatuv, kuchli tomon yoki tavsiya UYDIRMANG. Hisobot qisman ma‘lumot asosida tuzilayotganini eng boshida bir jumla bilan ayting. Agar bola deyarli javob bermagan bo‘lsa, bo‘limlarni sun‘iy to‘ldirmang: qisqa va rostgo‘y yozing hamda to‘laqonli mashg‘ulot o‘tkazishni taklif qiling.'
+    ? ' Diqqat: barcha yo‘nalishlar to‘liq qamrab olinmadi. Hisobotni FAQAT bolaning shu suhbatda bergan haqiqiy javoblariga asoslang — baholanmagan yo‘nalish uchun darajani null qoldiring va u haqda kuzatuv, kuchli tomon yoki tavsiya UYDIRMANG. Hisobot qisman ma‘lumot asosida tuzilayotganini eng boshida bir jumla bilan ayting. Agar bola deyarli javob bermagan bo‘lsa, bo‘limlarni sun‘iy to‘ldirmang: qisqa va rostgo‘y yozing hamda to‘laqonli mashg‘ulot o‘tkazishni taklif qiling. Quyidagi bo‘limlardagi son ko‘rsatkichlari (3–5, 2–3, uch qator kabi) — yuqori chegara, majburiy emas: yetarli asos bo‘lmasa kamroq band yozing yoki "— yetarli ma‘lumot yo‘q" deb belgilang. Sonni to‘ldirish uchun hech narsani to‘qib chiqarmang.'
     : '';
   return (
     'Mashg‘ulot yakunlandi.' + p +
     ' Endi hisobotni tayyorlang. Hisobotni faqat shu suhbatdagi haqiqiy javoblar va kuzatuvlarga asoslang — hech narsa uydirmang. Faqat hisobot matnini yozing (kirish izohisiz, blockquote ishlatmang), Markdown formatida, aynan quyidagi ## sarlavhalar bilan:\n\n' +
-    '## Surat\n3–5 ta kuchli tomon: har biri "- **Nomi** — qisqa izoh" ko‘rinishida.\n\n' +
-    '## Hozirgi o‘rni\nUch qator, har biri: "- **Mantiq va tafakkur** — Me‘yorda. Kuzatuvlar..." (daraja faqat: Shakllanmoqda / Me‘yorda / Kuchli).\n\n' +
+    '## Surat\n3–5 ta kuchli tomon: har biri "- **Nomi** — qisqa izoh" ko‘rinishida (faqat javoblardan ko‘ringanicha; asos kam bo‘lsa kamroq yozing).\n\n' +
+    '## Hozirgi o‘rni\nHar bir BAHOLANGAN yo‘nalish uchun bitta qator: "- **Mantiq va tafakkur** — Me‘yorda. Kuzatuvlar..." (daraja faqat: Shakllanmoqda / Me‘yorda / Kuchli). Baholanmagan yo‘nalishni "- **Nomi** — baholanmadi" deb belgilang va JSON‘da uning darajasini null qoldiring.\n\n' +
     '## Maqsad va yo‘l xaritasi\nBirinchi xatboshi — maqsad. So‘ng kelgusi 3–6 oy uchun 3–4 bosqich raqamlangan ro‘yxat: "1. ...".\n\n' +
     '## Nimani o‘rganish va mashq qilish\nHar bir soha "- **Soha** — haftalik hajmdagi aniq taklif" ko‘rinishida.\n\n' +
-    '## Tavsiya etilgan sport va mashg‘ulotlar\n2–3 ta variant: "- **Sport nomi** — bolaning o‘z javobiga bog‘langan bir qatorlik sabab". Har birini bir necha hafta sinab ko‘rishni va yangi sport oldidan oddiy tibbiy ko‘rikni eslating (Kattalar uchun bo‘limida).\n\n' +
+    '## Tavsiya etilgan sport va mashg‘ulotlar\nBolaning javoblaridan mos sabab topilsa, 1–3 ta variant: "- **Sport nomi** — bolaning o‘z javobiga bog‘langan bir qatorlik sabab". Agar javoblarda yetarli asos bo‘lmasa, sport to‘qib chiqarmang — "— yetarli ma‘lumot yo‘q" deb yozing. Har birini bir necha hafta sinab ko‘rishni va yangi sport oldidan oddiy tibbiy ko‘rikni eslating (Kattalar uchun bo‘limida).\n\n' +
     '## ' + name + ' uchun xat\nBolaga o‘qib beriladigan 2–3 ta sodda, ruhlantiruvchi jumla.\n\n' +
     '## Kattalar uchun\n"- " ro‘yxat: nimani qo‘llab-quvvatlash, kuzatish yoki maktabdan so‘rash.'
   );

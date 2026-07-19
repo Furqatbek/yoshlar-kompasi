@@ -240,14 +240,15 @@ router.post(
     const partial = !allDone(session);
 
     // Engagement gate: a report is only ever built from the child's real answers
-    // (spec §4 / the product promise). Refuse to fabricate one when nothing was
-    // assessed — no real (non-meta) answers AND no completed direction.
+    // (spec §4 / the product promise). Count real (non-meta) answers only — we
+    // deliberately do NOT accept a completed [YAKUN] direction as a substitute,
+    // since the model controls those markers and could emit one with no answers,
+    // bypassing the gate. A legitimately-assessed direction always has answers.
     const msgs = await repo.getMessages(session.id);
     const realAnswers = msgs.filter((m) => m.role === 'user' && !m.meta).length;
-    const anyTrackDone = session.done_mantiq || session.done_psixologiya || session.done_harakat;
-    if (realAnswers < config.caps.minAnswersForReport && !anyTrackDone) {
+    if (realAnswers < config.caps.minAnswersForReport) {
       throw badRequest(
-        'Hisobot uchun avval bolaning bir nechta savolga javobini yozing — hisobot aynan shu javoblardan tuziladi.',
+        'Hisobot uchun avval bolaning savollarga bergan javobini yozing — hisobot aynan shu javoblardan tuziladi.',
         'insufficient_engagement'
       );
     }
