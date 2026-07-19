@@ -23,7 +23,7 @@ Siz veb-ilova ichida ishlayapsiz. Quyidagilarga qat'iy amal qiling:
 1. Bolaga ovoz chiqarib o'qib beriladigan HAR BIR matnni blockquote (>) qilib yozing. Har bir savol yoki topshiriq — ALOHIDA blockquote, oralarida bo'sh qator. Kattalarga mo'ljallangan izohlar oddiy matn bo'lib qoladi.
 2. Bir vaqtda 2–4 ta savol bering va yo'nalishlarni almashtirib turing. Javoblaringiz ixcham bo'lsin: kattalar uchun 1–2 jumla izoh + savollar. Emoji ishlatmang.
 3. Bir yo'nalish bo'yicha baholash uchun yetarli ma'lumot to'plangach, javobingiz OXIRIDA alohida qatorda aynan shunday texnik belgi yozing: [YAKUN: MANTIQ] yoki [YAKUN: PSIXOLOGIYA] yoki [YAKUN: HARAKAT]. Bu belgi kattalarga ko'rinmaydi; har birini faqat bir marta ishlating. Uchala belgi ham yozilgach, mashg'ulotni yakunlash mumkinligini kattalarga ayting.
-4. To'liq hisobotni faqat alohida so'ralganda, so'rovda berilgan sarlavhalar bilan yozing. Undan oldin hisobot yozmang.
+4. Hisobotni faqat alohida so'ralganda, so'rovda berilgan sarlavhalar bilan yozing; undan oldin hisobot yozmang. Hisobotdagi har bir kuchli tomon, kuzatuv va daraja aynan bolaning yozib berilgan javoblaridan kelib chiqsin — hech qachon ma'lumot uydirmang. Bola javob bermagan yo'nalishni baholamang: uning darajasini null qoldiring va u haqda kuzatuv yozmang. Agar suhbatda deyarli javob bo'lmasa, to'liq baholash to'qib chiqarmang.
 5. Bola baholashiga aloqasi bo'lmagan (mavzudan tashqari) so'rovlarni muloyimlik bilan rad eting va mashg'ulotga qayting.`;
 
 // The structured-report rule the admin panel relies on for filtering.
@@ -76,11 +76,11 @@ function buildIntro(c) {
 // Fixed report-request user turn — mirrors the original buildReportRequest.
 function buildReportRequest(name, partial) {
   const p = partial
-    ? ' Diqqat: barcha yo‘nalishlar to‘liq qamrab olinmadi — hisobot qisman ma‘lumot asosida tuzilayotganini hisobotning eng boshida bir jumla bilan ayting.'
+    ? ' Diqqat: barcha yo‘nalishlar to‘liq qamrab olinmadi. Hisobotni FAQAT bolaning shu suhbatda bergan haqiqiy javoblariga asoslang — baholanmagan yo‘nalish uchun darajani null qoldiring va u haqda kuzatuv, kuchli tomon yoki tavsiya UYDIRMANG. Hisobot qisman ma‘lumot asosida tuzilayotganini eng boshida bir jumla bilan ayting. Agar bola deyarli javob bermagan bo‘lsa, bo‘limlarni sun‘iy to‘ldirmang: qisqa va rostgo‘y yozing hamda to‘laqonli mashg‘ulot o‘tkazishni taklif qiling.'
     : '';
   return (
     'Mashg‘ulot yakunlandi.' + p +
-    ' Endi to‘liq hisobotni tayyorlang. Faqat hisobot matnini yozing (kirish izohisiz, blockquote ishlatmang), Markdown formatida, aynan quyidagi ## sarlavhalar bilan:\n\n' +
+    ' Endi hisobotni tayyorlang. Hisobotni faqat shu suhbatdagi haqiqiy javoblar va kuzatuvlarga asoslang — hech narsa uydirmang. Faqat hisobot matnini yozing (kirish izohisiz, blockquote ishlatmang), Markdown formatida, aynan quyidagi ## sarlavhalar bilan:\n\n' +
     '## Surat\n3–5 ta kuchli tomon: har biri "- **Nomi** — qisqa izoh" ko‘rinishida.\n\n' +
     '## Hozirgi o‘rni\nUch qator, har biri: "- **Mantiq va tafakkur** — Me‘yorda. Kuzatuvlar..." (daraja faqat: Shakllanmoqda / Me‘yorda / Kuchli).\n\n' +
     '## Maqsad va yo‘l xaritasi\nBirinchi xatboshi — maqsad. So‘ng kelgusi 3–6 oy uchun 3–4 bosqich raqamlangan ro‘yxat: "1. ...".\n\n' +

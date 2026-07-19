@@ -72,6 +72,12 @@ const config = {
   caps: {
     maxTurns: int(process.env.MAX_TURNS, 60),
     maxMessageChars: int(process.env.MAX_MESSAGE_CHARS, 2000),
+    // A report must be grounded in real answers, never fabricated. Refuse to
+    // generate one until the child has actually answered at least this many
+    // turns (a completed assessment direction also counts as engagement). The
+    // default (1) blocks only the "finished without answering anything" case;
+    // raise it to demand more substance before a report.
+    minAnswersForReport: int(process.env.MIN_ANSWERS_FOR_REPORT, 1),
   },
 
   // Rate limits (spec §6). In-memory; single-instance. See README for scaling.

@@ -520,6 +520,18 @@ input, textarea, button, select { font-family: var(--font-body); }
     </div>
   </sc-if>
 
+  <sc-if value="{{ lowEngage }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-text) 55%, transparent);">
+      <div class="dialog elev-lg" style="background: var(--color-bg); border: 2px solid var(--color-text); padding: var(--space-6); max-width: 440px; margin: var(--space-4);">
+        <h3 class="dialog-title" style="margin-bottom: var(--space-2);">Hali javoblar yo'q</h3>
+        <p class="dialog-body text-muted" style="margin-bottom: var(--space-4);">Hisobot aynan bolaning javoblaridan tuziladi. Avval savollarni bolaga o'qib bering va uning javoblarini yozing — so'ng hisobotni olishingiz mumkin.</p>
+        <div class="dialog-actions" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" onClick="{{ dismissLowEngage }}">Tushundim</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ gate }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Kontakt darvozasi" style="position: fixed; inset: 0; z-index: 65; background: var(--color-bg); overflow: auto;">
       <div style="max-width: 520px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
@@ -999,7 +1011,7 @@ class Component extends DCLogic {
   state = {
     route: (typeof location !== 'undefined' && location.hash ? location.hash.replace(/^#/, '') : '/') || '/',
     name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
-    messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
+    messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, lowEngage: false, generating: false,
     status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
     token: '', shareToken: '', reportPartial: false, resumeName: '',
     gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false, copied: false,
@@ -1179,8 +1191,16 @@ class Component extends DCLogic {
     }
   }
 
+  _realAnswers() {
+    return (this.state.messages || []).filter((m) => m.role === 'user' && !m.meta).length;
+  }
+
   askFinish() {
+    // A report is built from the child's answers — block the finish/contact flow
+    // outright if nothing has been answered yet (mirrors the server gate).
     const p = this.state.progress;
+    const engaged = this._realAnswers() > 0 || p.MANTIQ || p.PSIXOLOGIYA || p.HARAKAT;
+    if (!engaged) return this.setState({ lowEngage: true });
     if (p.MANTIQ && p.PSIXOLOGIYA && p.HARAKAT) this.setState({ gate: true, gateError: '' });
     else this.setState({ finishConfirm: true });
   }
@@ -1224,7 +1244,13 @@ class Component extends DCLogic {
         generating: false, status: 'done', resumeName: ''
       }, () => { location.hash = '#/hisobot/' + d.share_token; });
     } catch (e) {
-      this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + this._errMsg(e) });
+      // The server's engagement gate isn't a failure to retry — nudge the user
+      // back to answering rather than locking the composer with apiError.
+      if (e && e.data && e.data.code === 'insufficient_engagement') {
+        this.setState({ generating: false, status: 'active', gate: false, lowEngage: true });
+      } else {
+        this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + this._errMsg(e) });
+      }
     }
     this._busy = false;
   }
@@ -1522,6 +1548,7 @@ class Component extends DCLogic {
       confirmFinish: () => this.setState({ finishConfirm: false, gate: true, gateError: '' }),
       cancelFinish: () => this.setState({ finishConfirm: false }),
       finishConfirm: S.finishConfirm, paused: S.paused, generating: S.generating,
+      lowEngage: S.lowEngage, dismissLowEngage: () => this.setState({ lowEngage: false }),
       gate: S.gate,
       parentVal: S.parentName, onParent: e => this.setState({ parentName: e.target.value, gateError: '' }),
       phoneVal: S.phone, onPhone: e => this.setState({ phone: this.fmtPhone(e.target.value), gateError: '' }),

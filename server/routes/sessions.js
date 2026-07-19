@@ -239,8 +239,20 @@ router.post(
     const child = await repo.getChildById(session.child_id);
     const partial = !allDone(session);
 
-    // Append the report-request meta turn once (retry-safe).
+    // Engagement gate: a report is only ever built from the child's real answers
+    // (spec §4 / the product promise). Refuse to fabricate one when nothing was
+    // assessed — no real (non-meta) answers AND no completed direction.
     const msgs = await repo.getMessages(session.id);
+    const realAnswers = msgs.filter((m) => m.role === 'user' && !m.meta).length;
+    const anyTrackDone = session.done_mantiq || session.done_psixologiya || session.done_harakat;
+    if (realAnswers < config.caps.minAnswersForReport && !anyTrackDone) {
+      throw badRequest(
+        'Hisobot uchun avval bolaning bir nechta savolga javobini yozing — hisobot aynan shu javoblardan tuziladi.',
+        'insufficient_engagement'
+      );
+    }
+
+    // Append the report-request meta turn once (retry-safe).
     const last = msgs[msgs.length - 1];
     if (!(last && last.role === 'user' && last.meta)) {
       await repo.addMessage(session.id, 'user', prompt.buildReportRequest(child.nickname, partial), true);
