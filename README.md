@@ -83,7 +83,7 @@ can route the same conversation through [OpenRouter](https://openrouter.ai):
 # in .env
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=sk-or-...              # from https://openrouter.ai/keys
-OPENROUTER_MODEL=anthropic/claude-sonnet-4.5   # any slug from /models
+OPENROUTER_MODEL=anthropic/claude-sonnet-4.6   # any slug from /models
 ```
 
 Add credits to your OpenRouter account, then `make up` (or `make restart`). The
@@ -92,6 +92,13 @@ are identical; only the HTTP endpoint changes. The prompt is tuned for Claude,
 so an `anthropic/*` slug tracks the direct behaviour most closely, but any
 OpenRouter model works. Only `ANTHROPIC_API_KEY` **or** `OPENROUTER_API_KEY` is
 required — whichever matches `LLM_PROVIDER`.
+
+> **Slug format matters.** OpenRouter uses namespaced `vendor/model` slugs with
+> **dot** versions (`anthropic/claude-sonnet-4.6`). The bare Anthropic id
+> `claude-sonnet-4-6` is **not** a valid OpenRouter model and is rejected with
+> *"… is not a valid model id"*. Sessions created before switching providers are
+> handled automatically — the server ignores a stored model id that doesn't
+> belong to the active provider and falls back to `OPENROUTER_MODEL`.
 
 ---
 
@@ -127,7 +134,7 @@ runtime.
 | `ANTHROPIC_API_KEY` | if anthropic | Claude API key (server-side only) |
 | `ANTHROPIC_MODEL` | no | Default `claude-sonnet-4-6`; override per account |
 | `OPENROUTER_API_KEY` | if openrouter | OpenRouter key (server-side only) |
-| `OPENROUTER_MODEL` | no | Default `anthropic/claude-sonnet-4.5`; any [slug](https://openrouter.ai/models) |
+| `OPENROUTER_MODEL` | no | Default `anthropic/claude-sonnet-4.6`; any `vendor/model` [slug](https://openrouter.ai/models) |
 | `JWT_SECRET` | yes | Signs the admin session cookie (≥16 chars) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | yes | Seeded admin account (bcrypt-hashed) |
 | `PUBLIC_BASE_URL` | prod | Origin used to build report links for delivery |

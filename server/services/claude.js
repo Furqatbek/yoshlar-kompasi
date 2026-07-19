@@ -44,6 +44,23 @@ function activeModel() {
   return config.llm.provider === 'openrouter' ? config.openrouter.model : config.anthropic.model;
 }
 
+// The model id to actually send for a session. session.model is stamped once at
+// creation and is provider-specific: an Anthropic native id (`claude-sonnet-4-6`)
+// is meaningless to OpenRouter, and an OpenRouter slug (`anthropic/claude-...`)
+// is meaningless to the Anthropic API. If the deployment's provider no longer
+// matches the id the session was stamped with (e.g. sessions created before a
+// switch to LLM_PROVIDER=openrouter), fall back to the active provider's
+// configured model instead of sending an id the provider will reject.
+// OpenRouter ids are namespaced (`vendor/model`); Anthropic native ids are not,
+// which is a stable enough invariant to tell them apart.
+function modelFor(storedModel) {
+  const m = String(storedModel || '');
+  if (config.llm.provider === 'openrouter') {
+    return m.includes('/') ? m : config.openrouter.model;
+  }
+  return (m && !m.includes('/')) ? m : config.anthropic.model;
+}
+
 // ---------------------------------------------------------------------------
 // Anthropic
 // ---------------------------------------------------------------------------
@@ -218,6 +235,7 @@ module.exports = {
   completeAnthropic,
   completeOpenRouter,
   activeModel,
+  modelFor,
   normalizeForAnthropic,
   toOpenAIMessages,
   ClaudeError,

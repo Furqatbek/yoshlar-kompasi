@@ -58,7 +58,10 @@ const config = {
   openrouter: {
     apiKey: process.env.OPENROUTER_API_KEY || '',
     baseUrl: (process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, ''),
-    model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.5',
+    // Default mirrors the Anthropic default (claude-sonnet-4-6) so switching
+    // providers keeps the same tier. OpenRouter uses vendor/model slugs with dot
+    // versions — the bare Anthropic id `claude-sonnet-4-6` is NOT valid here.
+    model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.6',
     // Optional attribution headers OpenRouter shows on your dashboard/rankings.
     siteUrl: process.env.OPENROUTER_SITE_URL || (process.env.PUBLIC_BASE_URL || ''),
     siteName: process.env.OPENROUTER_SITE_NAME || 'Yoshlar Kompasi',
@@ -125,14 +128,29 @@ function assertProdConfig() {
   if (config.isProd && config.delivery.provider === 'telegram' && !process.env.TELEGRAM_WEBHOOK_SECRET) {
     missing.push('TELEGRAM_WEBHOOK_SECRET (required when DELIVERY_PROVIDER=telegram)');
   }
+
+  // Model-id shape check. The most common — and hardest to diagnose —
+  // misconfiguration is a provider/model-format mismatch: OpenRouter needs a
+  // namespaced `vendor/model` slug (anthropic/claude-sonnet-4.6), while the
+  // Anthropic API uses ids WITHOUT a slash (claude-sonnet-4-6). A wrong shape
+  // makes every LLM call fail with "not a valid model id", so fail fast at boot
+  // with a pointed message instead of 400-ing on each request.
+  if (config.llm.provider === 'openrouter') {
+    if (config.openrouter.model && !config.openrouter.model.includes('/')) {
+      missing.push('OPENROUTER_MODEL="' + config.openrouter.model + '" is not a valid OpenRouter slug — it needs a vendor prefix, e.g. anthropic/claude-sonnet-4.6 (see https://openrouter.ai/models)');
+    }
+  } else if (config.anthropic.model && config.anthropic.model.includes('/')) {
+    missing.push('ANTHROPIC_MODEL="' + config.anthropic.model + '" contains a "/" — that is an OpenRouter-style slug; the Anthropic API uses ids like claude-sonnet-4-6 (set LLM_PROVIDER=openrouter to use vendor/model slugs)');
+  }
+
   if (config.isProd && missing.length) {
     // eslint-disable-next-line no-console
-    console.error('[config] Missing required environment: ' + missing.join(', '));
+    console.error('[config] Invalid or missing required environment: ' + missing.join(', '));
     process.exit(1);
   }
   if (!config.isProd && missing.length) {
     // eslint-disable-next-line no-console
-    console.warn('[config] (dev) missing/weak: ' + missing.join(', ') + ' — some features will error until set.');
+    console.warn('[config] (dev) missing/weak/invalid: ' + missing.join(', ') + ' — some features will error until set.');
   }
 }
 

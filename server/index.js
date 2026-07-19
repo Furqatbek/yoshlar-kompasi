@@ -75,6 +75,11 @@ app.use(errorHandler);
 const server = app.listen(config.port, () => {
   // eslint-disable-next-line no-console
   console.log('[yoshlar-kompasi] listening on :' + config.port + ' (' + config.nodeEnv + ')');
+  // Surface which LLM is actually wired up (a mismatched model id is the most
+  // common misconfiguration) — never logs the API key.
+  const claude = require('./services/claude');
+  // eslint-disable-next-line no-console
+  console.log('[llm] provider=' + config.llm.provider + ' model=' + claude.activeModel());
 });
 
 function shutdown(sig) {

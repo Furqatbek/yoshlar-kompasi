@@ -151,7 +151,7 @@ router.post(
 
     const history = await repo.getMessages(session.id);
     const out = await claude.complete({
-      system: prompt.systemPrompt(), model: session.model,
+      system: prompt.systemPrompt(), model: claude.modelFor(session.model),
       maxTokens: config.llm.conversationMaxTokens, messages: history,
     });
     await repo.addMessage(session.id, 'assistant', out.text, false);
@@ -248,7 +248,7 @@ router.post(
 
     const history = await repo.getMessages(session.id);
     const out = await claude.complete({
-      system: prompt.systemPrompt(), model: session.model,
+      system: prompt.systemPrompt(), model: claude.modelFor(session.model),
       maxTokens: config.llm.reportMaxTokens, messages: history,
     });
     await repo.applyTurn(session.id, { inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: false });
