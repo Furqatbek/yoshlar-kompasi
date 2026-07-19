@@ -28,8 +28,9 @@ router.post(
     const password = String((req.body && req.body.password) || '');
     if (!email || !password) throw badRequest('Email va parolni kiriting.');
     const admin = await repo.getAdminByEmail(email);
-    // Always run a compare to keep timing uniform whether or not the user exists.
-    const hash = admin ? admin.password_hash : '$2a$12$0000000000000000000000000000000000000000000000000000';
+    // Always run a real cost-12 compare so response timing does not reveal
+    // whether the account exists (the dummy is a valid hash of a random string).
+    const hash = admin ? admin.password_hash : '$2a$12$xmbiFkhlUK4HQQ/ARTzFN.aXNuVqqmpVS.BkHNhUMRnPiSYSM0SIm';
     const ok = await bcrypt.compare(password, hash).catch(() => false);
     if (!admin || !ok) throw unauthorized('Email yoki parol noto‘g‘ri.');
     res.cookie(config.admin.cookieName, signAdmin(admin), adminCookieOptions());
@@ -157,7 +158,13 @@ router.get(
       grade: req.query.grade,
       sinceDays: req.query.date,
     });
-    const q = (val) => '"' + String(val == null ? '' : val).replace(/"/g, '""') + '"';
+    // Quote for CSV and neutralize spreadsheet formula injection: a leading
+    // =,+,-,@ (or tab/CR) in untrusted names would execute in Excel/Sheets.
+    const q = (val) => {
+      let s = String(val == null ? '' : val);
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return '"' + s.replace(/"/g, '""') + '"';
+    };
     const head = ['Ota-ona', 'Telefon', 'Holat', 'Marketing roziligi', 'Bolalar', "Mashg'ulotlar", "Qo'shilgan"];
     const lines = [head.map(q).join(',')];
     for (const r of rows) {

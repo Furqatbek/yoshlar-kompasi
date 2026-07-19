@@ -29,6 +29,13 @@ const messageLimiter = rateLimit({
   key: (r) => 'msg:' + r.params.id,
   message: 'Juda tez yuborilmoqda. Bir daqiqadan so‘ng urinib ko‘ring.',
 });
+// Report generation is expensive and one-per-session; bound double-clicks.
+const reportLimiter = rateLimit({
+  windowMs: 30 * 1000,
+  max: 2,
+  key: (r) => 'report:' + r.params.id,
+  message: 'Hisobot tayyorlanmoqda — biroz kuting.',
+});
 
 function progressOf(session) {
   return { mantiq: session.done_mantiq, psixologiya: session.done_psixologiya, harakat: session.done_harakat };
@@ -85,9 +92,12 @@ router.post(
     } catch (err) {
       // The session exists; let the client enter it and retry the first turn.
       const messages = await repo.getMessages(session.id);
+      // Never surface upstream Claude error text to the client.
       return res.status(201).json({
         ...base, messages, progress: progressOf(session), done: false,
-        api_error: err.retryable ? 'Claude javob bermadi. Qayta urinib ko‘ring.' : (err.message || 'Xatolik'),
+        api_error: err.retryable
+          ? 'Claude javob bermadi. Qayta urinib ko‘ring.'
+          : 'Xatolik yuz berdi. Birozdan so‘ng qayta urinib ko‘ring.',
       });
     }
   })
@@ -102,13 +112,29 @@ router.post(
     const session = req.session;
     if (session.status === 'finished') throw forbidden('Mashg‘ulot allaqachon yakunlangan.');
     const retry = req.body && req.body.retry === true;
+    const capMsg = 'Savollar chegarasiga yetdik. Iltimos, mashg‘ulotni yakunlab, hisobotni oling.';
 
-    if (!retry) {
+    if (retry) {
+      // Idempotent retry: if the previous turn actually produced an assistant
+      // reply (its response was just lost in transit), echo it instead of
+      // re-calling Claude. Only a dangling user turn re-generates.
+      const msgs0 = await repo.getMessages(session.id);
+      const last0 = msgs0[msgs0.length - 1];
+      if (last0 && last0.role === 'assistant') {
+        return res.json({
+          reply: last0.content, progress: progressOf(session), done: allDone(session),
+          turn_count: session.turn_count, cap_reached: false,
+        });
+      }
+      // Dangling user turn — still bounded by the turn cap.
+      if (session.turn_count >= config.caps.maxTurns) {
+        return res.json({ reply: capMsg, progress: progressOf(session), done: allDone(session), turn_count: session.turn_count, cap_reached: true });
+      }
+    } else {
       const content = v.reqStr(req.body && req.body.content, 'Xabar', config.caps.maxMessageChars);
       // Turn cap: store the message, then ask them to finish (no Claude call).
       if (session.turn_count >= config.caps.maxTurns) {
         await repo.addMessage(session.id, 'user', content, false);
-        const capMsg = 'Savollar chegarasiga yetdik. Iltimos, mashg‘ulotni yakunlab, hisobotni oling.';
         await repo.addMessage(session.id, 'assistant', capMsg, false);
         return res.json({
           reply: capMsg, progress: progressOf(session), done: allDone(session),
@@ -171,9 +197,16 @@ router.post(
     }
     const email = v.optStr(b.email, 120);
     const marketing = v.bool(b.marketing_consent);
-    const parent = await repo.upsertParent({
-      phone, name: parentName, email, marketing, consentVersion: config.consentTextVersion,
-    });
+    const consentVersion = config.consentTextVersion;
+
+    // Idempotent per session: if the child is already linked (re-submit),
+    // update that parent instead of creating a duplicate phone-less record.
+    const child = await repo.getChildById(session.child_id);
+    if (child && child.parent_id) {
+      await repo.updateParentContact(child.parent_id, { phone, name: parentName, email, marketing, consentVersion });
+      return res.json({ ok: true });
+    }
+    const parent = await repo.upsertParent({ phone, name: parentName, email, marketing, consentVersion });
     await repo.linkChildToParent(session.child_id, parent.id);
     res.json({ ok: true });
   })
@@ -182,21 +215,22 @@ router.post(
 // POST /api/sessions/:id/report — final Claude call, parse, store, deliver.
 router.post(
   '/:id/report',
+  reportLimiter,
   sessionAuth,
   asyncHandler(async (req, res) => {
     const session = req.session;
 
+    const respond = (rep, delivery) => res.json({
+      report_url: reportUrl(req, rep.share_token),
+      share_token: rep.share_token,
+      partial: rep.partial,
+      delivered: rep.delivered,
+      delivery: delivery || null,
+    });
+
     // One report per session (spec §4). Return the existing one if present.
     const existing = await repo.getReportBySession(session.id);
-    if (existing) {
-      return res.json({
-        report_url: reportUrl(req, existing.share_token),
-        share_token: existing.share_token,
-        partial: existing.partial,
-        delivered: existing.delivered,
-        delivery: null,
-      });
-    }
+    if (existing) return respond(existing);
 
     const child = await repo.getChildById(session.child_id);
     const partial = !allDone(session);
@@ -217,34 +251,36 @@ router.post(
 
     const parsed = parseReport(out.text);
     const shareTok = shareToken();
-    const publicUrl = reportUrl(req, shareTok);
+
+    // Atomic claim: ON CONFLICT DO NOTHING means a concurrent request that
+    // already inserted wins; we return their report and skip delivery so it is
+    // never sent twice.
+    const created = await repo.createReport({
+      sessionId: session.id, childId: child.id, contentMd: parsed.contentMd,
+      levelLogic: parsed.levelLogic, levelPsych: parsed.levelPsych, levelActivity: parsed.levelActivity,
+      sports: parsed.sports, partial, shareToken: shareTok, delivered: false,
+    });
+    if (!created) {
+      const winner = await repo.getReportBySession(session.id);
+      return respond(winner);
+    }
+
+    await repo.setSessionStatus(session.id, 'finished', true);
 
     // Deliver only when a phone was left (delivery consent is enforced at the gate).
-    let delivered = false;
     let deliveryInfo = null;
     const parent = child.parent_id ? await repo.getParent(child.parent_id) : null;
     if (parent && parent.phone) {
-      const d = await delivery.deliver({
-        reportUrl: publicUrl, shareToken: shareTok, parentPhone: parent.phone, childNickname: child.nickname,
+      deliveryInfo = await delivery.deliver({
+        reportUrl: reportUrl(req, shareTok), shareToken: shareTok, parentPhone: parent.phone, childNickname: child.nickname,
       });
-      deliveryInfo = d;
-      delivered = d.status === 'sent';
+      if (deliveryInfo.status === 'sent') {
+        await repo.markReportDelivered(shareTok);
+        created.delivered = true;
+      }
     }
 
-    await repo.createReport({
-      sessionId: session.id, childId: child.id, contentMd: parsed.contentMd,
-      levelLogic: parsed.levelLogic, levelPsych: parsed.levelPsych, levelActivity: parsed.levelActivity,
-      sports: parsed.sports, partial, shareToken: shareTok, delivered,
-    });
-    await repo.setSessionStatus(session.id, 'finished', true);
-
-    res.json({
-      report_url: publicUrl,
-      share_token: shareTok,
-      partial,
-      delivered,
-      delivery: deliveryInfo ? { channel: deliveryInfo.channel, status: deliveryInfo.status, link: deliveryInfo.link || null } : null,
-    });
+    respond(created, deliveryInfo ? { channel: deliveryInfo.channel, status: deliveryInfo.status, link: deliveryInfo.link || null } : null);
   })
 );
 

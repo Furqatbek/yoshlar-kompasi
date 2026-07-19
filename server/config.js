@@ -88,6 +88,13 @@ function assertProdConfig() {
   if (!config.databaseUrl) missing.push('DATABASE_URL');
   if (!config.anthropic.apiKey) missing.push('ANTHROPIC_API_KEY');
   if (!config.admin.jwtSecret || config.admin.jwtSecret.length < 16) missing.push('JWT_SECRET (>=16 chars)');
+  // Report/resume links are built from this in prod; without it we would fall
+  // back to the (spoofable) Host header when generating delivered links.
+  if (config.isProd && !config.publicBaseUrl) missing.push('PUBLIC_BASE_URL');
+  // A Telegram webhook with no shared secret is unauthenticated (see routes/telegram.js).
+  if (config.isProd && config.delivery.provider === 'telegram' && !process.env.TELEGRAM_WEBHOOK_SECRET) {
+    missing.push('TELEGRAM_WEBHOOK_SECRET (required when DELIVERY_PROVIDER=telegram)');
+  }
   if (config.isProd && missing.length) {
     // eslint-disable-next-line no-console
     console.error('[config] Missing required environment: ' + missing.join(', '));

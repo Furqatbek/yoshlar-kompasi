@@ -89,13 +89,15 @@ async function upsertParent({ phone, name, email, marketing, consentVersion }) {
   if (phone) {
     const existing = (await query('SELECT * FROM parents WHERE phone = $1', [phone])).rows[0];
     if (existing) {
+      // Refresh consent bookkeeping on re-contact so a changed consent text
+      // version is recorded; never downgrade marketing consent.
       const { rows } = await query(
         `UPDATE parents
            SET name = $2,
                email = COALESCE($3, email),
                marketing_consent = marketing_consent OR $4,
-               consent_text_version = COALESCE(consent_text_version, $5),
-               consented_at = COALESCE(consented_at, now())
+               consent_text_version = $5,
+               consented_at = now()
          WHERE id = $1 RETURNING *`,
         [existing.id, name, email, marketing, consentVersion]
       );
@@ -114,6 +116,23 @@ async function linkChildToParent(childId, parentId) {
   await query('UPDATE children SET parent_id = $2 WHERE id = $1', [childId, parentId]);
 }
 
+// Update the parent a child is already linked to (idempotent re-submit of the
+// contact gate). Only sets phone if one is provided and not already taken.
+async function updateParentContact(parentId, { phone, name, email, marketing, consentVersion }) {
+  const { rows } = await query(
+    `UPDATE parents
+        SET name = $2,
+            email = COALESCE($3, email),
+            phone = CASE WHEN $4::text IS NOT NULL AND phone IS NULL THEN $4 ELSE phone END,
+            marketing_consent = marketing_consent OR $5,
+            consent_text_version = $6,
+            consented_at = now()
+      WHERE id = $1 RETURNING *`,
+    [parentId, name, email, phone, marketing, consentVersion]
+  );
+  return rows[0] || null;
+}
+
 // ---- reports -----------------------------------------------------------
 
 async function getReportBySession(sessionId) {
@@ -121,11 +140,16 @@ async function getReportBySession(sessionId) {
   return rows[0] || null;
 }
 
+// Idempotent insert: the UNIQUE(session_id) plus ON CONFLICT DO NOTHING makes
+// this the atomic claim that guarantees one report per session even under
+// concurrent requests. Returns null if a report already exists (caller loses
+// the race and should return the existing one instead of a 500).
 async function createReport(r) {
   const { rows } = await query(
     `INSERT INTO reports
        (session_id, child_id, content_md, level_logic, level_psych, level_activity, sports, partial, share_token, delivered, delivered_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$11)
+     ON CONFLICT (session_id) DO NOTHING
      RETURNING *`,
     [
       r.sessionId, r.childId, r.contentMd,
@@ -134,7 +158,7 @@ async function createReport(r) {
       !!r.delivered, r.delivered ? new Date() : null,
     ]
   );
-  return rows[0];
+  return rows[0] || null;
 }
 
 async function getReportByShareToken(token) {
@@ -253,7 +277,7 @@ async function weeklyBuckets() {
 module.exports = {
   createChildAndSession, getSessionById, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
-  upsertParent, linkChildToParent,
+  upsertParent, linkChildToParent, updateParentContact,
   getReportBySession, createReport, getReportByShareToken, markReportDelivered,
   getAdminByEmail, listLeads, getParent, getLeadChildren, updateLead, weeklyBuckets,
 };
