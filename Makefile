@@ -19,6 +19,7 @@ help:
 	@echo "  make build-web     assemble server/public from the frontend"
 	@echo "  make migrate       run DB migrations (needs DATABASE_URL)"
 	@echo "  make seed          create the admin (needs ADMIN_EMAIL/PASSWORD)"
+	@echo "  make purge         delete data past the retention window (cron this)"
 	@echo "  make dev           run the server with --watch"
 
 # ---- Docker ----
@@ -60,6 +61,9 @@ migrate:
 
 seed:
 	cd server && npm run seed
+
+purge:
+	cd server && npm run purge
 
 dev:
 	cd server && npm run dev

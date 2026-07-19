@@ -862,6 +862,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           </div>
           <span style="flex: 1;"></span>
           <div class="field"><label style="font-size: 11px;">Holat</label><select class="input" value="{{ ldStatusVal }}" onChange="{{ onLdStatus }}" style="min-width: 150px;"><option value="new">Yangi</option><option value="contacted">Bog'lanildi</option><option value="interested">Qiziqish bildirdi</option><option value="enrolled">Yozildi</option><option value="closed">Yopildi</option></select></div>
+          <div style="align-self: flex-end;"><button type="button" class="btn btn-ghost" onClick="{{ ldDelete }}" style="color: var(--color-accent-700);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Lidni o'chirish</button></div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
           <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
@@ -1284,6 +1285,17 @@ class Component extends DCLogic {
       if (prev) this._setLeadLocal(prev); // revert optimistic change on failure
     }
   }
+  async deleteLead() {
+    const id = this.state.lead && this.state.lead.parent && this.state.lead.parent.id;
+    if (!id) return;
+    if (typeof confirm === 'function' && !confirm('Bu lidni va unga bog‘liq barcha yozuvlarni (bolalar, mashg‘ulotlar, hisobotlar) butunlay o‘chirasizmi? Ortga qaytarib bo‘lmaydi.')) return;
+    try {
+      await this.api('/admin/leads/' + encodeURIComponent(id), { method: 'DELETE' });
+      this.setState({ lead: null, leadMissing: false });
+      location.hash = '#/admin/leads';
+      this.fetchLeads();
+    } catch (e) { this._adminUnauth(e); }
+  }
   stCls(st) {
     if (st === 'new') return 'tag tag-accent';
     if (st === 'enrolled') return 'tag tag-accent';
@@ -1543,6 +1555,7 @@ class Component extends DCLogic {
       onLdStatus: e => { const v = e.target.value; const prev = { lead_status: ld ? ld.lead_status : 'new' }; this._setLeadLocal({ lead_status: v }); this.patchLead({ lead_status: v }, prev); },
       ldNotesVal: ld ? (ld.admin_notes || '') : '',
       onLdNotes: e => { const v = e.target.value; this._setLeadLocal({ admin_notes: v }); clearTimeout(this._noteTimer); this._noteTimer = setTimeout(() => this.patchLead({ admin_notes: v }), 600); },
+      ldDelete: () => this.deleteLead(),
       ldChildren,
       funnel, weekRows
     };

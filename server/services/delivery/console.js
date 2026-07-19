@@ -5,10 +5,11 @@
 
 module.exports = {
   name: 'console',
-  // eslint-disable-next-line no-unused-vars
-  async deliver({ reportUrl, parentPhone, childNickname }) {
+  async deliver({ reportUrl, parentPhone }) {
+    // Log ids only — no nickname/answers, and mask the phone (spec §6/§7).
+    const masked = parentPhone ? parentPhone.slice(0, -4).replace(/\d/g, '*') + parentPhone.slice(-4) : 'no-phone';
     // eslint-disable-next-line no-console
-    console.log('[delivery:console] -> ' + (parentPhone || 'no-phone') + ' | ' + childNickname + ' | ' + reportUrl);
+    console.log('[delivery:console] report ready ' + masked + ' -> ' + reportUrl);
     return { status: 'sent', channel: 'console' };
   },
 };

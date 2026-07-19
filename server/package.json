@@ -12,6 +12,7 @@
     "build:web": "node scripts/build-web.js",
     "migrate": "node db/migrate.js",
     "seed": "node db/seed.js",
+    "purge": "node db/purge.js",
     "start": "node index.js",
     "dev": "node --watch index.js"
   },

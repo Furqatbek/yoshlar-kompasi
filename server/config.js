@@ -32,9 +32,9 @@ const config = {
     apiKey: process.env.ANTHROPIC_API_KEY || '',
     baseUrl: (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, ''),
     version: process.env.ANTHROPIC_VERSION || '2023-06-01',
-    // The frontend used claude-sonnet-4-5; the backend now owns the choice.
-    // Override per your Anthropic access (e.g. a Haiku tier to cut cost).
-    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+    // Spec §4: start with claude-sonnet-4-6; A/B claude-haiku-4-5-20251001 for
+    // cost. Override per your Anthropic account access.
+    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
     reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 3000),
     timeoutMs: int(process.env.ANTHROPIC_TIMEOUT_MS, 60000),

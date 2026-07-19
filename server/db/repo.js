@@ -235,6 +235,13 @@ async function getLeadChildren(parentId) {
   return rows;
 }
 
+// Right-to-erasure (spec §7): deleting a parent cascades to their children,
+// sessions, messages and reports via the ON DELETE CASCADE foreign keys.
+async function deleteParent(parentId) {
+  const { rowCount } = await query('DELETE FROM parents WHERE id = $1', [parentId]);
+  return rowCount > 0;
+}
+
 async function updateLead(parentId, { leadStatus, adminNotes }) {
   const sets = [];
   const params = [parentId];
@@ -279,5 +286,5 @@ module.exports = {
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,
   getReportBySession, createReport, getReportByShareToken, markReportDelivered,
-  getAdminByEmail, listLeads, getParent, getLeadChildren, updateLead, weeklyBuckets,
+  getAdminByEmail, listLeads, getParent, getLeadChildren, updateLead, deleteParent, weeklyBuckets,
 };

@@ -7,8 +7,10 @@ function errorHandler(err, req, res, next) {
   const status = err.status || err.statusCode || 500;
   // Never leak internals or children's data into responses/logs. Log ids only.
   if (status >= 500) {
+    // Log ids only, never nicknames/answers (spec §6); key by session when known.
+    const sid = req.session && req.session.id ? ' session=' + req.session.id : '';
     // eslint-disable-next-line no-console
-    console.error('[error] ' + (req.method + ' ' + req.path) + ' -> ' + status + ': ' + err.message);
+    console.error('[error] ' + req.method + ' ' + req.path + sid + ' -> ' + status + ': ' + err.message);
     if (!config.isProd && err.stack) {
       // eslint-disable-next-line no-console
       console.error(err.stack);

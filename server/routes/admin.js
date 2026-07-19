@@ -138,6 +138,18 @@ router.patch(
   })
 );
 
+// DELETE /admin/leads/:id — right-to-erasure (spec §7). Cascades to the
+// parent's children, sessions, messages and reports.
+router.delete(
+  '/leads/:id',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const ok = await repo.deleteParent(req.params.id);
+    if (!ok) throw notFound('Lid topilmadi.');
+    res.json({ ok: true, deleted: true });
+  })
+);
+
 // GET /admin/stats — weekly funnel buckets (frontend renders funnel + table).
 router.get(
   '/stats',

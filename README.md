@@ -133,6 +133,7 @@ Admin (httpOnly JWT cookie):
 
 `POST /admin/login` · `POST /admin/logout` · `GET /admin/me` ·
 `GET /admin/leads` · `GET /admin/leads/:id` · `PATCH /admin/leads/:id` ·
+`DELETE /admin/leads/:id` (right-to-erasure, cascades) ·
 `GET /admin/stats` · `GET /admin/export/leads.csv`
 
 Health: `GET /healthz`, `GET /readyz` (checks the DB).
@@ -176,14 +177,20 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
 - **Uzbekistan data localization** — host Postgres with an in-country provider
   (Docker Compose makes this portable), and have a local specialist review the
   consent texts and the fact that AI processing runs on foreign servers.
-- Define a retention window and honor deletion requests: deleting a parent
-  cascades to their children, sessions, messages and reports.
+- Honor deletion requests now: `DELETE /admin/leads/:id` (a button on the lead
+  detail page) removes the parent and cascades to their children, sessions,
+  messages and reports.
+- Enforce a retention window with `make purge` (or `npm run purge`) —
+  `RETENTION_MONTHS` (default 24) deletes children/sessions/reports whose last
+  session activity is older than the window, plus any orphaned parent. Schedule
+  it from cron.
 
 ---
 
 ## Operations
 
 - **Backups:** `make backup` (nightly via cron recommended); `make restore F=…`.
+- **Retention:** `make purge` on a cron (respects `RETENTION_MONTHS`).
 - **Monitoring:** watch three numbers — sessions finished/day, average tokens
   per session (input/output tokens are logged per session), and delivery success.
   `GET /readyz` for liveness.
