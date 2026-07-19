@@ -1,0 +1,11 @@
+.git
+**/node_modules
+server/public
+**/.env
+*.log
+.DS_Store
+**/.DS_Store
+.thumbnail
+_ds/**/*.md
+Kompas v1.dc.html
+Kompas v2.dc.html

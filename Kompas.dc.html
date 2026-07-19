@@ -578,6 +578,7 @@ input, textarea, button, select { font-family: var(--font-body); }
         <button type="button" class="btn btn-secondary" onClick="{{ resetAll }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Yangi mashg'ulot</button>
         <span style="flex: 1;"></span>
         <button type="button" class="btn btn-ghost" onClick="{{ copyShare }}" style="font-size: 13px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="0" ry="0"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>{{ copyLabel }}</button>
+        <sc-if value="{{ deliveryLink }}" hint-placeholder-val="{{ false }}"><a class="btn btn-secondary no-print" href="{{ deliveryLink }}" target="_blank" rel="noopener" style="font-size: 13px; text-decoration: none;">Telegram orqali olish</a></sc-if>
       </div>
       <div id="yik-report" class="elev-md" style="background: var(--color-neutral-100); border: 2px solid var(--color-divider); padding: clamp(20px, 5vw, 48px);">
         <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">{{ brand }} · Hisobot</h6>
@@ -817,7 +818,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <p class="text-muted" style="margin: 0; font-size: 13px;">{{ leadsCount }} ta yozuv</p>
         </div>
         <span style="flex: 1;"></span>
-        <div class="field"><label style="font-size: 11px;">Holat</label><select class="input" value="{{ fStatusVal }}" onChange="{{ onFStatus }}" style="min-width: 140px;"><option value="all">Hammasi</option><option value="Yangi">Yangi</option><option value="Bog'lanildi">Bog'lanildi</option><option value="Yozildi">Yozildi</option><option value="Yo'qotildi">Yo'qotildi</option></select></div>
+        <div class="field"><label style="font-size: 11px;">Holat</label><select class="input" value="{{ fStatusVal }}" onChange="{{ onFStatus }}" style="min-width: 140px;"><option value="all">Hammasi</option><option value="new">Yangi</option><option value="contacted">Bog'lanildi</option><option value="interested">Qiziqish bildirdi</option><option value="enrolled">Yozildi</option><option value="closed">Yopildi</option></select></div>
         <div class="field"><label style="font-size: 11px;">Sinf</label><select class="input" value="{{ fGradeVal }}" onChange="{{ onFGrade }}" style="min-width: 110px;"><option value="all">Hammasi</option><option value="1">1-sinf</option><option value="2">2-sinf</option><option value="3">3-sinf</option><option value="4">4-sinf</option></select></div>
         <div class="field"><label style="font-size: 11px;">Davr</label><select class="input" value="{{ fDateVal }}" onChange="{{ onFDate }}" style="min-width: 130px;"><option value="all">Hammasi</option><option value="7">7 kun</option><option value="30">30 kun</option></select></div>
         <button type="button" class="btn btn-secondary" onClick="{{ exportCsv }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>CSV eksport</button>
@@ -860,7 +861,8 @@ input, textarea, button, select { font-family: var(--font-body); }
             <p class="text-muted" style="margin: 0; font-size: 13px;">Qo'shilgan: {{ ldCreated }}</p>
           </div>
           <span style="flex: 1;"></span>
-          <div class="field"><label style="font-size: 11px;">Holat</label><select class="input" value="{{ ldStatusVal }}" onChange="{{ onLdStatus }}" style="min-width: 150px;"><option value="Yangi">Yangi</option><option value="Bog'lanildi">Bog'lanildi</option><option value="Yozildi">Yozildi</option><option value="Yo'qotildi">Yo'qotildi</option></select></div>
+          <div class="field"><label style="font-size: 11px;">Holat</label><select class="input" value="{{ ldStatusVal }}" onChange="{{ onLdStatus }}" style="min-width: 150px;"><option value="new">Yangi</option><option value="contacted">Bog'lanildi</option><option value="interested">Qiziqish bildirdi</option><option value="enrolled">Yozildi</option><option value="closed">Yopildi</option></select></div>
+          <div style="align-self: flex-end;"><button type="button" class="btn btn-ghost" onClick="{{ ldDelete }}" style="color: var(--color-accent-700);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Lidni o'chirish</button></div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
           <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
@@ -983,23 +985,73 @@ class Component extends DCLogic {
     name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
     messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
     status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
-    token: '', shareToken: '', reportMd: '', reportPartial: false, reportDate: '', resumeName: '',
+    token: '', shareToken: '', reportPartial: false, resumeName: '',
     gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false, copied: false,
     admAuthed: false, admEmail: '', admPass: '', admError: '',
-    fStatus: 'all', fGrade: 'all', fDate: 'all', leadsBump: 0, isMobile: false
+    fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
+    // server-fetched, route-scoped data
+    report: null, reportLoading: false, reportNotFound: false, deliveryLink: '',
+    leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null
   };
 
   brand() { return this.props.brandName ?? "Yosh Iste'dodlar Kompasi"; }
-  model() { return this.props.model ?? 'claude-sonnet-4-5'; }
-  rid() { return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6); }
-  fmtDate(ts) { const d = new Date(ts); return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); }
+  fmtDate(ts) { if (!ts) return ''; const d = new Date(ts); if (isNaN(d.getTime())) return ''; return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); }
+
+  // --- API client -------------------------------------------------------
+  api(path, opts) {
+    const o = Object.assign({ method: 'GET' }, opts || {});
+    o.headers = Object.assign({ 'Content-Type': 'application/json' }, (opts && opts.headers) || {});
+    o.credentials = 'same-origin';
+    if (o.body != null && typeof o.body !== 'string') o.body = JSON.stringify(o.body);
+    return fetch(path, o).then(async (res) => {
+      let data = null;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.indexOf('application/json') >= 0) { try { data = await res.json(); } catch (e) {} }
+      if (!res.ok) { const err = new Error((data && (data.error || data.message)) || ('HTTP ' + res.status)); err.status = res.status; err.data = data; throw err; }
+      return data;
+    });
+  }
+  _errMsg(e) { if (e && e.data && e.data.error) return e.data.error; if (e && e.message) return e.message; return 'Tarmoq xatosi'; }
+  _prog(p) { return { MANTIQ: !!(p && p.mantiq), PSIXOLOGIYA: !!(p && p.psixologiya), HARAKAT: !!(p && p.harakat) }; }
+
+  // --- session handle persistence (server holds the data) ---------------
+  // The session token is the single identifier: it is the /mashgulot/:token URL
+  // param and the API path segment. localStorage only remembers it for one-tap
+  // resume on the same device; the URL itself resumes on any device.
+  saveHandle() { try { localStorage.setItem('yik_sess_v1', JSON.stringify({ tok: this._stok })); } catch (e) {} }
+  clearHandle() { try { localStorage.removeItem('yik_sess_v1'); } catch (e) {} }
+
+  async loadSession(token) {
+    if (!token || this._loadingSession === token) return;
+    this._loadingSession = token; this._stok = token;
+    try {
+      const d = await this.api('/api/sessions/' + encodeURIComponent(token));
+      this._loadedSession = token;
+      this._lastN = -1;
+      this.setState({
+        name: d.child.nickname || '', grade: d.child.grade || 0, age: d.child.age == null ? '' : d.child.age,
+        goal: d.child.goal || '', notes: d.child.notes || '',
+        messages: d.messages || [], progress: this._prog(d.progress), status: d.status, token: token,
+        shareToken: d.report ? d.report.share_token : '', reportPartial: d.report ? !!d.report.partial : false,
+        paused: d.status === 'paused',
+        resumeName: (d.status === 'active' || d.status === 'paused') ? (d.child.nickname || 'Bola') : ''
+      });
+      this.saveHandle();
+    } catch (e) {
+      // Only forget the session on a definitive expiry/not-found — keep it on a
+      // transient network/5xx blip so resume still works after a hiccup.
+      if (e && (e.status === 401 || e.status === 404)) { this.clearHandle(); this._stok = null; this._loadedSession = null; }
+    } finally {
+      this._loadingSession = null;
+    }
+  }
 
   componentDidMount() {
     this._hash = () => {
       const r = (location.hash || '#/').replace(/^#/, '') || '/';
       if (r === '/admin' && this.state.admAuthed) { location.hash = '#/admin/leads'; return; }
-      if (r === '/mashgulot' && this.state.token) { location.hash = '#/mashgulot/' + this.state.token; return; }
-      this.setState({ route: r, copied: false });
+      if (r === '/mashgulot' && this._stok) { location.hash = '#/mashgulot/' + this._stok; return; }
+      this.setState({ route: r, copied: false }, () => this.syncRoute());
       if (!r.startsWith('/mashgulot')) window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', this._hash);
@@ -1007,30 +1059,15 @@ class Component extends DCLogic {
     this._onMq = () => this.setState({ isMobile: this._mq.matches });
     if (this._mq.addEventListener) this._mq.addEventListener('change', this._onMq); else this._mq.addListener(this._onMq);
     this._onMq();
-    import('./kompas-prompt.js').then(m => { this._P = m; }).catch(e => { this._loadErr = String(e); });
-    let authed = false;
-    try { authed = localStorage.getItem('yik_admin_v1') === '1'; } catch (e) {}
-    try {
-      const raw = localStorage.getItem('yik_v1');
-      if (raw) {
-        const s = JSON.parse(raw);
-        if (s && s.messages && s.messages.length) {
-          this.setState({
-            name: s.name || '', grade: s.grade || 0, age: s.age || '', goal: s.goal || '', notes: s.notes || '',
-            messages: s.messages, progress: s.progress || this.state.progress, status: s.status || 'active',
-            token: s.token || this.rid(), shareToken: s.shareToken || '',
-            reportMd: s.reportMd || '', reportPartial: !!s.reportPartial, reportDate: s.reportDate || '',
-            parentName: s.parentName || '', phone: s.phone || '',
-            paused: s.status === 'paused',
-            resumeName: (s.status === 'active' || s.status === 'paused') ? (s.name || 'Bola') : ''
-          });
-        }
-      }
-    } catch (e) {}
-    this.seedDemo();
-    this.setState({ admAuthed: authed });
+
+    let handle = null; try { handle = JSON.parse(localStorage.getItem('yik_sess_v1') || 'null'); } catch (e) {}
+    if (handle && handle.tok) { this._stok = handle.tok; this.loadSession(handle.tok); }
+
+    // Is there an admin session? (httpOnly cookie — we can't read it directly.)
+    this.api('/admin/me').then(() => this.setState({ admAuthed: true }, () => this.syncRoute())).catch(() => {});
+
     document.title = this.brand();
-    if ((this.state.route === '/admin') && authed) location.hash = '#/admin/leads';
+    this.syncRoute();
   }
   componentWillUnmount() {
     window.removeEventListener('hashchange', this._hash);
@@ -1044,111 +1081,84 @@ class Component extends DCLogic {
     }
   }
 
-  save() {
-    const S = this.state;
-    try {
-      localStorage.setItem('yik_v1', JSON.stringify({
-        name: S.name, grade: S.grade, age: S.age, goal: S.goal, notes: S.notes,
-        messages: S.messages, progress: S.progress, status: S.status,
-        token: S.token, shareToken: S.shareToken,
-        reportMd: S.reportMd, reportPartial: S.reportPartial, reportDate: S.reportDate,
-        parentName: S.parentName, phone: S.phone
-      }));
-    } catch (e) {}
+  // Trigger route-scoped server fetches.
+  syncRoute() {
+    const r = this.state.route; const seg = r.split('/').filter(Boolean);
+    if (seg[0] === 'mashgulot' && seg[1]) {
+      // Load the session named by the URL token — this is how resume works from
+      // any device (the token is self-contained in the link).
+      if (this._loadedSession !== seg[1] && this._loadingSession !== seg[1]) this.loadSession(seg[1]);
+      return;
+    }
+    if (seg[0] === 'hisobot' && seg[1]) {
+      if (this._loadedReportToken !== seg[1] && !this._reportLoading) this.fetchReport(seg[1]);
+      return;
+    }
+    if (seg[0] === 'admin' && this.state.admAuthed) {
+      if (seg[1] === 'leads' && seg[2]) this.fetchLead(seg[2]);
+      else if (seg[1] === 'stats') this.fetchStats();
+      else this.fetchLeads();
+    }
   }
 
-  loadLeads() { try { return JSON.parse(localStorage.getItem('yik_leads_v1') || '[]'); } catch (e) { return []; } }
-  saveLeads(ls) { try { localStorage.setItem('yik_leads_v1', JSON.stringify(ls)); } catch (e) {} this.setState({ leadsBump: this.state.leadsBump + 1 }); }
-  loadEvents() { try { return JSON.parse(localStorage.getItem('yik_events_v1') || '[]'); } catch (e) { return []; } }
-  pushEvent(type, ts) {
-    const ev = this.loadEvents(); ev.push({ t: type, ts: ts || Date.now() });
-    try { localStorage.setItem('yik_events_v1', JSON.stringify(ev)); } catch (e) {}
-  }
-
-  demoReport(name) {
-    return "## Surat\n- **Qonuniyatlarni tez ilg'aydi** — topshiriqlarning ko'pini mustaqil yechdi.\n- **Qat'iyatli** — xato javobdan keyin yana urindi.\n- **Jamoani yaxshi ko'radi** — do'stlari bilan o'ynashni afzal ko'radi.\n## Hozirgi o'rni\n- **Mantiq va tafakkur** — Kuchli. Ketma-ketliklarni tez davom ettirdi, yechimini ovoz chiqarib tushuntirdi.\n- **Psixologiya va qiziqishlar** — Me'yorda. Qiziquvchan, yangi narsalarni so'rab o'rganadi.\n- **Tana va harakat** — Me'yorda. Muvozanat barqaror, ritmda ozgina adashdi.\n## Maqsad va yo'l xaritasi\nMaqsad: matematikada kuchli bo'lish.\n1. Haftasiga 3 kun, kechqurun 2 tadan qonuniyat topshirig'i.\n2. Oyiga bitta mantiqiy o'yin kechasi (oila bilan).\n3. 3 oydan so'ng qayta baholash va bosqichlarni yangilash.\n## Nimani o'rganish va mashq qilish\n- **Mantiq** — kuniga 2 ta qonuniyat topshirig'i, haftada bitta boshqotirma.\n- **Harakat** — haftasiga 2 marta to'p mashqlari va sakrash o'yinlari.\n## Tavsiya etilgan sport va mashg'ulotlar\n- **Futbol** — g'ayrati baland va jamoaviy o'yinni yaxshi ko'rgani uchun.\n- **Shaxmat to'garagi** — strategik fikrlashini qo'shimcha rivojlantiradi.\n## " + name + " uchun xat\n" + name + ", sen qiyin savollardan qo'rqmaysan — bu katta kuch! Har kuni ozgina mashq qilsang, yanada kuchli bo'lasan. Biz senga ishonamiz!\n## Kattalar uchun\n- Natijani emas, urinishni maqtang.\n- Haftalik reja bajarilishini birga belgilab boring.\n- Yangi sport boshlashdan oldin oddiy tibbiy ko'rikdan o'ting.";
-  }
-
-  seedDemo() {
-    try { if (localStorage.getItem('yik_seed_v1')) return; } catch (e) { return; }
-    const day = 86400000; const now = Date.now();
-    const mk = (parent, phone, marketing, status, childName, grade, agoDays, partial, notes) => ({
-      id: 'L' + this.rid(), parent, phone, marketing, status, notes: notes || '', demo: true, createdAt: now - agoDays * day,
-      children: [{ name: childName, grade, sessions: [{ date: now - agoDays * day, shareToken: this.rid(), partial: !!partial, reportMd: this.demoReport(childName) }] }]
-    });
-    const leads = [
-      mk('Nilufar X.', '90 123-45-67', true, 'Yozildi', 'Ali', 2, 2, false, "Futbol guruhiga yozildi, seshanba 17:00."),
-      mk('Bekzod T.', '91 234-56-78', false, "Bog'lanildi", 'Zuhra', 3, 4, false, "Qayta qo'ng'iroq: payshanba."),
-      mk('Madina R.', '93 345-67-89', true, 'Yangi', 'Timur', 1, 6, true, ''),
-      mk('Olim S.', '94 456-78-90', false, 'Yangi', 'Laylo', 4, 9, false, ''),
-      mk('Gulnora A.', '97 567-89-01', true, "Yo'qotildi", 'Bek', 2, 16, false, "Narx to'g'ri kelmadi."),
-      mk('Sardor M.', '88 678-90-12', true, "Bog'lanildi", 'Madina', 3, 20, false, 'Sinov darsiga taklif qilindi.')
-    ];
-    const ev = [];
-    const bucket = [[4, 3, 3, 2], [7, 5, 4, 4], [6, 4, 3, 3], [5, 3, 2, 2]];
-    bucket.forEach((b, wi) => {
-      const put = (t, n) => { for (let i = 0; i < n; i++) ev.push({ t, ts: now - (wi * 7 + (i % 6)) * day - 3600000 }); };
-      put('started', b[0]); put('finished', b[1]); put('contact', b[2]); put('delivered', b[3]);
-    });
-    try {
-      localStorage.setItem('yik_leads_v1', JSON.stringify(leads));
-      localStorage.setItem('yik_events_v1', JSON.stringify(ev));
-      localStorage.setItem('yik_seed_v1', '1');
-    } catch (e) {}
-  }
-
+  // --- setup / session --------------------------------------------------
   submitForm() {
     const S = this.state;
     if (!S.name.trim()) return this.setState({ formError: "Bolaning ismini yozing — faqat ism kifoya." });
     if (!S.grade) return this.setState({ formError: 'Sinfni tanlang.' });
-    if (!S.consent) return this.setState({ formError: 'Davom etish uchun rozilik belgisini qo\u2018ying.' });
+    if (!S.consent) return this.setState({ formError: 'Davom etish uchun rozilik belgisini qo‘ying.' });
     this.setState({ formError: '', prepared: true });
   }
 
-  startSession() {
-    if (!this._P) { this.setState({ formError: 'Yuklanmoqda — bir soniyadan so\u2018ng qayta bosing.' }); return; }
-    const S = this.state;
-    const intro = { role: 'user', content: this._P.buildIntro({ name: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim() }), meta: true };
-    const token = this.rid();
-    this._lastN = 0;
-    this.pushEvent('started');
-    this.setState({
-      messages: [intro], status: 'active', paused: false, apiError: '', resumeName: '', draft: '', token, shareToken: '',
-      gate: false, delivered: false, gateError: '',
-      progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false }, reportMd: '', reportPartial: false, reportDate: ''
-    }, () => { this.save(); location.hash = '#/mashgulot/' + token; this.callModel(); });
-  }
-
-  async callModel() {
+  async startSession() {
     if (this._busy) return; this._busy = true;
-    this.setState({ sending: true, apiError: '' });
+    const S = this.state;
+    this.setState({ formError: '', sending: true });
     try {
-      if (!(window.claude && window.claude.complete)) throw new Error("Bu muhitda Claude ulanishi mavjud emas.");
-      if (!this._P) throw new Error('Ko\u2018rsatmalar hali yuklanmadi.');
-      const msgs = this.state.messages.map(m => ({ role: m.role, content: m.content }));
-      const text = await window.claude.complete({ system: this._P.SYSTEM_PROMPT, model: this.model(), max_tokens: 1600, messages: msgs });
-      const prog = { ...this.state.progress };
-      const re = /\[YAKUN:\s*(MANTIQ|PSIXOLOGIYA|HARAKAT)\s*\]/gi; let m;
-      while ((m = re.exec(text))) prog[m[1].toUpperCase()] = true;
-      this.setState({ messages: [...this.state.messages, { role: 'assistant', content: text }], sending: false, progress: prog }, () => this.save());
+      const d = await this.api('/api/sessions', { method: 'POST', body: {
+        nickname: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim()
+      } });
+      this._stok = d.session_token; this._loadedSession = d.session_token; this._loadedReportToken = null; this._lastN = 0;
+      this.saveHandle();
+      this.setState({
+        messages: d.messages || [], status: 'active', paused: false, apiError: d.api_error || '',
+        resumeName: '', draft: '', token: d.session_token, shareToken: '',
+        gate: false, delivered: false, gateError: '', progress: this._prog(d.progress),
+        reportPartial: false, sending: false
+      }, () => { location.hash = '#/mashgulot/' + d.session_token; });
     } catch (e) {
-      this.setState({ sending: false, apiError: (e && e.message) ? e.message : 'Tarmoq xatosi' });
+      this.setState({ sending: false, formError: this._errMsg(e) });
     }
     this._busy = false;
   }
 
-  send(text) {
+  async send(text) {
     const S = this.state;
     if (S.sending || S.generating || S.paused || S.gate) return;
     const t = (text != null ? text : S.draft).trim();
     if (!t) return;
     if (S.apiError && S.messages.length && S.messages[S.messages.length - 1].role === 'user') return;
-    this.setState({ messages: [...S.messages, { role: 'user', content: t }], draft: '' }, () => { this.save(); this.callModel(); });
+    const optimistic = [...S.messages, { role: 'user', content: t }];
+    this._lastN = -1;
+    this.setState({ messages: optimistic, draft: '', sending: true, apiError: '' });
+    try {
+      const d = await this.api('/api/sessions/' + this._stok + '/messages', { method: 'POST', body: { content: t } });
+      this.setState({ messages: [...optimistic, { role: 'assistant', content: d.reply }], sending: false, progress: this._prog(d.progress) });
+    } catch (e) {
+      this.setState({ sending: false, apiError: this._errMsg(e) });
+    }
   }
 
-  retry() {
-    const last = this.state.messages[this.state.messages.length - 1];
-    if (last && last.report) this.generate(); else this.callModel();
+  async retry() {
+    const S = this.state;
+    if (S.status === 'generating' || (S.messages.length && S.messages[S.messages.length - 1].report)) { this.generate(); return; }
+    this.setState({ sending: true, apiError: '' });
+    try {
+      const d = await this.api('/api/sessions/' + this._stok + '/messages', { method: 'POST', body: { retry: true } });
+      this.setState({ messages: [...this.state.messages, { role: 'assistant', content: d.reply }], sending: false, progress: this._prog(d.progress) });
+    } catch (e) {
+      this.setState({ sending: false, apiError: this._errMsg(e) });
+    }
   }
 
   askFinish() {
@@ -1166,70 +1176,155 @@ class Component extends DCLogic {
     return out;
   }
 
-  gateSubmit() {
+  async gateSubmit() {
     const S = this.state;
     if (!S.parentName.trim()) return this.setState({ gateError: 'Ismingizni yozing.' });
     const digits = S.phone.replace(/\D/g, '');
-    if (digits && digits.length < 9) return this.setState({ gateError: 'Telefon raqami to\u2018liq emas — 9 ta raqam kerak.' });
-    if (digits && !S.cDelivery) return this.setState({ gateError: 'Havola yuborilishi uchun rozilik belgisini qo\u2018ying.' });
-    this._pending = { name: S.parentName.trim(), phone: digits ? this.fmtPhone(S.phone) : '', marketing: S.cMarketing };
-    this.setState({ gateError: '', gate: false }, () => { this.save(); this.generate(); });
+    if (digits && digits.length < 9) return this.setState({ gateError: 'Telefon raqami to‘liq emas — 9 ta raqam kerak.' });
+    if (digits && !S.cDelivery) return this.setState({ gateError: 'Havola yuborilishi uchun rozilik belgisini qo‘ying.' });
+    this.setState({ gateError: '', gate: false });
+    try {
+      await this.api('/api/sessions/' + this._stok + '/contact', { method: 'POST', body: {
+        parent_name: S.parentName.trim(), phone: digits, marketing_consent: S.cMarketing
+      } });
+    } catch (e) {
+      return this.setState({ gate: true, gateError: this._errMsg(e) });
+    }
+    this.generate();
   }
-  gateViewOnly() { this._pending = null; this.setState({ gate: false }, () => this.generate()); }
+  gateViewOnly() { this.setState({ gate: false }, () => this.generate()); }
 
   async generate() {
     if (this._busy) return; this._busy = true;
-    const S = this.state;
-    const partial = !(S.progress.MANTIQ && S.progress.PSIXOLOGIYA && S.progress.HARAKAT);
-    let msgs = S.messages;
-    const last = msgs[msgs.length - 1];
-    if (!(last && last.report)) {
-      msgs = [...msgs, { role: 'user', content: this._P.buildReportRequest(S.name.trim() || 'Bola', partial), meta: true, report: true }];
-    }
-    this.setState({ finishConfirm: false, generating: true, status: 'generating', apiError: '', messages: msgs }, () => this.save());
+    this.setState({ finishConfirm: false, generating: true, status: 'generating', apiError: '' });
     try {
-      if (!(window.claude && window.claude.complete)) throw new Error("Bu muhitda Claude ulanishi mavjud emas.");
-      const text = await window.claude.complete({ system: this._P.SYSTEM_PROMPT, model: this.model(), max_tokens: 6000, messages: msgs.map(m => ({ role: m.role, content: m.content })) });
-      const now = Date.now();
-      const shareToken = this.rid();
-      this.pushEvent('finished');
-      const pc = this._pending;
-      if (pc && pc.name) {
-        const leads = this.loadLeads();
-        let lead = pc.phone ? leads.find(l => l.phone === pc.phone) : null;
-        if (!lead) {
-          lead = { id: 'L' + this.rid(), parent: pc.name, phone: pc.phone, marketing: pc.marketing, status: 'Yangi', notes: '', demo: false, createdAt: now, children: [] };
-          leads.unshift(lead);
-        } else { lead.parent = pc.name; lead.marketing = lead.marketing || pc.marketing; }
-        let child = lead.children.find(c => c.name === (S.name.trim() || 'Bola') && c.grade === S.grade);
-        if (!child) { child = { name: S.name.trim() || 'Bola', grade: S.grade, sessions: [] }; lead.children.push(child); }
-        child.sessions.unshift({ date: now, shareToken, partial, reportMd: text });
-        this.saveLeads(leads);
-        this.pushEvent('contact');
-        if (pc.phone) this.pushEvent('delivered');
-      }
-      const delivered = !!(pc && pc.phone);
-      this._pending = null;
-      this.setState({ reportMd: text, reportPartial: partial, reportDate: this.fmtDate(now), shareToken, delivered, generating: false, status: 'done', resumeName: '' }, () => { this.save(); location.hash = '#/hisobot/' + shareToken; });
+      const d = await this.api('/api/sessions/' + this._stok + '/report', { method: 'POST', body: {} });
+      this._loadedReportToken = null;
+      this.setState({
+        shareToken: d.share_token, reportPartial: !!d.partial,
+        delivered: !!d.delivered, deliveryLink: (d.delivery && d.delivery.link) || '',
+        generating: false, status: 'done', resumeName: ''
+      }, () => { location.hash = '#/hisobot/' + d.share_token; });
     } catch (e) {
-      this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + ((e && e.message) || ''), gate: !!this._pending || this.state.gate ? false : false }, () => this.save());
+      this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + this._errMsg(e) });
     }
     this._busy = false;
   }
 
+  async fetchReport(token) {
+    this._reportLoading = true;
+    this.setState({ report: null, reportLoading: true, reportNotFound: false });
+    try {
+      const d = await this.api('/api/reports/' + encodeURIComponent(token));
+      this._loadedReportToken = token;
+      this.setState({ report: { md: d.content_md, name: d.nickname, grade: d.grade, date: this.fmtDate(d.date), partial: !!d.partial }, reportLoading: false, reportNotFound: false });
+    } catch (e) {
+      // Only a 404 is a genuine "not found"; a transient error stays retryable.
+      const missing = !!(e && e.status === 404);
+      if (missing) this._loadedReportToken = token;
+      this.setState({ report: null, reportLoading: false, reportNotFound: missing });
+    }
+    this._reportLoading = false;
+  }
+
+  // --- admin ------------------------------------------------------------
+  async admLogin() {
+    const S = this.state;
+    if (!S.admEmail.trim() || !S.admPass.trim()) { this.setState({ admError: 'Email va parolni kiriting.' }); return; }
+    try {
+      await this.api('/admin/login', { method: 'POST', body: { email: S.admEmail.trim(), password: S.admPass } });
+      this.setState({ admAuthed: true, admError: '', admPass: '' }, () => { location.hash = '#/admin/leads'; this.syncRoute(); });
+    } catch (e) {
+      this.setState({ admError: this._errMsg(e) });
+    }
+  }
+  async admLogout() {
+    try { await this.api('/admin/logout', { method: 'POST' }); } catch (e) {}
+    this.setState({ admAuthed: false, leads: [], lead: null, stats: null });
+    location.hash = '#/admin';
+  }
+
+  _adminUnauth(e) { if (e && e.status === 401) { this.setState({ admAuthed: false }); location.hash = '#/admin'; return true; } return false; }
+
+  async fetchLeads() {
+    this.setState({ leadsLoading: true });
+    const S = this.state; const p = new URLSearchParams();
+    if (S.fStatus !== 'all') p.set('status', S.fStatus);
+    if (S.fGrade !== 'all') p.set('grade', S.fGrade);
+    if (S.fDate !== 'all') p.set('date', S.fDate);
+    try {
+      const d = await this.api('/admin/leads' + (p.toString() ? ('?' + p.toString()) : ''));
+      this.setState({ leads: d.leads || [], leadsLoading: false });
+    } catch (e) { if (!this._adminUnauth(e)) this.setState({ leadsLoading: false }); }
+  }
+  async fetchLead(id) {
+    this.setState({ lead: null, leadLoading: true, leadMissing: false });
+    try {
+      const d = await this.api('/admin/leads/' + encodeURIComponent(id));
+      this.setState({ lead: d, leadLoading: false });
+    } catch (e) {
+      if (this._adminUnauth(e)) return;
+      this.setState({ leadLoading: false, leadMissing: e && e.status === 404 });
+    }
+  }
+  async fetchStats() {
+    try { const d = await this.api('/admin/stats'); this.setState({ stats: d.buckets || null }); }
+    catch (e) { this._adminUnauth(e); }
+  }
+  _setLeadLocal(patch) {
+    const lead = this.state.lead;
+    if (!lead || !lead.parent) return;
+    this.setState({ lead: Object.assign({}, lead, { parent: Object.assign({}, lead.parent, patch) }) });
+  }
+  async patchLead(body, prev) {
+    const id = this.state.lead && this.state.lead.parent && this.state.lead.parent.id;
+    if (!id) return;
+    try {
+      const d = await this.api('/admin/leads/' + encodeURIComponent(id), { method: 'PATCH', body });
+      // Reconcile status from the server; leave notes alone so a debounced save
+      // never clobbers characters typed while the request was in flight.
+      if (d && body.lead_status !== undefined) this._setLeadLocal({ lead_status: d.lead_status });
+    } catch (e) {
+      if (this._adminUnauth(e)) return;
+      if (prev) this._setLeadLocal(prev); // revert optimistic change on failure
+    }
+  }
+  async deleteLead() {
+    const id = this.state.lead && this.state.lead.parent && this.state.lead.parent.id;
+    if (!id) return;
+    if (typeof confirm === 'function' && !confirm('Bu lidni va unga bog‘liq barcha yozuvlarni (bolalar, mashg‘ulotlar, hisobotlar) butunlay o‘chirasizmi? Ortga qaytarib bo‘lmaydi.')) return;
+    try {
+      await this.api('/admin/leads/' + encodeURIComponent(id), { method: 'DELETE' });
+      this.setState({ lead: null, leadMissing: false });
+      location.hash = '#/admin/leads';
+      this.fetchLeads();
+    } catch (e) { this._adminUnauth(e); }
+  }
+  stCls(st) {
+    if (st === 'new') return 'tag tag-accent';
+    if (st === 'enrolled') return 'tag tag-accent';
+    if (st === 'contacted' || st === 'interested') return 'tag tag-neutral';
+    return 'tag tag-outline';
+  }
+  stLabel(st) {
+    const m = { new: 'Yangi', contacted: "Bog'lanildi", interested: 'Qiziqish bildirdi', enrolled: 'Yozildi', closed: 'Yopildi' };
+    return m[st] || st;
+  }
+
   resetAll() {
-    try { localStorage.removeItem('yik_v1'); } catch (e) {}
-    this._lastN = 0; this._pending = null;
+    this.clearHandle(); this._stok = null; this._loadedSession = null; this._lastN = 0; this._loadedReportToken = null; this._busy = false;
     this.setState({
       name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
       messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
       status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
-      token: '', shareToken: '', reportMd: '', reportPartial: false, reportDate: '', resumeName: '',
-      gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false
+      token: '', shareToken: '', reportPartial: false, resumeName: '',
+      gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false,
+      report: null, reportNotFound: false, deliveryLink: ''
     });
     location.hash = '#/boshlash';
   }
 
+  // --- markdown / report parsing (unchanged) ----------------------------
   mdClean(s) {
     return String(s).replace(/\*\*/g, '').replace(/(^|\s)\*(\S[^*]*)\*/g, '$1$2').replace(/^#+\s*/gm, '');
   }
@@ -1302,42 +1397,6 @@ class Component extends DCLogic {
     return out;
   }
 
-  findReport(tok) {
-    const S = this.state;
-    if (!tok) return S.reportMd ? { md: S.reportMd, name: S.name.trim() || 'Bola', grade: S.grade, date: S.reportDate, partial: S.reportPartial, own: true } : null;
-    if (tok === S.shareToken && S.reportMd) return { md: S.reportMd, name: S.name.trim() || 'Bola', grade: S.grade, date: S.reportDate, partial: S.reportPartial, own: true };
-    const leads = this.loadLeads();
-    for (const l of leads) for (const c of (l.children || [])) for (const ss of (c.sessions || [])) {
-      if (ss.shareToken === tok) return { md: ss.reportMd, name: c.name, grade: c.grade, date: this.fmtDate(ss.date), partial: !!ss.partial, own: false };
-    }
-    return null;
-  }
-
-  weekStats() {
-    const ev = this.loadEvents(); const day = 86400000; const now = Date.now();
-    const buckets = [0, 1, 2, 3].map(() => ({ started: 0, finished: 0, contact: 0, delivered: 0 }));
-    ev.forEach(e => {
-      const wi = Math.floor((now - e.ts) / (7 * day));
-      if (wi >= 0 && wi < 4 && buckets[wi][e.t] != null) buckets[wi][e.t]++;
-    });
-    return buckets;
-  }
-
-  csvExport(rows) {
-    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-    const head = ['Ota-ona', 'Telefon', 'Holat', 'Marketing roziligi', 'Bolalar', "Mashg'ulotlar", "Qo'shilgan"];
-    const lines = [head.map(q).join(',')];
-    rows.forEach(l => {
-      const kids = (l.children || []).map(c => c.name + ' (' + c.grade + '-sinf)').join('; ');
-      const n = (l.children || []).reduce((a, c) => a + (c.sessions || []).length, 0);
-      lines.push([l.parent, l.phone ? '+998 ' + l.phone : '', l.status, l.marketing ? 'Ha' : "Yo'q", kids, n, this.fmtDate(l.createdAt)].map(q).join(','));
-    });
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(lines.join('\n'));
-    a.download = 'lidlar.csv';
-    document.body.appendChild(a); a.click(); a.remove();
-  }
-
   renderVals() {
     const S = this.state;
     const route = S.route;
@@ -1352,10 +1411,10 @@ class Component extends DCLogic {
     const isLeadDetail = !!leadId;
     const isStats = admin && route === '/admin/stats';
 
-    const repView = isReport ? this.findReport(segs[1] || '') : null;
+    const repView = (isReport && S.report) ? { md: S.report.md, name: S.report.name, grade: S.report.grade, date: S.report.date, partial: S.report.partial, own: (segs[1] === S.shareToken) } : null;
     const repMd = repView ? repView.md : '';
     if (this._repSrc !== repMd) { this._rep = this.parseReport(repMd); this._repSrc = repMd; }
-    const rep = this._rep;
+    const rep = this._rep || this.parseReport('');
 
     const lastIdx = S.messages.length - 1;
     const chat = [];
@@ -1371,47 +1430,35 @@ class Component extends DCLogic {
       pick: () => this.setState({ grade: n, formError: '' })
     }));
 
-    const day = 86400000; const nowTs = Date.now();
-    const leads = this.loadLeads();
-    const stCls = st => st === 'Yangi' ? 'tag tag-accent' : (st === "Bog'lanildi" ? 'tag tag-neutral' : 'tag tag-outline');
-    const filtered = leads.filter(l => {
-      if (S.fStatus !== 'all' && l.status !== S.fStatus) return false;
-      if (S.fGrade !== 'all' && !(l.children || []).some(c => String(c.grade) === S.fGrade)) return false;
-      if (S.fDate !== 'all' && (nowTs - l.createdAt) > Number(S.fDate) * day) return false;
-      return true;
-    });
-    const leadRows = filtered.map(l => {
-      const n = (l.children || []).reduce((a, c) => a + (c.sessions || []).length, 0);
-      let lastTs = 0; (l.children || []).forEach(c => (c.sessions || []).forEach(ss => { if (ss.date > lastTs) lastTs = ss.date; }));
-      return {
-        parent: l.parent, phone: l.phone ? '+998 ' + l.phone : '—',
-        children: (l.children || []).map(c => c.name + ' · ' + c.grade + '-sinf').join(', ') || '—',
-        sessions: String(n), lastDate: lastTs ? this.fmtDate(lastTs) : '—',
-        status: l.status, statusCls: stCls(l.status), demo: !!l.demo, href: '#/admin/leads/' + l.id
-      };
-    });
+    const leadRows = (S.leads || []).map(l => ({
+      parent: l.name, phone: l.phone || '—',
+      children: l.children_label || '—',
+      sessions: String(l.sessions_count || 0),
+      lastDate: l.last_report_at ? this.fmtDate(l.last_report_at) : '—',
+      status: l.lead_status_label || this.stLabel(l.lead_status), statusCls: this.stCls(l.lead_status),
+      demo: false, href: '#/admin/leads/' + l.id
+    }));
 
-    const ld = isLeadDetail ? leads.find(l => l.id === leadId) : null;
-    const ldChildren = ld ? (ld.children || []).map(c => ({
+    const ld = (isLeadDetail && S.lead) ? S.lead.parent : null;
+    const ldChildren = (isLeadDetail && S.lead) ? (S.lead.children || []).map(c => ({
       name: c.name, grade: c.grade + '-sinf',
       sessions: (c.sessions || []).map(ss => ({
         date: this.fmtDate(ss.date),
-        label: ss.partial ? 'Qisman' : 'To\u2018liq', cls: ss.partial ? 'tag tag-outline' : 'tag tag-neutral',
-        href: '#/hisobot/' + ss.shareToken
+        label: ss.partial ? 'Qisman' : 'To‘liq', cls: ss.partial ? 'tag tag-outline' : 'tag tag-neutral',
+        href: '#/hisobot/' + ss.share_token
       }))
     })) : [];
-    const updateLead = fn => { const ls = this.loadLeads(); const x = ls.find(l => l.id === leadId); if (x) { fn(x); this.saveLeads(ls); } };
 
-    const buckets = this.weekStats();
+    const buckets = S.stats || [{ started: 0, finished: 0, contact: 0, delivered: 0 }, { started: 0, finished: 0, contact: 0, delivered: 0 }, { started: 0, finished: 0, contact: 0, delivered: 0 }, { started: 0, finished: 0, contact: 0, delivered: 0 }];
     const b0 = buckets[0];
     const maxN = Math.max(b0.started, 1);
     const funnel = [
-      { label: 'Boshlangan mashg\u2018ulotlar', n: b0.started, w: Math.round(100 * b0.started / maxN) + '%' },
+      { label: 'Boshlangan mashg‘ulotlar', n: b0.started, w: Math.round(100 * b0.started / maxN) + '%' },
       { label: 'Yakunlangan', n: b0.finished, w: Math.round(100 * b0.finished / maxN) + '%' },
       { label: 'Kontakt qoldirgan', n: b0.contact, w: Math.round(100 * b0.contact / maxN) + '%' },
       { label: 'Hisobot yetkazilgan', n: b0.delivered, w: Math.round(100 * b0.delivered / maxN) + '%' }
     ];
-    const wLabels = ['Shu hafta', 'O\u2018tgan hafta', '2 hafta oldin', '3 hafta oldin'];
+    const wLabels = ['Shu hafta', 'O‘tgan hafta', '2 hafta oldin', '3 hafta oldin'];
     const weekRows = buckets.map((b, i) => ({
       label: wLabels[i], started: String(b.started), finished: String(b.finished), contact: String(b.contact), delivered: String(b.delivered),
       conv: b.started ? Math.round(100 * b.contact / b.started) + '%' : '—'
@@ -1428,7 +1475,7 @@ class Component extends DCLogic {
       showTestimonials: this.props.showTestimonials ?? false,
       resumeAvail: !!S.resumeName && (route === '/' || route === '' || route === '/boshlash'),
       resumeName: S.resumeName,
-      resumeGo: () => { this.setState({ resumeName: '' }); location.hash = '#/mashgulot/' + (S.token || ''); },
+      resumeGo: () => { this.setState({ resumeName: '' }); location.hash = '#/mashgulot/' + (S.token || this._stok || ''); },
       resetAll: () => this.resetAll(),
       nameVal: S.name, onName: e => this.setState({ name: e.target.value, formError: '' }),
       ageVal: S.age, onAge: e => this.setState({ age: e.target.value }),
@@ -1439,7 +1486,7 @@ class Component extends DCLogic {
       submitForm: () => this.submitForm(), startSession: () => this.startSession(),
       childName: S.name.trim() || 'Bola', gradeLabel: S.grade ? S.grade + '-sinf' : '',
       chipMantiq: chipCls('MANTIQ'), chipPsix: chipCls('PSIXOLOGIYA'), chipHarakat: chipCls('HARAKAT'),
-      sessionEmpty: !S.messages.length,
+      sessionEmpty: !chat.length,
       chat, sending: S.sending, apiError: S.apiError,
       draftVal: S.draft, onDraft: e => this.setState({ draft: e.target.value }),
       onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
@@ -1448,8 +1495,8 @@ class Component extends DCLogic {
       chipCant: () => this.send('Javob berolmadi'),
       chipSkip: () => this.send("O'tkazib yuborish"),
       chipEasier: () => this.send('Soddaroq savol bering'),
-      pauseNow: () => this.setState({ paused: true, status: 'paused' }, () => this.save()),
-      resumeNow: () => this.setState({ paused: false, status: 'active' }, () => this.save()),
+      pauseNow: () => this.setState({ paused: true, status: 'paused' }),
+      resumeNow: () => this.setState({ paused: false, status: 'active' }),
       retry: () => this.retry(),
       askFinish: () => this.askFinish(),
       confirmFinish: () => this.setState({ finishConfirm: false, gate: true, gateError: '' }),
@@ -1462,10 +1509,11 @@ class Component extends DCLogic {
       cMarketingVal: S.cMarketing, onCMarketing: e => this.setState({ cMarketing: e.target.checked }),
       gateError: S.gateError,
       gateSubmit: () => this.gateSubmit(), gateViewOnly: () => this.gateViewOnly(),
-      hasReport: !!repView, reportEmpty: !repView,
+      hasReport: !!repView, reportEmpty: isReport && S.reportNotFound,
       repName: repView ? repView.name : '', repGrade: repView ? repView.grade + '-sinf' : '',
       repDate: repView ? repView.date : '', repPartial: !!(repView && repView.partial),
       delivered: S.delivered && !!repView && repView.own,
+      deliveryLink: (repView && repView.own) ? (S.deliveryLink || '') : '',
       copyShare: () => {
         const url = location.origin + location.pathname + '#/hisobot/' + (segs[1] || S.shareToken);
         try { navigator.clipboard.writeText(url); } catch (e) {}
@@ -1487,33 +1535,34 @@ class Component extends DCLogic {
       admKey: e => { if (e.key === 'Enter') { e.preventDefault(); this.admLogin(); } },
       admError: S.admError,
       admLogin: () => this.admLogin(),
-      admLogout: () => { try { localStorage.removeItem('yik_admin_v1'); } catch (e) {} this.setState({ admAuthed: false }); location.hash = '#/admin'; },
-      fStatusVal: S.fStatus, onFStatus: e => this.setState({ fStatus: e.target.value }),
-      fGradeVal: S.fGrade, onFGrade: e => this.setState({ fGrade: e.target.value }),
-      fDateVal: S.fDate, onFDate: e => this.setState({ fDate: e.target.value }),
-      leadRows, leadsCount: String(filtered.length), leadsEmpty: filtered.length === 0,
-      exportCsv: () => this.csvExport(filtered),
-      leadFound: !!ld, leadMissing: isLeadDetail && !ld,
-      ldParent: ld ? ld.parent : '', ldDemo: !!(ld && ld.demo),
-      ldCreated: ld ? this.fmtDate(ld.createdAt) : '',
-      ldPhone: ld ? (ld.phone ? '+998 ' + ld.phone : 'Telefon qoldirilmagan') : '',
-      ldDeliveryConsent: ld ? (ld.phone ? 'Ha, ' + this.fmtDate(ld.createdAt) : '—') : '',
-      ldMarketing: ld ? (ld.marketing ? 'Ha' : "Yo'q") : '',
-      ldStatusVal: ld ? ld.status : 'Yangi',
-      onLdStatus: e => { const v = e.target.value; updateLead(x => { x.status = v; }); },
-      ldNotesVal: ld ? ld.notes : '',
-      onLdNotes: e => { const v = e.target.value; updateLead(x => { x.notes = v; }); },
+      admLogout: () => this.admLogout(),
+      fStatusVal: S.fStatus, onFStatus: e => this.setState({ fStatus: e.target.value }, () => this.fetchLeads()),
+      fGradeVal: S.fGrade, onFGrade: e => this.setState({ fGrade: e.target.value }, () => this.fetchLeads()),
+      fDateVal: S.fDate, onFDate: e => this.setState({ fDate: e.target.value }, () => this.fetchLeads()),
+      leadRows, leadsCount: String((S.leads || []).length), leadsEmpty: !S.leadsLoading && (S.leads || []).length === 0,
+      exportCsv: () => {
+        const p = new URLSearchParams();
+        if (S.fStatus !== 'all') p.set('status', S.fStatus);
+        if (S.fGrade !== 'all') p.set('grade', S.fGrade);
+        if (S.fDate !== 'all') p.set('date', S.fDate);
+        const a = document.createElement('a');
+        a.href = '/admin/export/leads.csv' + (p.toString() ? ('?' + p.toString()) : '');
+        document.body.appendChild(a); a.click(); a.remove();
+      },
+      leadFound: !!ld, leadMissing: isLeadDetail && S.leadMissing,
+      ldParent: ld ? ld.name : '', ldDemo: false,
+      ldCreated: ld ? this.fmtDate(ld.created_at) : '',
+      ldPhone: ld ? (ld.phone ? ld.phone : 'Telefon qoldirilmagan') : '',
+      ldDeliveryConsent: ld ? (ld.phone ? ('Ha, ' + this.fmtDate(ld.consented_at)) : '—') : '',
+      ldMarketing: ld ? (ld.marketing_consent ? 'Ha' : "Yo'q") : '',
+      ldStatusVal: ld ? ld.lead_status : 'new',
+      onLdStatus: e => { const v = e.target.value; const prev = { lead_status: ld ? ld.lead_status : 'new' }; this._setLeadLocal({ lead_status: v }); this.patchLead({ lead_status: v }, prev); },
+      ldNotesVal: ld ? (ld.admin_notes || '') : '',
+      onLdNotes: e => { const v = e.target.value; this._setLeadLocal({ admin_notes: v }); clearTimeout(this._noteTimer); this._noteTimer = setTimeout(() => this.patchLead({ admin_notes: v }), 600); },
+      ldDelete: () => this.deleteLead(),
       ldChildren,
       funnel, weekRows
     };
-  }
-
-  admLogin() {
-    const S = this.state;
-    if (!S.admEmail.trim() || !S.admPass.trim()) { this.setState({ admError: 'Email va parolni kiriting.' }); return; }
-    try { localStorage.setItem('yik_admin_v1', '1'); } catch (e) {}
-    this.setState({ admAuthed: true, admError: '' });
-    location.hash = '#/admin/leads';
   }
 }
 </script>
