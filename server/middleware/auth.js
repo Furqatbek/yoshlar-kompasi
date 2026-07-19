@@ -3,20 +3,16 @@
 const jwt = require('jsonwebtoken');
 const { config } = require('../config');
 const repo = require('../db/repo');
-const { timingSafeEqual } = require('../utils/tokens');
 const { asyncHandler, unauthorized, notFound } = require('../utils/http');
 
-// Parent-facing auth: an unguessable session token (spec §2). The token arrives
-// in the X-Session-Token header (browser localStorage) or a Bearer header.
+// Parent-facing auth (spec §2): the :id path segment IS the unguessable session
+// token — it lives in the URL (/mashgulot/:token) and localStorage and doubles
+// as the credential, so a resume link works from any device. A wrong/expired
+// token resolves to nothing and returns 404 (no existence oracle). The token is
+// 256-bit random and looked up by a UNIQUE index, so it is not brute-forceable.
 const sessionAuth = asyncHandler(async (req, res, next) => {
-  const header = req.get('x-session-token') || '';
-  const bearer = (req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  const token = header || bearer;
-  const session = await repo.getSessionById(req.params.id);
+  const session = req.params.id ? await repo.getSessionByToken(req.params.id) : null;
   if (!session) throw notFound('Mashg‘ulot topilmadi.');
-  if (!token || !timingSafeEqual(token, session.session_token)) {
-    throw unauthorized('Mashg‘ulotga ruxsat yo‘q.');
-  }
   req.session = session;
   next();
 });

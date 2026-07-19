@@ -32,6 +32,13 @@ async function getSessionById(id) {
   return rows[0] || null;
 }
 
+// Parent-facing lookup: the unguessable session_token is the URL identifier
+// (spec route /mashgulot/:token) and the credential in one.
+async function getSessionByToken(token) {
+  const { rows } = await query('SELECT * FROM sessions WHERE session_token = $1', [token]);
+  return rows[0] || null;
+}
+
 async function getChildById(id) {
   const { rows } = await query('SELECT * FROM children WHERE id = $1', [id]);
   return rows[0] || null;
@@ -282,7 +289,7 @@ async function weeklyBuckets() {
 }
 
 module.exports = {
-  createChildAndSession, getSessionById, getChildById,
+  createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,
   getReportBySession, createReport, getReportByShareToken, markReportDelivered,
