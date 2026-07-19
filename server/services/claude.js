@@ -204,14 +204,29 @@ async function completeOpenRouter({ system, model, maxTokens, messages }) {
   }
 
   const data = await res.json();
-  // A 200 can still carry an error body (upstream provider failure surfaced by
-  // OpenRouter). Treat it as retryable so the client's "Qayta urinish" works.
+  // A 200 can still carry a failure, in two places (per OpenRouter's error
+  // contract). Treat both as retryable so the client's "Qayta urinish" works.
+  // (1) Request-level: a top-level { error }.
   if (data && data.error) {
     const msg = (data.error.message || (typeof data.error === 'string' ? data.error : '')) || 'noma’lum xato';
     throw new ClaudeError('OpenRouter xatosi: ' + msg, { status: 502, retryable: true });
   }
   const choice = (data.choices && data.choices[0]) || null;
+  // (2) Provider-level: non-streaming provider failures come back 200 with the
+  // error embedded on the choice (finish_reason 'error' + choice.error), not at
+  // the top level — so an unchecked path would store a partial/blank reply as if
+  // it succeeded.
+  if (choice && (choice.finish_reason === 'error' || choice.error)) {
+    const msg = (choice.error && choice.error.message) || 'model xatosi';
+    throw new ClaudeError('OpenRouter xatosi: ' + msg, { status: 502, retryable: true });
+  }
   const text = ((choice && choice.message && choice.message.content) || '').trim();
+  // An empty completion (no choices, or null/blank content) is a failed
+  // generation, not a valid assistant turn. Surface it as retryable instead of
+  // storing a blank reply and silently consuming the turn.
+  if (!text) {
+    throw new ClaudeError('Model bo‘sh javob qaytardi.', { status: 502, retryable: true });
+  }
   const usage = data.usage || {};
   return {
     text,
