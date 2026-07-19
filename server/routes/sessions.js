@@ -90,6 +90,10 @@ router.post(
       const messages = await repo.getMessages(session.id);
       return res.status(201).json({ ...base, messages, progress: progressOf(updated), done: allDone(updated) });
     } catch (err) {
+      // Log the real cause server-side (bad model / key / credits show up here)
+      // so operators can diagnose; the client only gets a generic message.
+      // eslint-disable-next-line no-console
+      console.error('[error] POST /api/sessions greeting failed session=' + session.id + ': ' + err.message);
       // The session exists; let the client enter it and retry the first turn.
       const messages = await repo.getMessages(session.id);
       // Never surface upstream Claude error text to the client.
