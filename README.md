@@ -45,12 +45,14 @@ nickname, grade, age and answers — never a parent's name or phone.
 
 ## Quick start (Docker)
 
-Prerequisites: Docker + Docker Compose, and an Anthropic API key.
+Prerequisites: Docker + Docker Compose, and an LLM key — either an Anthropic API
+key (default) or an [OpenRouter](https://openrouter.ai) key (see below).
 
 ```bash
 cp .env.example .env
 # edit .env — set at least:
-#   ANTHROPIC_API_KEY, JWT_SECRET (openssl rand -base64 48),
+#   ANTHROPIC_API_KEY (or LLM_PROVIDER=openrouter + OPENROUTER_API_KEY),
+#   JWT_SECRET (openssl rand -base64 48),
 #   ADMIN_EMAIL, ADMIN_PASSWORD, POSTGRES_PASSWORD
 #   PUBLIC_BASE_URL (your https origin, for report links)
 
@@ -70,6 +72,26 @@ Stop with `make down`. Data persists in the `db_data` volume.
 
 Set `DATABASE_URL` in `.env` (add `?sslmode=require` if needed) and remove the
 `db` service and `depends_on` from `docker-compose.yml`.
+
+### Using OpenRouter instead of Anthropic direct
+
+If you can't fund the Anthropic API Console directly (some regions/cards are
+rejected there — note this is separate from your Claude chat subscription), you
+can route the same conversation through [OpenRouter](https://openrouter.ai):
+
+```bash
+# in .env
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-...              # from https://openrouter.ai/keys
+OPENROUTER_MODEL=anthropic/claude-sonnet-4.5   # any slug from /models
+```
+
+Add credits to your OpenRouter account, then `make up` (or `make restart`). The
+app is provider-agnostic — prompts, report parsing, caps and privacy guarantees
+are identical; only the HTTP endpoint changes. The prompt is tuned for Claude,
+so an `anthropic/*` slug tracks the direct behaviour most closely, but any
+OpenRouter model works. Only `ANTHROPIC_API_KEY` **or** `OPENROUTER_API_KEY` is
+required — whichever matches `LLM_PROVIDER`.
 
 ---
 
@@ -101,11 +123,14 @@ runtime.
 | Var | Required | Purpose |
 |---|---|---|
 | `DATABASE_URL` | yes | Postgres connection string |
-| `ANTHROPIC_API_KEY` | yes | Claude API key (server-side only) |
+| `LLM_PROVIDER` | no | `anthropic` (default) or `openrouter` |
+| `ANTHROPIC_API_KEY` | if anthropic | Claude API key (server-side only) |
+| `ANTHROPIC_MODEL` | no | Default `claude-sonnet-4-6`; override per account |
+| `OPENROUTER_API_KEY` | if openrouter | OpenRouter key (server-side only) |
+| `OPENROUTER_MODEL` | no | Default `anthropic/claude-sonnet-4.5`; any [slug](https://openrouter.ai/models) |
 | `JWT_SECRET` | yes | Signs the admin session cookie (≥16 chars) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | yes | Seeded admin account (bcrypt-hashed) |
 | `PUBLIC_BASE_URL` | prod | Origin used to build report links for delivery |
-| `ANTHROPIC_MODEL` | no | Default `claude-sonnet-4-5`; override per account |
 | `COOKIE_SECURE` | no | `true` in prod; `false` for local http |
 | `DELIVERY_PROVIDER` | no | `console` (default) or `telegram` |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_USERNAME` | if telegram | Bot credentials |

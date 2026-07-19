@@ -60,7 +60,7 @@ router.post(
     const goal = v.optStr(b.goal, 300);
     const notes = v.optStr(b.notes, 500);
 
-    const model = config.anthropic.model;
+    const model = claude.activeModel();
     const promptVersion = prompt.promptVersion();
     const token = sessionToken();
     const { child, session } = await repo.createChildAndSession({
@@ -81,7 +81,7 @@ router.post(
       const history = await repo.getMessages(session.id);
       const out = await claude.complete({
         system: prompt.systemPrompt(), model,
-        maxTokens: config.anthropic.conversationMaxTokens, messages: history,
+        maxTokens: config.llm.conversationMaxTokens, messages: history,
       });
       await repo.addMessage(session.id, 'assistant', out.text, false);
       const updated = await repo.applyTurn(session.id, {
@@ -152,7 +152,7 @@ router.post(
     const history = await repo.getMessages(session.id);
     const out = await claude.complete({
       system: prompt.systemPrompt(), model: session.model,
-      maxTokens: config.anthropic.conversationMaxTokens, messages: history,
+      maxTokens: config.llm.conversationMaxTokens, messages: history,
     });
     await repo.addMessage(session.id, 'assistant', out.text, false);
     const updated = await repo.applyTurn(session.id, {
@@ -249,7 +249,7 @@ router.post(
     const history = await repo.getMessages(session.id);
     const out = await claude.complete({
       system: prompt.systemPrompt(), model: session.model,
-      maxTokens: config.anthropic.reportMaxTokens, messages: history,
+      maxTokens: config.llm.reportMaxTokens, messages: history,
     });
     await repo.applyTurn(session.id, { inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: false });
 

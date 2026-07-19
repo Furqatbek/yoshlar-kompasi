@@ -27,7 +27,19 @@ const config = {
   // Postgres.
   databaseUrl: process.env.DATABASE_URL || '',
 
-  // Anthropic / Claude.
+  // LLM provider selection. 'anthropic' talks to the Anthropic Messages API
+  // directly; 'openrouter' routes through OpenRouter's OpenAI-compatible API
+  // (useful where direct Anthropic billing is unavailable — e.g. cards that the
+  // Anthropic API Console rejects). The rest of the app is provider-agnostic:
+  // both paths return { text, inputTokens, outputTokens } (see services/claude.js).
+  llm: {
+    provider: (process.env.LLM_PROVIDER || 'anthropic').toLowerCase(), // anthropic | openrouter
+    // Shared generation budgets, applied regardless of provider.
+    conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
+    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 3000),
+  },
+
+  // Anthropic / Claude (used when LLM_PROVIDER=anthropic).
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY || '',
     baseUrl: (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, ''),
@@ -38,6 +50,19 @@ const config = {
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
     reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 3000),
     timeoutMs: int(process.env.ANTHROPIC_TIMEOUT_MS, 60000),
+  },
+
+  // OpenRouter (used when LLM_PROVIDER=openrouter). OpenAI-compatible chat API.
+  // Pick a model slug from https://openrouter.ai/models — the prompt is tuned
+  // for Claude, so an anthropic/* slug behaves closest to the direct path.
+  openrouter: {
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+    baseUrl: (process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, ''),
+    model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.5',
+    // Optional attribution headers OpenRouter shows on your dashboard/rankings.
+    siteUrl: process.env.OPENROUTER_SITE_URL || (process.env.PUBLIC_BASE_URL || ''),
+    siteName: process.env.OPENROUTER_SITE_NAME || 'Yoshlar Kompasi',
+    timeoutMs: int(process.env.OPENROUTER_TIMEOUT_MS, int(process.env.ANTHROPIC_TIMEOUT_MS, 60000)),
   },
 
   // Assessment caps (spec §4/§6).
@@ -86,7 +111,12 @@ const config = {
 function assertProdConfig() {
   const missing = [];
   if (!config.databaseUrl) missing.push('DATABASE_URL');
-  if (!config.anthropic.apiKey) missing.push('ANTHROPIC_API_KEY');
+  // Only the active provider's credentials are required.
+  if (config.llm.provider === 'openrouter') {
+    if (!config.openrouter.apiKey) missing.push('OPENROUTER_API_KEY (required when LLM_PROVIDER=openrouter)');
+  } else {
+    if (!config.anthropic.apiKey) missing.push('ANTHROPIC_API_KEY');
+  }
   if (!config.admin.jwtSecret || config.admin.jwtSecret.length < 16) missing.push('JWT_SECRET (>=16 chars)');
   // Report/resume links are built from this in prod; without it we would fall
   // back to the (spoofable) Host header when generating delivered links.
