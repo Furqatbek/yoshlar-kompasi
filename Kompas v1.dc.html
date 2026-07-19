@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="_ds/modernist-68c12c76-ab8b-42f5-b3b2-4816b63c0677/styles.css">
+<script src="_ds/modernist-68c12c76-ab8b-42f5-b3b2-4816b63c0677/_ds_bundle.js"></script>
+<style>
+body { margin: 0; background: var(--color-bg); }
+a { color: var(--color-accent-700); }
+a:hover { color: var(--color-accent-600); }
+input, textarea, button { font-family: var(--font-body); }
+@keyframes yikBlink { 0%, 80%, 100% { opacity: 0.15; } 40% { opacity: 1; } }
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  #yik-report { max-width: none !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
+}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-direction: column; background: var(--color-bg); color: var(--color-text);">
+
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+<nav class="nav no-print" style="position: sticky; top: 0; z-index: 40; background: var(--color-bg);">
+  <a href="#/" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center; gap: 8px;"><span style="width: 12px; height: 12px; background: var(--color-accent); display: inline-block;"></span><span class="nav-brand">{{ brand }}</span></a>
+  <a href="#/haqida">Metodika</a>
+  <a href="#/maxfiylik">Maxfiylik</a>
+  <span style="flex: 1;"></span>
+  <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none;">Boshlash</a>
+</nav>
+</sc-if>
+
+<sc-if value="{{ resumeAvail }}" hint-placeholder-val="{{ false }}">
+<div class="no-print" style="background: var(--color-accent-100); border-bottom: 2px solid var(--color-divider);">
+  <div style="max-width: 1060px; margin: 0 auto; padding: var(--space-3) var(--space-4); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
+    <span style="font-weight: 600;">{{ resumeName }} bilan mashg'ulot yakunlanmagan — davom ettirasizmi?</span>
+    <span style="flex: 1;"></span>
+    <button type="button" class="btn btn-primary" onClick="{{ resumeGo }}">Davom etish</button>
+    <button type="button" class="btn btn-ghost" onClick="{{ resetAll }}">Yangi mashg'ulot</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+<main style="flex: 1;">
+  <section style="max-width: 1060px; margin: 0 auto; padding: var(--space-8) var(--space-4) var(--space-8);">
+    <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-3);">1–4-sinf o'quvchilari uchun · ota-onalar va o'qituvchilarga</h6>
+    <h1 style="font-size: clamp(34px, 4.6vw, 58px); max-width: 21ch; margin-bottom: var(--space-4); text-wrap: pretty;">30 daqiqada — farzandingizning kuchli tomonlari, o'quv yo'l xaritasi va mos sport tavsiyalari.</h1>
+    <p style="max-width: 58ch; font-size: 17px; margin-bottom: var(--space-6);">Savollarni siz ovoz chiqarib o'qib berasiz, javoblarni siz yozasiz — bola telefonni ushlamaydi. Yakunda bitta aniq hujjat olasiz.</p>
+    <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+      <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none; font-size: 16px; padding: 12px 20px;">Boshlash</a>
+      <a class="btn btn-ghost" href="#/haqida" style="text-decoration: none; font-size: 16px; padding: 12px 20px;">Metodika bilan tanishish</a>
+    </div>
+  </section>
+
+  <section style="max-width: 1060px; margin: 0 auto; padding: 0 var(--space-4) var(--space-8);">
+    <div style="height: 2px; background: var(--color-divider); margin-bottom: var(--space-6);"></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6);">
+      <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
+        <h6 style="margin-bottom: var(--space-2);">01</h6>
+        <h4 style="margin-bottom: var(--space-2);">Savolni o'qib berasiz</h4>
+        <p class="text-muted" style="margin: 0;">Ilova savollarni katta kartochkalarda beradi — siz ularni bolaga ovoz chiqarib o'qib berasiz.</p>
+      </div>
+      <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
+        <h6 style="margin-bottom: var(--space-2);">02</h6>
+        <h4 style="margin-bottom: var(--space-2);">Javobni yozasiz</h4>
+        <p class="text-muted" style="margin: 0;">Bolaning javobini o'z so'zlari bilan yozib borasiz. Tayyor tugmalar ham bor: o'tkazib yuborish, soddaroq savol so'rash.</p>
+      </div>
+      <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
+        <h6 style="margin-bottom: var(--space-2);">03</h6>
+        <h4 style="margin-bottom: var(--space-2);">Hisobot olasiz</h4>
+        <p class="text-muted" style="margin: 0;">Uch yo'nalish bo'yicha surat, 3–6 oylik yo'l xaritasi va 2–3 ta sport tavsiyasi — chop etish mumkin.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1060px; margin: 0 auto; padding: 0 var(--space-4) var(--space-8);">
+    <div style="height: 2px; background: var(--color-divider); margin-bottom: var(--space-6);"></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6); align-items: start;">
+      <div>
+        <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">Natija</h6>
+        <h2 style="max-width: 16ch;">Yakunda — bitta aniq hujjat</h2>
+        <p class="text-muted" style="max-width: 44ch;">Har bir mashg'ulot bolaning hozirgi holati surati, maqsad sari yo'l xaritasi va asoslangan sport tavsiyalari bilan tugaydi. Chop etib, muzlatgichga osib qo'ysa bo'ladi.</p>
+      </div>
+      <div class="elev-md" style="background: var(--color-neutral-100); border: 2px solid var(--color-divider); padding: var(--space-4);">
+        <div style="display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;">
+          <span class="tag tag-accent">Namuna</span>
+          <span style="font-family: var(--font-heading); font-weight: 800; font-size: 17px;">Ali · 2-sinf</span>
+        </div>
+        <div style="height: 2px; background: var(--color-divider); margin: var(--space-3) 0;"></div>
+        <h6 style="margin-bottom: var(--space-1);">Surat</h6>
+        <p style="font-size: 14px; margin-bottom: var(--space-3);">Qonuniyatlarni tez ilg'aydi · xatodan keyin ham urinadi · jamoada o'ynashni yaxshi ko'radi</p>
+        <h6 style="margin-bottom: var(--space-1);">Hozirgi o'rni</h6>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-3); font-size: 14px;">
+          <div style="display: flex; justify-content: space-between; gap: var(--space-2); border-top: 1px solid var(--color-divider); padding-top: 6px;"><span>Mantiq va tafakkur</span><span class="tag tag-accent">Kuchli</span></div>
+          <div style="display: flex; justify-content: space-between; gap: var(--space-2); border-top: 1px solid var(--color-divider); padding-top: 6px;"><span>Psixologiya va qiziqishlar</span><span class="tag tag-neutral">Me'yorda</span></div>
+          <div style="display: flex; justify-content: space-between; gap: var(--space-2); border-top: 1px solid var(--color-divider); padding-top: 6px;"><span>Tana va harakat</span><span class="tag tag-outline">Me'yorda</span></div>
+        </div>
+        <h6 style="margin-bottom: var(--space-1);">Tavsiya etilgan sport</h6>
+        <p style="font-size: 14px; margin-bottom: var(--space-3);">Futbol — g'ayrati baland va jamoaviy o'yinni yaxshi ko'rgani uchun</p>
+        <div style="background: var(--color-accent); color: var(--color-neutral-100); padding: var(--space-3);">
+          <div style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; margin-bottom: 4px;">Ali uchun xat</div>
+          <div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px;">«Ali, sen qiyin savollardan qo'rqmaysan — bu katta kuch!»</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1060px; margin: 0 auto; padding: 0 var(--space-4) var(--space-8);">
+    <div style="height: 2px; background: var(--color-divider); margin-bottom: var(--space-6);"></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6);">
+      <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-2);"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
+        <h4 style="margin-bottom: var(--space-2);">Bu tashxis emas</h4>
+        <p class="text-muted" style="margin: 0;">Yo'l-yo'riq vositasi: yorliq yopishtirmaydi, kelajakni bashorat qilmaydi. Qobiliyatlar mashq bilan o'sadi.</p>
+      </div>
+      <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-2);"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <h4 style="margin-bottom: var(--space-2);">Faqat ism so'raladi</h4>
+        <p class="text-muted" style="margin: 0;">Familiya, surat, manzil yoki hujjatlar hech qachon so'ralmaydi. Ma'lumot faqat brauzeringizda saqlanadi.</p>
+      </div>
+      <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-2);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <h4 style="margin-bottom: var(--space-2);">Kattalar olib boradi</h4>
+        <p class="text-muted" style="margin: 0;">Mashg'ulotni ota-ona yoki o'qituvchi boshqaradi — bola qurilmani ushlamaydi.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: var(--color-accent);">
+    <div style="max-width: 1060px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
+      <h2 style="color: var(--color-neutral-100); font-size: clamp(30px, 4vw, 48px); max-width: 18ch; margin-bottom: var(--space-3);">Bugun 30 daqiqa ajrating.</h2>
+      <p style="color: var(--color-accent-100); max-width: 46ch; margin-bottom: var(--space-6); font-size: 17px;">Bolangiz nimada kuchli — bugun bilib oling. Kerak bo'ladigani: tinch joy, telefon va bolaning kayfiyati.</p>
+      <a class="btn" href="#/boshlash" style="text-decoration: none; background: var(--color-neutral-100); color: var(--color-accent-700); font-size: 16px; padding: 12px 20px;">Boshlash</a>
+    </div>
+  </section>
+</main>
+</sc-if>
+
+<sc-if value="{{ isSetup }}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1;">
+  <div style="max-width: 680px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
+    <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">1-qadam / 2</h6>
+    <h1 style="font-size: clamp(30px, 4vw, 44px); margin-bottom: var(--space-2);">Mashg'ulotga tayyorgarlik</h1>
+    <p class="text-muted" style="max-width: 52ch; margin-bottom: var(--space-6);">Bola haqida bir necha ma'lumot — savollar sinfiga moslashadi. Hammasi faqat shu qurilmada qoladi.</p>
+
+    <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+      <div class="field">
+        <label for="yik-name">Bolaning ismi yoki taxallusi *</label>
+        <input class="input" id="yik-name" placeholder="Masalan: Ali" value="{{ nameVal }}" onChange="{{ onName }}">
+        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Faqat ism — familiya kerak emas</span>
+      </div>
+      <div class="field">
+        <label>Sinfi *</label>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2);">
+          <sc-for list="{{ gradeOpts }}" as="g" hint-placeholder-count="4">
+            <button type="button" class="{{ g.cls }}" onClick="{{ g.pick }}" style="padding: 14px 8px; font-size: 16px; justify-content: flex-start;">{{ g.label }}</button>
+          </sc-for>
+        </div>
+        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">1–2-sinf — A guruh savollari (~6–8 yosh), 3–4-sinf — B guruh (~8–11 yosh)</span>
+      </div>
+      <div class="field" style="max-width: 200px;">
+        <label for="yik-age">Yoshi (ixtiyoriy)</label>
+        <input class="input" id="yik-age" type="number" min="6" max="11" placeholder="6–11" value="{{ ageVal }}" onChange="{{ onAge }}">
+      </div>
+      <div class="field">
+        <label for="yik-goal">Maqsad yoki orzu (ixtiyoriy)</label>
+        <input class="input" id="yik-goal" placeholder="Masalan: matematikada kuchli bo'lish, futbolchi bo'lish…" value="{{ goalVal }}" onChange="{{ onGoal }}">
+      </div>
+      <div class="field">
+        <label for="yik-notes">Qo'shimcha izoh (ixtiyoriy)</label>
+        <textarea class="input" id="yik-notes" rows="2" placeholder="Sog'liq cheklovlari, uyatchanlik yoki bilish muhim bo'lgan boshqa narsalar" value="{{ notesVal }}" onChange="{{ onNotes }}"></textarea>
+      </div>
+      <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px; max-width: 60ch;">
+        <input type="checkbox" checked="{{ consentVal }}" onChange="{{ onConsent }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
+        <span>Men bolaning ota-onasi yoki o'qituvchisiman, 18 yoshdan kattaman va <a href="#/maxfiylik">maxfiylik siyosatiga</a> roziman. *</span>
+      </label>
+      <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+        <div style="color: var(--color-accent-700); font-weight: 600; font-size: 14px;">{{ formError }}</div>
+      </sc-if>
+      <sc-if value="{{ notPrepared }}" hint-placeholder-val="{{ true }}">
+        <div><button type="button" class="btn btn-primary" onClick="{{ submitForm }}" style="font-size: 16px; padding: 12px 20px;">Davom etish</button></div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ prepared }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top: var(--space-6); border-top: 2px solid var(--color-divider); padding-top: var(--space-6);">
+        <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">2-qadam / 2</h6>
+        <h3 style="margin-bottom: var(--space-4);">Boshlashdan oldin</h3>
+        <div style="display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-6);">
+          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Tinch joy tanlang — televizor va o'yinchoqlardan uzoqroq.</span></div>
+          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Bola yoningizda va dam olgan bo'lsin.</span></div>
+          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Taxminan 30 daqiqa ajrating — istalgan payt tanaffus qilish mumkin.</span></div>
+          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Savollarni bolaga ovoz chiqarib o'qib berasiz, javobini yozasiz.</span></div>
+        </div>
+        <button type="button" class="btn btn-primary" onClick="{{ startSession }}" style="font-size: 16px; padding: 12px 20px;">Mashg'ulotni boshlash</button>
+      </div>
+    </sc-if>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ isSession }}" hint-placeholder-val="{{ false }}">
+<div style="flex: 1; display: flex; flex-direction: column;">
+  <header class="no-print" style="position: sticky; top: 0; z-index: 40; background: var(--color-bg); border-bottom: 2px solid var(--color-divider);">
+    <div style="max-width: 880px; margin: 0 auto; padding: var(--space-3) var(--space-4); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
+      <div style="min-width: 90px;">
+        <div style="font-family: var(--font-heading); font-weight: 800; font-size: 16px; line-height: 1.1;">{{ childName }}</div>
+        <div class="text-muted" style="font-size: 12px;">{{ gradeLabel }}</div>
+      </div>
+      <div style="display: flex; gap: var(--space-1); flex-wrap: wrap;">
+        <span class="{{ chipMantiq }}">Mantiq</span>
+        <span class="{{ chipPsix }}">Psixologiya</span>
+        <span class="{{ chipHarakat }}">Harakat</span>
+      </div>
+      <span style="flex: 1;"></span>
+      <button type="button" class="btn btn-ghost" onClick="{{ pauseNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>Tanaffus</button>
+      <button type="button" class="btn btn-secondary" onClick="{{ askFinish }}">Yakunlash</button>
+    </div>
+  </header>
+
+  <main style="flex: 1;">
+    <div style="max-width: 880px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8); display: flex; flex-direction: column; gap: var(--space-6);">
+      <sc-if value="{{ sessionEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="border: 2px solid var(--color-divider); padding: var(--space-6);">
+          <h4 style="margin-bottom: var(--space-2);">Mashg'ulot hali boshlanmagan</h4>
+          <p class="text-muted">Avval bola haqidagi qisqa formani to'ldiring.</p>
+          <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none;">Tayyorgarlikka o'tish</a>
+        </div>
+      </sc-if>
+      <sc-for list="{{ chat }}" as="msg" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column;">
+          <sc-if value="{{ msg.u }}" hint-placeholder-val="{{ false }}">
+            <div style="align-self: flex-end; max-width: min(560px, 88%); background: var(--color-neutral-200); border: 1px solid var(--color-divider); padding: var(--space-3) var(--space-4);">
+              <div class="text-muted" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px;">Javob</div>
+              <div style="white-space: pre-wrap;">{{ msg.text }}</div>
+            </div>
+            <sc-if value="{{ msg.failed }}" hint-placeholder-val="{{ false }}">
+              <div style="align-self: flex-end; display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); flex-wrap: wrap;">
+                <span style="color: var(--color-accent-700); font-size: 13px; font-weight: 600;">Xabar yuborilmadi. {{ apiError }}</span>
+                <button type="button" class="btn btn-secondary" onClick="{{ retry }}" style="font-size: 12px; padding: 4px 10px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Qayta yuborish</button>
+              </div>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ msg.a }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: var(--space-3); max-width: 720px;">
+              <sc-for list="{{ msg.blocks }}" as="b" hint-placeholder-count="1">
+                <div>
+                  <sc-if value="{{ b.q }}" hint-placeholder-val="{{ false }}">
+                    <div style="background: var(--color-accent-100); border: 1px solid var(--color-accent-300); padding: var(--space-4);">
+                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-2); color: var(--color-accent-700);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><path d="M16 9a5 5 0 0 1 0 6"></path><path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path></svg>
+                        <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;">Bolaga o'qib bering</span>
+                      </div>
+                      <div style="font-size: 19px; line-height: 1.5; white-space: pre-wrap;">{{ b.text }}</div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ b.adult }}" hint-placeholder-val="{{ false }}">
+                    <div class="text-muted" style="white-space: pre-wrap; max-width: 65ch;">{{ b.text }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ sending }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; gap: 5px; align-items: center; padding: var(--space-2) 0;">
+          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0s;"></span>
+          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.2s;"></span>
+          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.4s;"></span>
+        </div>
+      </sc-if>
+    </div>
+  </main>
+
+  <div class="no-print" style="position: sticky; bottom: 0; background: var(--color-bg); border-top: 2px solid var(--color-divider);">
+    <div style="max-width: 880px; margin: 0 auto; padding: var(--space-3) var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);">
+      <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;">
+        <button type="button" class="tag tag-outline" onClick="{{ chipCant }}" style="cursor: pointer;">Javob berolmadi</button>
+        <button type="button" class="tag tag-outline" onClick="{{ chipSkip }}" style="cursor: pointer;">O'tkazib yuborish</button>
+        <button type="button" class="tag tag-outline" onClick="{{ chipEasier }}" style="cursor: pointer;">Soddaroq savol bering</button>
+        <button type="button" class="tag tag-outline" onClick="{{ pauseNow }}" style="cursor: pointer;">Tanaffus</button>
+      </div>
+      <div style="display: flex; gap: var(--space-2);">
+        <input class="input" style="flex: 1; font-size: 16px;" placeholder="Bolaning javobini yozing…" value="{{ draftVal }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}">
+        <button type="button" class="btn btn-primary" onClick="{{ sendNow }}" disabled="{{ sendDisabled }}" style="padding: 10px 16px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path><path d="M22 2 11 13"></path></svg>Yuborish</button>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-text) 55%, transparent);">
+      <div class="dialog elev-lg" style="background: var(--color-bg); border: 2px solid var(--color-text); padding: var(--space-6); max-width: 420px; margin: var(--space-4);">
+        <h3 class="dialog-title" style="margin-bottom: var(--space-2);">Tanaffus</h3>
+        <p class="dialog-body text-muted" style="margin-bottom: var(--space-4);">Mashg'ulot to'xtatildi, holat saqlangan. Bola dam olsin — shoshilish shart emas.</p>
+        <button type="button" class="btn btn-primary" onClick="{{ resumeNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>Davom etish</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ finishConfirm }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-text) 55%, transparent);">
+      <div class="dialog elev-lg" style="background: var(--color-bg); border: 2px solid var(--color-text); padding: var(--space-6); max-width: 440px; margin: var(--space-4);">
+        <h3 class="dialog-title" style="margin-bottom: var(--space-2);">Hozir yakunlaymizmi?</h3>
+        <p class="dialog-body text-muted" style="margin-bottom: var(--space-4);">Hamma yo'nalishlar hali qamrab olinmadi. Hisobot qisman ma'lumot asosida tuziladi. Davom etamizmi?</p>
+        <div class="dialog-actions" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" onClick="{{ confirmFinish }}">Ha, hisobot olish</button>
+          <button type="button" class="btn btn-ghost" onClick="{{ cancelFinish }}">Ortga</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ generating }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; z-index: 70; background: var(--color-bg); display: flex; align-items: center; justify-content: center;">
+      <div style="text-align: left; max-width: 420px; padding: var(--space-4);">
+        <div style="display: flex; gap: 6px; margin-bottom: var(--space-4);">
+          <span style="width: 14px; height: 14px; background: var(--color-accent); animation: yikBlink 1.4s infinite 0s;"></span>
+          <span style="width: 14px; height: 14px; background: var(--color-accent); animation: yikBlink 1.4s infinite 0.25s;"></span>
+          <span style="width: 14px; height: 14px; background: var(--color-accent); animation: yikBlink 1.4s infinite 0.5s;"></span>
+        </div>
+        <h3 style="margin-bottom: var(--space-2);">{{ childName }}ning hisoboti tayyorlanmoqda…</h3>
+        <p class="text-muted">Odatda 10–30 soniya. Sahifani yopmang.</p>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1;">
+  <div style="max-width: 900px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);">
+    <sc-if value="{{ reportEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 2px solid var(--color-divider); padding: var(--space-6);">
+        <h4 style="margin-bottom: var(--space-2);">Hisobot hali yo'q</h4>
+        <p class="text-muted">Hisobot mashg'ulot yakunlangach shu yerda paydo bo'ladi.</p>
+        <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none;">Mashg'ulotni boshlash</a>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasReport }}" hint-placeholder-val="{{ false }}">
+      <div class="no-print" style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4);">
+        <button type="button" class="btn btn-primary" onClick="{{ printNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 9V2h12v7"></path><rect x="6" y="14" width="12" height="8"></rect></svg>PDF yuklab olish</button>
+        <button type="button" class="btn btn-secondary" onClick="{{ resetAll }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Yangi mashg'ulot</button>
+      </div>
+      <div id="yik-report" class="elev-md" style="background: var(--color-neutral-100); border: 2px solid var(--color-divider); padding: clamp(20px, 5vw, 48px);">
+        <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">{{ brand }} · Hisobot</h6>
+        <h1 style="font-size: clamp(32px, 4.5vw, 48px); margin-bottom: var(--space-2);">{{ childName }}</h1>
+        <div style="display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-4);">
+          <span class="tag tag-neutral">{{ gradeLabel }}</span>
+          <span class="text-muted" style="font-size: 13px;">{{ reportDate }}</span>
+          <sc-if value="{{ reportPartial }}" hint-placeholder-val="{{ false }}"><span class="tag tag-outline">Qisman ma'lumot asosida</span></sc-if>
+        </div>
+        <sc-if value="{{ repIntro }}" hint-placeholder-val="{{ false }}"><p class="text-muted" style="max-width: 65ch;">{{ repIntro }}</p></sc-if>
+
+        <sc-if value="{{ strengthsHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Surat</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-3);">
+            <sc-for list="{{ strengths }}" as="it" hint-placeholder-count="3">
+              <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-2);">
+                <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 4px;">{{ it.main }}</div>
+                <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px;">{{ it.sub }}</div></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ levelsHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Hozirgi o'rni</h3>
+          <div style="display: flex; flex-direction: column;">
+            <sc-for list="{{ levels }}" as="lv" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: minmax(150px, 220px) auto 1fr; gap: var(--space-3); align-items: start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+                <div style="font-family: var(--font-heading); font-weight: 800;">{{ lv.name }}</div>
+                <span class="{{ lv.cls }}" style="justify-self: start;">{{ lv.level }}</span>
+                <div class="text-muted" style="font-size: 14px;">{{ lv.text }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ roadmapHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Maqsad va yo'l xaritasi</h3>
+          <sc-if value="{{ goal }}" hint-placeholder-val="{{ false }}"><p style="max-width: 65ch; font-weight: 600;">{{ goal }}</p></sc-if>
+          <div style="display: flex; flex-direction: column;">
+            <sc-for list="{{ milestones }}" as="ms" hint-placeholder-count="3">
+              <div style="display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-divider);">
+                <div style="width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-text); color: var(--color-neutral-100); font-family: var(--font-heading); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;">{{ ms.n }}</div>
+                <div style="align-self: center;">{{ ms.t }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ learnHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Nimani o'rganish va mashq qilish</h3>
+          <div style="display: flex; flex-direction: column;">
+            <sc-for list="{{ learn }}" as="it" hint-placeholder-count="3">
+              <div style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+                <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 2px;">{{ it.main }}</div>
+                <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px; max-width: 65ch;">{{ it.sub }}</div></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ sportsHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Tavsiya etilgan sport va mashg'ulotlar</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3);">
+            <sc-for list="{{ sports }}" as="sp" hint-placeholder-count="3">
+              <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
+                <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">0{{ sp.n }} · Sinab ko'ring</h6>
+                <h4 style="margin-bottom: var(--space-2);">{{ sp.main }}</h4>
+                <p class="text-muted" style="font-size: 14px; margin: 0;">{{ sp.sub }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ letterHas }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: var(--space-6); background: var(--color-accent); color: var(--color-neutral-100); padding: clamp(20px, 4vw, 40px);">
+            <h6 style="color: var(--color-accent-200); margin-bottom: var(--space-3);">{{ childName }} uchun xat · ovoz chiqarib o'qib bering</h6>
+            <sc-for list="{{ letter }}" as="par" hint-placeholder-count="2">
+              <p style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.4vw, 26px); line-height: 1.35; margin: 0 0 var(--space-3); max-width: 30ch;">{{ par.t }}</p>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ adultsHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Kattalar uchun</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+            <sc-for list="{{ adults }}" as="it" hint-placeholder-count="3">
+              <div style="display: flex; gap: 10px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-for list="{{ extra }}" as="sec" hint-placeholder-count="0">
+          <div>
+            <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+            <h3 style="margin-bottom: var(--space-3);">{{ sec.title }}</h3>
+            <sc-for list="{{ sec.paras }}" as="p" hint-placeholder-count="1"><p style="max-width: 65ch; white-space: pre-wrap;">{{ p.t }}</p></sc-for>
+          </div>
+        </sc-for>
+
+        <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-3);"></div>
+        <p class="text-muted" style="font-size: 13px; margin: 0;">Bu hisobot tashxis emas, yo'l-yo'riq vositasi. Qobiliyatlar mashq bilan o'sadi.</p>
+      </div>
+    </sc-if>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ isPrivacy }}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1;">
+  <div style="max-width: 720px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
+    <h1 style="margin-bottom: var(--space-3);">Maxfiylik siyosati</h1>
+    <p class="text-muted" style="max-width: 58ch; margin-bottom: var(--space-6);">Biz bolalar haqidagi ma'lumot bilan ishlaymiz — shuning uchun qoidalar qisqa va qat'iy.</p>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Nima yig'iladi</h4>
+      <p style="margin: 0; max-width: 60ch;">Faqat mashg'ulot uchun zarur ma'lumot: bolaning ismi yoki taxallusi, sinfi, ixtiyoriy yoshi va maqsadi hamda siz yozib borgan javoblar.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Qayerga boradi</h4>
+      <p style="margin: 0; max-width: 60ch;">Savollar tuzish va hisobot tayyorlash uchun yozganlaringiz Claude sun'iy intellekt xizmatiga (Anthropic API) yuboriladi. Ma'lumot reklama yoki boshqa maqsadlarda ishlatilmaydi.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Qancha saqlanadi</h4>
+      <p style="margin: 0; max-width: 60ch;">Hisobot tayyor bo'lgach, serverda hech narsa saqlanmaydi. Mashg'ulot holati faqat sizning brauzeringizda (shu qurilmada) turadi — «Yangi mashg'ulot» tugmasi uni butunlay o'chiradi.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Hech qachon so'ralmaydi</h4>
+      <div style="display: flex; flex-direction: column; gap: var(--space-2); max-width: 60ch;">
+        <div style="display: flex; gap: 10px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span>Familiya, manzil yoki maktab raqami</span></div>
+        <div style="display: flex; gap: 10px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span>Surat yoki hujjatlar</span></div>
+        <div style="display: flex; gap: 10px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span>Bolaning aloqa ma'lumotlari</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1;">
+  <div style="max-width: 860px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
+    <h1 style="margin-bottom: var(--space-3);">Metodika</h1>
+    <p class="text-muted" style="max-width: 58ch; margin-bottom: var(--space-6);">Mashg'ulot bolani uch yo'nalishda kuzatishga asoslangan. Savollar tayyor bankdan olinadi va sinfga hamda bolaning javoblariga moslashadi.</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8);">
+      <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
+        <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">01</h6>
+        <h4 style="margin-bottom: var(--space-2);">Mantiq va tafakkur</h4>
+        <p class="text-muted" style="font-size: 14px; margin: 0;">Qonuniyatlar, arifmetik mulohaza, fazoviy boshqotirmalar, xotira o'yinlari, og'zaki topishmoqlar.</p>
+      </div>
+      <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
+        <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">02</h6>
+        <h4 style="margin-bottom: var(--space-2);">Psixologiya va qiziqishlar</h4>
+        <p class="text-muted" style="font-size: 14px; margin: 0;">Qiziquvchanlik, qat'iyat, xatolarga munosabat, jamoa yoki yakka o'yin, his-tuyg'ular. To'g'ri javob yo'q — suhbat bor.</p>
+      </div>
+      <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
+        <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">03</h6>
+        <h4 style="margin-bottom: var(--space-2);">Tana va harakat</h4>
+        <p class="text-muted" style="font-size: 14px; margin: 0;">G'ayrat darajasi, sevimli o'yinlar, muvozanat, to'p, sakrash, ritm kabi oddiy mini-topshiriqlar.</p>
+      </div>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Bu qanday ishlaydi?</h4>
+      <p style="margin: 0; max-width: 62ch;">Siz savollarni bolaga ovoz chiqarib o'qib berasiz va javoblarini yozib borasiz. 1–2-sinf uchun A guruh, 3–4-sinf uchun B guruh savollari beriladi; ketma-ket juda oson yoki juda qiyin bo'lsa, daraja o'zgaradi. Uch yo'nalish qamrab olingach, yakuniy hisobot tuziladi.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Bu nima EMAS?</h4>
+      <p style="margin: 0; max-width: 62ch;">Tashxis emas, IQ testi emas va kelajakni bashorat qilmaydi. Natija — hozirgi holat surati: nimani qo'llab-quvvatlash va nimani mashq qilish kerakligi haqida yo'l-yo'riq. Bolalar bir-biri bilan solishtirilmaydi.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Kimlar uchun?</h4>
+      <p style="margin: 0; max-width: 62ch;">1–4-sinf (taxminan 6–11 yosh) bolalarining ota-onalari va o'qituvchilari uchun. Mashg'ulotni faqat kattalar olib boradi — bola qurilmani ushlamaydi.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Qancha vaqt oladi?</h4>
+      <p style="margin: 0; max-width: 62ch;">Odatda 20–30 daqiqa. Istalgan payt «Tanaffus» qilish mumkin — holat saqlanadi va keyin davom ettirasiz. Agar bola tashvish yoki qo'rquv belgilarini ko'rsatsa, dastur to'xtab, mutaxassis bilan maslahatlashishni tavsiya qiladi.</p>
+    </div>
+  </div>
+</main>
+</sc-if>
+
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ false }}">
+<footer class="no-print" style="border-top: 2px solid var(--color-divider); margin-top: auto;">
+  <div style="max-width: 1060px; margin: 0 auto; padding: var(--space-6) var(--space-4); display: flex; gap: var(--space-6); flex-wrap: wrap; align-items: flex-start;">
+    <div style="flex: 1; min-width: 220px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: var(--space-2);"><span style="width: 10px; height: 10px; background: var(--color-accent); display: inline-block;"></span><span style="font-family: var(--font-heading); font-weight: 800;">{{ brand }}</span></div>
+      <p class="text-muted" style="font-size: 13px; max-width: 40ch; margin: 0;">Bu hisobot tashxis emas, yo'l-yo'riq vositasi. Qobiliyatlar mashq bilan o'sadi.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-1); font-size: 14px;">
+      <a href="#/haqida">Metodika</a>
+      <a href="#/maxfiylik">Maxfiylik siyosati</a>
+      <a href="#/boshlash">Boshlash</a>
+    </div>
+  </div>
+</footer>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;brandName&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Yosh Iste'dodlar Kompasi&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brend&quot;}, &quot;model&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;claude-sonnet-4-5&quot;, &quot;options&quot;: [&quot;claude-sonnet-4-5&quot;, &quot;claude-haiku-4-5&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;AI&quot;}}">
+class Component extends DCLogic {
+  state = {
+    route: (typeof location !== 'undefined' && location.hash ? location.hash.replace(/^#/, '') : '/') || '/',
+    name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
+    messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
+    status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
+    reportMd: '', reportPartial: false, reportDate: '', resumeName: ''
+  };
+
+  brand() { return this.props.brandName ?? "Yosh Iste'dodlar Kompasi"; }
+  model() { return this.props.model ?? 'claude-sonnet-4-5'; }
+
+  componentDidMount() {
+    this._hash = () => {
+      const r = (location.hash || '#/').replace(/^#/, '') || '/';
+      this.setState({ route: r });
+      if (r !== '/mashgulot') window.scrollTo(0, 0);
+    };
+    window.addEventListener('hashchange', this._hash);
+    import('./kompas-prompt.js').then(m => { this._P = m; }).catch(e => { this._loadErr = String(e); });
+    try {
+      const raw = localStorage.getItem('yik_v1');
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && s.messages && s.messages.length) {
+          this.setState({
+            name: s.name || '', grade: s.grade || 0, age: s.age || '', goal: s.goal || '', notes: s.notes || '',
+            messages: s.messages, progress: s.progress || this.state.progress, status: s.status || 'active',
+            reportMd: s.reportMd || '', reportPartial: !!s.reportPartial, reportDate: s.reportDate || '',
+            paused: s.status === 'paused',
+            resumeName: (s.status === 'active' || s.status === 'paused') ? (s.name || 'Bola') : ''
+          });
+        }
+      }
+    } catch (e) {}
+    document.title = this.brand();
+  }
+  componentWillUnmount() { window.removeEventListener('hashchange', this._hash); }
+  componentDidUpdate() {
+    const n = this.state.messages.length + (this.state.sending ? 1 : 0);
+    if (this.state.route === '/mashgulot' && n !== this._lastN) {
+      this._lastN = n;
+      requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    }
+  }
+
+  save() {
+    const S = this.state;
+    try {
+      localStorage.setItem('yik_v1', JSON.stringify({
+        name: S.name, grade: S.grade, age: S.age, goal: S.goal, notes: S.notes,
+        messages: S.messages, progress: S.progress, status: S.status,
+        reportMd: S.reportMd, reportPartial: S.reportPartial, reportDate: S.reportDate
+      }));
+    } catch (e) {}
+  }
+
+  submitForm() {
+    const S = this.state;
+    if (!S.name.trim()) return this.setState({ formError: "Bolaning ismini yozing — faqat ism kifoya." });
+    if (!S.grade) return this.setState({ formError: 'Sinfni tanlang.' });
+    if (!S.consent) return this.setState({ formError: 'Davom etish uchun rozilik belgisini qo\u2018ying.' });
+    this.setState({ formError: '', prepared: true });
+  }
+
+  startSession() {
+    if (!this._P) { this.setState({ formError: 'Yuklanmoqda — bir soniyadan so\u2018ng qayta bosing.' }); return; }
+    const S = this.state;
+    const intro = { role: 'user', content: this._P.buildIntro({ name: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim() }), meta: true };
+    this._lastN = 0;
+    this.setState({
+      messages: [intro], status: 'active', paused: false, apiError: '', resumeName: '', draft: '',
+      progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false }, reportMd: '', reportPartial: false, reportDate: ''
+    }, () => { this.save(); location.hash = '#/mashgulot'; this.callModel(); });
+  }
+
+  async callModel() {
+    if (this._busy) return; this._busy = true;
+    this.setState({ sending: true, apiError: '' });
+    try {
+      if (!(window.claude && window.claude.complete)) throw new Error("Bu muhitda Claude ulanishi mavjud emas.");
+      if (!this._P) throw new Error('Ko\u2018rsatmalar hali yuklanmadi.');
+      const msgs = this.state.messages.map(m => ({ role: m.role, content: m.content }));
+      const text = await window.claude.complete({ system: this._P.SYSTEM_PROMPT, model: this.model(), max_tokens: 1600, messages: msgs });
+      const prog = { ...this.state.progress };
+      const re = /\[YAKUN:\s*(MANTIQ|PSIXOLOGIYA|HARAKAT)\s*\]/gi; let m;
+      while ((m = re.exec(text))) prog[m[1].toUpperCase()] = true;
+      this.setState({ messages: [...this.state.messages, { role: 'assistant', content: text }], sending: false, progress: prog }, () => this.save());
+    } catch (e) {
+      this.setState({ sending: false, apiError: (e && e.message) ? e.message : 'Tarmoq xatosi' });
+    }
+    this._busy = false;
+  }
+
+  send(text) {
+    const S = this.state;
+    if (S.sending || S.generating || S.paused) return;
+    const t = (text != null ? text : S.draft).trim();
+    if (!t) return;
+    if (S.apiError && S.messages.length && S.messages[S.messages.length - 1].role === 'user') return;
+    this.setState({ messages: [...S.messages, { role: 'user', content: t }], draft: '' }, () => { this.save(); this.callModel(); });
+  }
+
+  retry() {
+    const last = this.state.messages[this.state.messages.length - 1];
+    if (last && last.report) this.generate(true); else this.callModel();
+  }
+
+  askFinish() {
+    const p = this.state.progress;
+    if (p.MANTIQ && p.PSIXOLOGIYA && p.HARAKAT) this.generate(); else this.setState({ finishConfirm: true });
+  }
+
+  async generate(isRetry) {
+    if (this._busy) return; this._busy = true;
+    const S = this.state;
+    const partial = !(S.progress.MANTIQ && S.progress.PSIXOLOGIYA && S.progress.HARAKAT);
+    let msgs = S.messages;
+    const last = msgs[msgs.length - 1];
+    if (!(last && last.report)) {
+      msgs = [...msgs, { role: 'user', content: this._P.buildReportRequest(S.name.trim() || 'Bola', partial), meta: true, report: true }];
+    }
+    this.setState({ finishConfirm: false, generating: true, status: 'generating', apiError: '', messages: msgs }, () => this.save());
+    try {
+      if (!(window.claude && window.claude.complete)) throw new Error("Bu muhitda Claude ulanishi mavjud emas.");
+      const text = await window.claude.complete({ system: this._P.SYSTEM_PROMPT, model: this.model(), max_tokens: 6000, messages: msgs.map(m => ({ role: m.role, content: m.content })) });
+      const d = new Date();
+      const date = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+      this.setState({ reportMd: text, reportPartial: partial, reportDate: date, generating: false, status: 'done', resumeName: '' }, () => { this.save(); location.hash = '#/hisobot'; });
+    } catch (e) {
+      this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + ((e && e.message) || '') }, () => this.save());
+    }
+    this._busy = false;
+  }
+
+  resetAll() {
+    try { localStorage.removeItem('yik_v1'); } catch (e) {}
+    this._lastN = 0;
+    this.setState({
+      name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
+      messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
+      status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
+      reportMd: '', reportPartial: false, reportDate: '', resumeName: ''
+    });
+    location.hash = '#/boshlash';
+  }
+
+  mdClean(s) {
+    return String(s).replace(/\*\*/g, '').replace(/(^|\s)\*(\S[^*]*)\*/g, '$1$2').replace(/^#+\s*/gm, '');
+  }
+
+  parseBlocks(content) {
+    const lines = String(content).split('\n').filter(l => !/^\s*\[YAKUN:/i.test(l));
+    const blocks = []; let cur = null;
+    for (const raw of lines) {
+      const isQ = /^\s*>/.test(raw);
+      const text = isQ ? raw.replace(/^\s*>\s?/, '') : raw;
+      if (isQ) {
+        if (text.trim() === '') { cur = null; continue; }
+        if (cur && cur.q) cur.text += '\n' + text; else { cur = { q: true, text }; blocks.push(cur); }
+      } else if (text.trim() === '') { cur = null; }
+      else {
+        if (cur && !cur.q) cur.text += '\n' + text; else { cur = { q: false, text }; blocks.push(cur); }
+      }
+    }
+    return blocks.map(b => ({ q: b.q, adult: !b.q, text: this.mdClean(b.text).trim() })).filter(b => b.text);
+  }
+
+  items(body) {
+    const out = String(body).split('\n').map(l => l.match(/^\s*(?:[-*]|\d+[.)])\s+(.*)/)).filter(Boolean).map(m => m[1].trim());
+    if (out.length) return out;
+    return String(body).split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+  }
+  boldSplit(s) {
+    const m = s.match(/^\*\*(.+?)\*\*\s*[—–:-]?\s*(.*)$/);
+    const name = m ? this.mdClean(m[1]).trim() : '';
+    const rest = this.mdClean(m ? m[2] : s).trim();
+    return { main: name || rest, sub: name ? rest : '', hasSub: !!(name && rest) };
+  }
+
+  parseReport(md) {
+    const out = { strengths: [], levels: [], goal: '', milestones: [], learn: [], sports: [], letter: [], adults: [], extra: [], intro: '' };
+    if (!md) return out;
+    const parts = String(md).split(/^##\s+/m);
+    out.intro = this.mdClean(parts[0] || '').trim();
+    for (let i = 1; i < parts.length; i++) {
+      const nl = parts[i].indexOf('\n');
+      const title = (nl < 0 ? parts[i] : parts[i].slice(0, nl)).trim();
+      const body = nl < 0 ? '' : parts[i].slice(nl + 1).trim();
+      const t = title.toLowerCase();
+      if (t.indexOf('surat') >= 0) out.strengths = this.items(body).map(s => this.boldSplit(s));
+      else if (t.indexOf('hozirgi') >= 0) {
+        out.levels = this.items(body).map(s => {
+          const lvm = s.match(/Shakllanmoqda|Me.{0,2}yorda|Kuchli/i);
+          const lv = lvm ? lvm[0] : '';
+          const lvNorm = /kuchli/i.test(lv) ? 'Kuchli' : (/shakl/i.test(lv) ? 'Shakllanmoqda' : (lv ? "Me'yorda" : ''));
+          const b = s.match(/^\*\*(.+?)\*\*/);
+          let name = b ? b[1] : s.split(/[—–-]/)[0];
+          let rest = s.replace(/^\*\*.+?\*\*\s*[—–:-]?\s*/, '');
+          if (lv) rest = rest.replace(lv, '').replace(/^\s*(Daraja[:\s]*)?[.,:—–-]?\s*/i, '');
+          const cls = lvNorm === 'Kuchli' ? 'tag tag-accent' : (lvNorm === 'Shakllanmoqda' ? 'tag tag-outline' : 'tag tag-neutral');
+          return { name: this.mdClean(name).trim(), level: lvNorm || '—', cls, text: this.mdClean(rest).trim() };
+        });
+      }
+      else if (t.indexOf('maqsad') >= 0 || t.indexOf('xarita') >= 0) {
+        const its = []; const paras = [];
+        String(body).split('\n').forEach(l => {
+          const m = l.match(/^\s*(?:\d+[.)]|[-*])\s+(.*)/);
+          if (m) its.push(this.mdClean(m[1]).trim()); else if (l.trim()) paras.push(this.mdClean(l.trim()));
+        });
+        out.goal = paras.join(' ');
+        out.milestones = its.map((tt, ix) => ({ n: ix + 1, t: tt }));
+      }
+      else if (t.indexOf("o'rganish") >= 0 || t.indexOf('\u2018rganish') >= 0 || t.indexOf('rganish') >= 0 || t.indexOf('mashq') >= 0) out.learn = this.items(body).map(s => this.boldSplit(s));
+      else if (t.indexOf('sport') >= 0) out.sports = this.items(body).map((s, ix) => { const b = this.boldSplit(s); return { n: ix + 1, main: b.main, sub: b.sub || b.main }; });
+      else if (t.indexOf('xat') >= 0) out.letter = String(body).split(/\n+/).map(l => this.mdClean(l.replace(/^\s*>\s?/, '')).trim()).filter(Boolean).map(tt => ({ t: tt }));
+      else if (t.indexOf('katta') >= 0) out.adults = this.items(body).map(s => ({ t: this.mdClean(s).trim() }));
+      else out.extra.push({ title: this.mdClean(title).trim(), paras: String(body).split(/\n{2,}/).map(p => this.mdClean(p).trim()).filter(Boolean).map(tt => ({ t: tt })) });
+    }
+    return out;
+  }
+
+  renderVals() {
+    const S = this.state;
+    const route = S.route;
+    const isSession = route === '/mashgulot';
+    const rep = (() => {
+      if (this._repSrc !== S.reportMd) { this._rep = this.parseReport(S.reportMd); this._repSrc = S.reportMd; }
+      return this._rep;
+    })();
+    const lastIdx = S.messages.length - 1;
+    const chat = [];
+    S.messages.forEach((m, i) => {
+      if (m.meta) return;
+      if (m.role === 'user') chat.push({ u: true, a: false, text: this.mdClean(m.content), failed: !!S.apiError && i === lastIdx, blocks: [] });
+      else chat.push({ u: false, a: true, text: '', failed: false, blocks: this.parseBlocks(m.content) });
+    });
+    const chipCls = k => S.progress[k] ? 'tag tag-accent' : 'tag tag-outline';
+    const gradeOpts = [1, 2, 3, 4].map(n => ({
+      label: n + '-sinf',
+      cls: S.grade === n ? 'btn btn-primary' : 'btn btn-secondary',
+      pick: () => this.setState({ grade: n, formError: '' })
+    }));
+    return {
+      brand: this.brand(),
+      isLanding: route === '/' || route === '', isSetup: route === '/boshlash', isSession,
+      isReport: route === '/hisobot', isPrivacy: route === '/maxfiylik', isAbout: route === '/haqida',
+      showNav: !isSession,
+      resumeAvail: !!S.resumeName && (route === '/' || route === '' || route === '/boshlash'),
+      resumeName: S.resumeName,
+      resumeGo: () => { this.setState({ resumeName: '', paused: S.status === 'paused' }); location.hash = '#/mashgulot'; },
+      resetAll: () => this.resetAll(),
+      nameVal: S.name, onName: e => this.setState({ name: e.target.value, formError: '' }),
+      ageVal: S.age, onAge: e => this.setState({ age: e.target.value }),
+      goalVal: S.goal, onGoal: e => this.setState({ goal: e.target.value }),
+      notesVal: S.notes, onNotes: e => this.setState({ notes: e.target.value }),
+      consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '' }),
+      gradeOpts, formError: S.formError, prepared: S.prepared, notPrepared: !S.prepared,
+      submitForm: () => this.submitForm(), startSession: () => this.startSession(),
+      childName: S.name.trim() || 'Bola', gradeLabel: S.grade ? S.grade + '-sinf' : '',
+      chipMantiq: chipCls('MANTIQ'), chipPsix: chipCls('PSIXOLOGIYA'), chipHarakat: chipCls('HARAKAT'),
+      sessionEmpty: !S.messages.length,
+      chat, sending: S.sending, apiError: S.apiError,
+      draftVal: S.draft, onDraft: e => this.setState({ draft: e.target.value }),
+      onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+      sendNow: () => this.send(),
+      sendDisabled: S.sending || S.generating || S.paused || !!S.apiError,
+      chipCant: () => this.send('Javob berolmadi'),
+      chipSkip: () => this.send("O'tkazib yuborish"),
+      chipEasier: () => this.send('Soddaroq savol bering'),
+      pauseNow: () => this.setState({ paused: true, status: 'paused' }, () => this.save()),
+      resumeNow: () => this.setState({ paused: false, status: 'active' }, () => this.save()),
+      retry: () => this.retry(),
+      askFinish: () => this.askFinish(),
+      confirmFinish: () => this.generate(),
+      cancelFinish: () => this.setState({ finishConfirm: false }),
+      finishConfirm: S.finishConfirm, paused: S.paused, generating: S.generating,
+      hasReport: !!S.reportMd, reportEmpty: !S.reportMd,
+      reportDate: S.reportDate, reportPartial: S.reportPartial,
+      repIntro: rep.intro, strengths: rep.strengths, strengthsHas: rep.strengths.length > 0,
+      levels: rep.levels, levelsHas: rep.levels.length > 0,
+      goal: rep.goal, milestones: rep.milestones, roadmapHas: !!(rep.goal || rep.milestones.length),
+      learn: rep.learn, learnHas: rep.learn.length > 0,
+      sports: rep.sports, sportsHas: rep.sports.length > 0,
+      letter: rep.letter, letterHas: rep.letter.length > 0,
+      adults: rep.adults, adultsHas: rep.adults.length > 0,
+      extra: rep.extra,
+      printNow: () => window.print()
+    };
+  }
+}
+</script>
+</body>
+</html>
