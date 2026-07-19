@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-yik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yik}
+      POSTGRES_DB: ${POSTGRES_DB:-yik}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-yik} -d ${POSTGRES_DB:-yik}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published by default — the app reaches it over the internal network.
+    # Uncomment to inspect from the host:
+    # ports:
+    #   - "5432:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgres://${POSTGRES_USER:-yik}:${POSTGRES_PASSWORD:-yik}@db:5432/${POSTGRES_DB:-yik}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      DELIVERY_PROVIDER: ${DELIVERY_PROVIDER:-console}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      CONSENT_TEXT_VERSION: ${CONSENT_TEXT_VERSION:-uz-2026-07}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  db_data:
