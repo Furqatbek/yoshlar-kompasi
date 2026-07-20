@@ -46,6 +46,7 @@ production CSP — run `npm run build:web` in `server/` first:
 node test/browser/render-check.js    # app mounts, zero console errors under prod CSP
 node test/browser/start-btn-test.js  # start-button pending state; same-tick double-click fires ONE request
 node test/browser/exit-test.js       # quit-without-report -> resume banner -> resume works
+node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
 ```
 
 ## Stubs

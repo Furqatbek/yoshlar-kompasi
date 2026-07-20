@@ -16,7 +16,7 @@ async function j(path, opts) { const res = await fetch(BASE + path, opts); let d
 
 (async () => {
   // 1. Create a session under OpenRouter (stamps the valid slug).
-  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: 'Stale', grade: 2, age: 7 }) });
+  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ consent: true, nickname: 'Stale', grade: 2, age: 7 }) });
   ok('create session -> 201', r.status === 201, 'status=' + r.status);
   const sid = r.data.session_id, stok = r.data.session_token;
 

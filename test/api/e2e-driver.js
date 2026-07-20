@@ -12,8 +12,12 @@ async function j(path, opts) {
 }
 
 (async () => {
+  // 0. Adult consent is enforced server-side, not only in the UI.
+  let r0 = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: 'NoConsent', grade: 2 }) });
+  ok('POST /api/sessions without consent -> 400 consent_required', r0.status === 400 && r0.data && r0.data.code === 'consent_required', 'status=' + r0.status + ' ' + JSON.stringify(r0.data));
+
   // 1. Create session
-  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: 'Ali', grade: 2, age: 7, goal: 'matematika' }) });
+  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ consent: true, nickname: 'Ali', grade: 2, age: 7, goal: 'matematika' }) });
   ok('POST /api/sessions -> 201', r.status === 201, 'status=' + r.status);
   const sid = r.data.session_id, stok = r.data.session_token;
   ok('  returns session_id + token', !!sid && !!stok);
@@ -116,7 +120,7 @@ async function j(path, opts) {
   ok('GET /admin/export/leads.csv -> 200 csv', csvRes.status === 200 && /Ota-ona/.test(csv) && /Nilufar/.test(csv));
 
   // 20. Parent dedupe: a second child with same phone attaches to same parent
-  let r2 = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: 'Zuhra', grade: 3 }) });
+  let r2 = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ consent: true, nickname: 'Zuhra', grade: 3 }) });
   const sid2 = r2.data.session_id, stok2 = r2.data.session_token;
   await j('/api/sessions/' + stok2 + '/contact', { method: 'POST', headers: { 'content-type': 'application/json', 'x-session-token': stok2 }, body: JSON.stringify({ parent_name: 'Nilufar X', phone: '901234567', marketing_consent: false }) });
   r = await j('/admin/leads', { headers: cookieH });

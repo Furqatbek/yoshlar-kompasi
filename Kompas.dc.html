@@ -1207,10 +1207,16 @@ class Component extends DCLogic {
     // is the reliable double-click latch.
     if (this._busy || this.state.sending) return; this._busy = true;
     const S = this.state;
+    // Re-validate at the moment of starting: the box may have been unchecked
+    // after step 2 was unlocked. The server enforces this too (consent_required).
+    if (!S.consent) {
+      this.setState({ formError: 'Davom etish uchun rozilik belgisini qo‘ying.', prepared: false });
+      this._busy = false; return;
+    }
     this.setState({ formError: '', sending: true });
     try {
       const d = await this.api('/api/sessions', { method: 'POST', body: {
-        nickname: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim()
+        nickname: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim(), consent: true
       } });
       this._stok = d.session_token; this._loadedSession = d.session_token; this._loadedReportToken = null; this._lastN = 0;
       this.saveHandle();
@@ -1609,7 +1615,9 @@ class Component extends DCLogic {
       ageVal: S.age, onAge: e => this.setState({ age: e.target.value }),
       goalVal: S.goal, onGoal: e => this.setState({ goal: e.target.value }),
       notesVal: S.notes, onNotes: e => this.setState({ notes: e.target.value }),
-      consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '' }),
+      // Unchecking the consent box re-locks step 2 — starting requires the
+      // assertion to hold NOW, not to have held once.
+      consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '', prepared: e.target.checked ? S.prepared : false }),
       gradeOpts, formError: S.formError, prepared: S.prepared, notPrepared: !S.prepared,
       starting: S.sending, startLabel: S.sending ? 'Tayyorlanmoqda…' : "Mashg'ulotni boshlash",
       submitForm: () => this.submitForm(), startSession: () => this.startSession(),

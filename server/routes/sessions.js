@@ -54,6 +54,11 @@ router.post(
   newSessionLimiter,
   asyncHandler(async (req, res) => {
     const b = req.body || {};
+    // The adult assertion (parent/teacher, 18+, privacy accepted) is enforced
+    // HERE, not only in the UI — client-side checks can be stale or bypassed.
+    if (b.consent !== true) {
+      throw badRequest('Davom etish uchun rozilik belgisini qo‘ying: siz bolaning ota-onasi yoki o‘qituvchisi ekaningizni tasdiqlashingiz kerak.', 'consent_required');
+    }
     const nickname = v.reqStr(b.nickname, 'Ism', 60);
     const grade = v.grade(b.grade);
     const age = v.optAge(b.age);

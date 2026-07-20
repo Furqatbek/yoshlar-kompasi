@@ -10,7 +10,7 @@ async function j(path, opts) { const r = await fetch(BASE + path, opts); let d =
   const H = (t) => ({ 'content-type': 'application/json', 'x-session-token': t });
 
   // Fresh session
-  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: 'Retrykid', grade: 1 }) });
+  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ consent: true, nickname: 'Retrykid', grade: 1 }) });
   const sid = r.data.session_id, stok = r.data.session_token;
 
   // send a turn

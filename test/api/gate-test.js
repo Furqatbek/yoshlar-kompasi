@@ -12,7 +12,7 @@ const H = { 'content-type': 'application/json' };
   // 1. Create session. The DEFAULT stub emits [YAKUN] markers on the greeting,
   //    so all tracks read "done" while there are STILL zero real answers — the
   //    exact model-controlled bypass the gate must resist.
-  let r = await j('/api/sessions', { method: 'POST', headers: H, body: JSON.stringify({ nickname: 'Ali', grade: 2, age: 7 }) });
+  let r = await j('/api/sessions', { method: 'POST', headers: H, body: JSON.stringify({ consent: true, nickname: 'Ali', grade: 2, age: 7 }) });
   ok('create session -> 201', r.status === 201, 'status=' + r.status);
   const stok = r.data.session_token;
   ok('  tracks marked done by greeting, but 0 real answers', r.data.done === true, JSON.stringify(r.data.progress));

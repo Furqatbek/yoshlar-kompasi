@@ -18,7 +18,7 @@ const H = { 'content-type': 'application/json' };
   console.log('live smoke against', BASE, '(real LLM — this spends credits)\n');
 
   // 1. Real greeting.
-  let r = await j('/api/sessions', { method: 'POST', headers: H, body: JSON.stringify({ nickname: 'Sinov', grade: 2, age: 7 }) });
+  let r = await j('/api/sessions', { method: 'POST', headers: H, body: JSON.stringify({ consent: true, nickname: 'Sinov', grade: 2, age: 7 }) });
   ok('create session -> 201', r.status === 201, 'status=' + r.status + ' ' + JSON.stringify(r.data && r.data.api_error));
   const stok = r.data && r.data.session_token;
   const greeting = ((r.data && r.data.messages) || []).filter((m) => m.role === 'assistant').map((m) => m.content).join('\n');

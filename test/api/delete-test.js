@@ -9,7 +9,7 @@ async function j(path, opts) { const r = await fetch(BASE + path, opts); let d =
 (async () => {
   const H = (t) => ({ 'content-type': 'application/json', 'x-session-token': t });
   // full flow to create a lead + report
-  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: 'Deletme', grade: 2 }) });
+  let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ consent: true, nickname: 'Deletme', grade: 2 }) });
   const sid = r.data.session_id, stok = r.data.session_token;
   await j('/api/sessions/' + stok + '/messages', { method: 'POST', headers: H(stok), body: JSON.stringify({ content: 'a' }) });
   await j('/api/sessions/' + stok + '/contact', { method: 'POST', headers: H(stok), body: JSON.stringify({ parent_name: 'DeleteParent', phone: '977778899', marketing_consent: false }) });
