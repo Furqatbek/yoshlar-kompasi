@@ -221,6 +221,12 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
 
 ## Operations
 
+- **Reverse proxy timeouts:** the final report is one long non-streaming LLM
+  call — commonly 1–3 minutes (`REPORT_TIMEOUT_MS`, default 180000). Any
+  TLS/reverse proxy in front (nginx `proxy_read_timeout`, Caddy
+  `reverse_proxy` transport timeouts, Cloudflare) must allow at least that
+  long on `POST /api/sessions/*/report`, or users will see a proxy timeout
+  even though the server would have finished.
 - **Backups:** `make backup` (nightly via cron recommended); `make restore F=…`.
 - **Retention:** `make purge` on a cron (respects `RETENTION_MONTHS`).
 - **Monitoring:** watch three numbers — sessions finished/day, average tokens

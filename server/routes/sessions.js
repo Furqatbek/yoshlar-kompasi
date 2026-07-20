@@ -263,6 +263,7 @@ router.post(
     const out = await claude.complete({
       system: prompt.systemPrompt(), model: claude.modelFor(session.model),
       maxTokens: config.llm.reportMaxTokens, messages: history,
+      timeoutMs: config.llm.reportTimeoutMs,
     });
     await repo.applyTurn(session.id, { inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: false });
 

@@ -31,8 +31,20 @@ const stub = http.createServer((req, res) => {
   req.on('end', () => {
     let parsed = {}; try { parsed = JSON.parse(body); } catch (_) {}
     lastReq = { method: req.method, url: req.url, headers: req.headers, body: parsed };
-    res.writeHead(next.status, { 'content-type': 'application/json' });
-    res.end(JSON.stringify(next.body != null ? next.body : okBody('Salom!')));
+    const payload = JSON.stringify(next.body != null ? next.body : okBody('Salom!'));
+    const finish = () => {
+      res.writeHead(next.status, { 'content-type': 'application/json' });
+      if (next.bodyDelayMs) {
+        // headers now, body later — simulates a long generation streaming in
+        // after the timeout window (the mid-body abort case).
+        res.write(payload.slice(0, 2));
+        setTimeout(() => res.end(payload.slice(2)), next.bodyDelayMs);
+      } else {
+        res.end(payload);
+      }
+    };
+    if (next.headersDelayMs) setTimeout(finish, next.headersDelayMs);
+    else finish();
   });
 });
 
@@ -214,6 +226,32 @@ async function main() {
     next = { status: 200, body: okBody('haqiqiy javob') };
     const out = await claude.complete({ system: 's', model: 'anthropic/x', maxTokens: 10, messages: [{ role: 'user', content: 'hi' }] });
     ok('valid non-empty completion still passes', out.text === 'haqiqiy javob' && out.inputTokens === 111, JSON.stringify(out));
+  }
+
+  // --- Scenario 8: timeouts surface as clean retryable errors ------------
+  {
+    const { claude } = loadWith({ LLM_PROVIDER: 'openrouter', OPENROUTER_API_KEY: 'k', OPENROUTER_BASE_URL: BASE });
+    const msg = [{ role: 'user', content: 'hi' }];
+
+    // (a) fetch-phase timeout: headers arrive later than the per-call budget.
+    next = { status: 200, body: null, headersDelayMs: 700 };
+    let e1 = null;
+    try { await claude.complete({ system: 's', model: 'a/b', maxTokens: 10, messages: msg, timeoutMs: 200 }); } catch (err) { e1 = err; }
+    ok('fetch-phase timeout -> ClaudeError (not raw abort)', e1 && e1.name === 'ClaudeError', e1 && e1.name + ': ' + e1.message);
+    ok('  timeout is retryable 504', e1 && e1.retryable === true && e1.status === 504, e1 && (e1.status + ' r=' + e1.retryable));
+
+    // (b) mid-body timeout: headers in time, body slower than the budget.
+    next = { status: 200, body: null, bodyDelayMs: 700 };
+    let e2 = null;
+    try { await claude.complete({ system: 's', model: 'a/b', maxTokens: 10, messages: msg, timeoutMs: 250 }); } catch (err) { e2 = err; }
+    ok('mid-body timeout -> ClaudeError (body read wrapped)', e2 && e2.name === 'ClaudeError', e2 && e2.name + ': ' + e2.message);
+    ok('  mid-body timeout is retryable', e2 && e2.retryable === true, e2 && String(e2.retryable));
+
+    // (c) a per-call timeoutMs larger than the delay succeeds (override works).
+    next = { status: 200, body: okBody('sekin, lekin yetib keldi'), bodyDelayMs: 400 };
+    const out = await claude.complete({ system: 's', model: 'a/b', maxTokens: 10, messages: msg, timeoutMs: 3000 });
+    ok('longer per-call timeout lets a slow report finish', out.text === 'sekin, lekin yetib keldi', out.text);
+    next = { status: 200, body: null };
   }
 
   stub.close();

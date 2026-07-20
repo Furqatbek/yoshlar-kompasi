@@ -84,7 +84,7 @@ function normalizeForAnthropic(messages) {
   return out;
 }
 
-async function completeAnthropic({ system, model, maxTokens, messages }) {
+async function completeAnthropic({ system, model, maxTokens, messages, timeoutMs }) {
   if (!config.anthropic.apiKey) {
     throw new ClaudeError('Claude API kaliti sozlanmagan.', { status: 500, retryable: false });
   }
@@ -105,7 +105,7 @@ async function completeAnthropic({ system, model, maxTokens, messages }) {
         'content-type': 'application/json',
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(config.anthropic.timeoutMs),
+      signal: AbortSignal.timeout(timeoutMs || config.anthropic.timeoutMs),
     });
   } catch (err) {
     throw networkError(err);
@@ -124,7 +124,15 @@ async function completeAnthropic({ system, model, maxTokens, messages }) {
     });
   }
 
-  const data = await res.json();
+  // The body read races the same abort signal: a long generation can deliver
+  // headers in time and still time out mid-body. Surface that as the same
+  // clean retryable error, never a raw AbortError -> 500.
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    throw networkError(err);
+  }
   const text = (data.content || [])
     .filter((b) => b && b.type === 'text')
     .map((b) => b.text)
@@ -158,7 +166,7 @@ function toOpenAIMessages(system, messages) {
   return out;
 }
 
-async function completeOpenRouter({ system, model, maxTokens, messages }) {
+async function completeOpenRouter({ system, model, maxTokens, messages, timeoutMs }) {
   if (!config.openrouter.apiKey) {
     throw new ClaudeError('OpenRouter API kaliti sozlanmagan.', { status: 500, retryable: false });
   }
@@ -182,7 +190,7 @@ async function completeOpenRouter({ system, model, maxTokens, messages }) {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(config.openrouter.timeoutMs),
+      signal: AbortSignal.timeout(timeoutMs || config.openrouter.timeoutMs),
     });
   } catch (err) {
     throw networkError(err);
@@ -203,7 +211,14 @@ async function completeOpenRouter({ system, model, maxTokens, messages }) {
     });
   }
 
-  const data = await res.json();
+  // The body read races the same abort signal: a long generation can deliver
+  // headers in time and still time out mid-body — surface that cleanly too.
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    throw networkError(err);
+  }
   // A 200 can still carry a failure, in two places (per OpenRouter's error
   // contract). Treat both as retryable so the client's "Qayta urinish" works.
   // (1) Request-level: a top-level { error }.

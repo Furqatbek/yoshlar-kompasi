@@ -37,6 +37,11 @@ const config = {
     // Shared generation budgets, applied regardless of provider.
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
     reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 4500),
+    // The report generates up to reportMaxTokens in one non-streaming call —
+    // at real model speeds that is often 1-3 minutes, far beyond the per-turn
+    // timeout. Give it its own budget. (A TLS/reverse proxy in front must have
+    // a read timeout at least this long.)
+    reportTimeoutMs: int(process.env.REPORT_TIMEOUT_MS, 180000),
   },
 
   // Anthropic / Claude (used when LLM_PROVIDER=anthropic).
