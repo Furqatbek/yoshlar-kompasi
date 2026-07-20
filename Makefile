@@ -23,9 +23,30 @@ help:
 	@echo "  make dev           run the server with --watch"
 
 # ---- Docker ----
-.PHONY: up down logs ps backup restore psql
+.PHONY: up down logs ps backup restore psql prod-up prod-down prod-logs cert
 up:
 	$(COMPOSE) up -d --build
+
+# ---- Production (nginx + TLS; compose profile "prod") ----
+# One-time: point DNS at this server, then `make cert DOMAIN=... EMAIL=...`,
+# set DOMAIN (+ PUBLIC_BASE_URL=https://$DOMAIN) in .env, then `make prod-up`.
+prod-up:
+	@grep -q '^DOMAIN=..*' .env || (echo "Set DOMAIN=your.domain in .env first"; exit 1)
+	@grep -q '^PUBLIC_BASE_URL=..*' .env || (echo "Set PUBLIC_BASE_URL=https://your.domain in .env first"; exit 1)
+	COMPOSE_PROFILES=prod $(COMPOSE) up -d --build
+
+prod-down:
+	COMPOSE_PROFILES=prod $(COMPOSE) down
+
+prod-logs:
+	COMPOSE_PROFILES=prod $(COMPOSE) logs -f app nginx cron
+
+# Initial certificate issuance (standalone; needs port 80 free — run BEFORE
+# prod-up, or `make prod-down` first). Renewals are automatic afterwards.
+cert:
+	@test -n "$(DOMAIN)" || (echo "Usage: make cert DOMAIN=kompas.example.uz EMAIL=you@example.com"; exit 1)
+	@test -n "$(EMAIL)" || (echo "Usage: make cert DOMAIN=kompas.example.uz EMAIL=you@example.com"; exit 1)
+	docker run --rm -p 80:80 -v $$(pwd)/letsencrypt:/etc/letsencrypt certbot/certbot certonly --standalone -d $(DOMAIN) -m $(EMAIL) --agree-tos --no-eff-email
 
 down:
 	$(COMPOSE) down

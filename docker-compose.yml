@@ -22,6 +22,7 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+    image: yoshlar-kompasi-app
     restart: unless-stopped
     depends_on:
       db:
@@ -67,7 +68,64 @@ services:
       retries: 3
       start_period: 20s
     ports:
-      - "${APP_PORT:-8080}:8080"
+      # Localhost-only: reachable for local use and by nginx over the compose
+      # network, but never directly from the internet.
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+
+  # In-stack scheduler: nightly DB backup, monthly retention purge, daily LLM
+  # credit check. Same image as the app (plus pg_dump); watch it with
+  # `docker compose logs cron`.
+  cron:
+    image: yoshlar-kompasi-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-yik}:${POSTGRES_PASSWORD:-yik}@db:5432/${POSTGRES_DB:-yik}
+      RETENTION_MONTHS: ${RETENTION_MONTHS:-24}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      BILLING_ALERT_MIN_USD: ${BILLING_ALERT_MIN_USD:-5}
+    volumes:
+      - ./deploy/cron/root:/etc/crontabs/root:ro
+      - ./backups:/backups
+    command: ["crond", "-f", "-l", "8"]
+
+  # TLS terminator — production only: `make prod-up` (compose profile "prod").
+  # Set DOMAIN in .env; certificates live under ./letsencrypt (make cert).
+  nginx:
+    image: nginx:1.27-alpine
+    profiles: ["prod"]
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx:/etc/nginx/templates:ro
+      - ${LETSENCRYPT_DIR:-./letsencrypt}:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot
+    # Reload every 6h so renewed certificates are picked up without downtime.
+    command: ["/bin/sh", "-c", "while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec nginx -g 'daemon off;'"]
+
+  # Automatic certificate renewal (webroot) — production only.
+  certbot:
+    image: certbot/certbot
+    profiles: ["prod"]
+    restart: unless-stopped
+    volumes:
+      - ${LETSENCRYPT_DIR:-./letsencrypt}:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"]
 
 volumes:
   db_data:
+  certbot_www:

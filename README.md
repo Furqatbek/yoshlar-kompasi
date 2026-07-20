@@ -68,6 +68,39 @@ Stop with `make down`. Data persists in the `db_data` volume.
 > For local http testing set `COOKIE_SECURE=false` in `.env`, otherwise the
 > admin login cookie won't be stored over plain http.
 
+### Production deployment (nginx + TLS, one server)
+
+DNS first: point an A-record for your domain at the server. Then:
+
+```bash
+# 1. One-time certificate (port 80 must be free; stack down is fine)
+make cert DOMAIN=kompas.example.uz EMAIL=you@example.com
+
+# 2. In .env set:
+#    DOMAIN=kompas.example.uz
+#    PUBLIC_BASE_URL=https://kompas.example.uz
+#    (plus the usual secrets)
+
+# 3. Bring up the full stack (app + db + nginx + certbot + cron)
+make prod-up
+make prod-logs
+```
+
+What you get:
+
+- **nginx** terminates HTTPS on 80/443 (HTTP redirects to HTTPS), proxies to
+  the app with a 300s read timeout (report generation), gzips static assets.
+  The app container itself binds to 127.0.0.1 only — never directly reachable.
+- **Automatic certificate renewal**: a certbot sidecar renews via webroot every
+  12h; nginx reloads itself every 6h to pick up renewed certs. No cron needed.
+- **In-stack cron** (also runs with plain `make up`): nightly DB backup to
+  `./backups` (pruned after `BACKUP_KEEP_DAYS`, default 14), monthly retention
+  purge, daily OpenRouter credit check (`BILLING_ALERT_MIN_USD`). Watch it with
+  `docker compose logs cron`.
+
+To change the domain later: update `DOMAIN` + `PUBLIC_BASE_URL` in `.env`, run
+`make cert` for the new name, `make prod-up`.
+
 ### Using a managed / in-country Postgres instead
 
 Set `DATABASE_URL` in `.env` (add `?sslmode=require` if needed) and remove the
@@ -221,12 +254,9 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
 
 ## Operations
 
-- **Reverse proxy timeouts:** the final report is one long non-streaming LLM
-  call — commonly 1–3 minutes (`REPORT_TIMEOUT_MS`, default 180000). Any
-  TLS/reverse proxy in front (nginx `proxy_read_timeout`, Caddy
-  `reverse_proxy` transport timeouts, Cloudflare) must allow at least that
-  long on `POST /api/sessions/*/report`, or users will see a proxy timeout
-  even though the server would have finished.
+- **Reverse proxy timeouts:** the bundled nginx config already allows 300s for
+  the long report call. If you put anything ELSE in front (Cloudflare, another
+  proxy), its read timeout must also exceed `REPORT_TIMEOUT_MS` (180s default).
 - **Backups:** `make backup` (nightly via cron); `make restore F=…`. Copy dumps
   off the server (rclone/scp to a second location) and test a restore monthly —
   an untested backup is a hope, not a backup.
@@ -238,21 +268,18 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
   below `BILLING_ALERT_MIN_USD` — cron it daily with `MAILTO` set (or wrap it
   in a curl to a Telegram/healthchecks.io hook) so you hear about low credit
   before sessions start dying mid-assessment.
-- **Uptime monitoring:** point a free external pinger (UptimeRobot,
-  Better Stack) at `GET /healthz` (process up) and `GET /readyz` (DB reachable),
-  1–5 min interval. This is what tells you it broke at 21:00, not a parent.
+- **Uptime monitoring (optional at small scale):** a free pinger (UptimeRobot)
+  on `GET /healthz` + `GET /readyz` takes 5 minutes to set up whenever traffic
+  grows enough to care.
 - **Error tracking:** logs are stdout-only (`make logs`). Minimum: enable Docker
   log rotation (`logging: driver: json-file, options: {max-size: "10m",
   max-file: "5"}`) and grep for `[error]`. Recommended: self-hosted GlitchTip
   (Sentry-compatible, keeps error payloads off US SaaS) or Sentry with PII
   scrubbing on — our logs are already id-only, never child data.
-- **Suggested crontab** (adjust paths):
-  ```cron
-  MAILTO=admin@markaz.uz
-  15 2 * * *  cd /opt/yoshlar-kompasi && make backup
-  30 2 1 * *  cd /opt/yoshlar-kompasi && make purge
-  0  8 * * *  cd /opt/yoshlar-kompasi && make billing-check
-  ```
+- **Scheduled jobs are in-stack** (the `cron` service; see
+  `deploy/cron/root`): nightly backup 02:15 UTC, monthly purge, daily billing
+  check. `docker compose logs cron` shows every run — glance at it weekly, and
+  make sure a `[backup] wrote` line appears daily.
 - **Before every deploy / prompt change:** run the live smoke test against the
   real model (`BASE_URL=... node test/live-smoke.js`, costs a few cents) — stub
   tests prove the plumbing, only this proves the model still follows the
