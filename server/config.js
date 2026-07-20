@@ -36,7 +36,7 @@ const config = {
     provider: (process.env.LLM_PROVIDER || 'anthropic').toLowerCase(), // anthropic | openrouter
     // Shared generation budgets, applied regardless of provider.
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
-    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 3000),
+    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 4500),
   },
 
   // Anthropic / Claude (used when LLM_PROVIDER=anthropic).
@@ -48,7 +48,7 @@ const config = {
     // cost. Override per your Anthropic account access.
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
-    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 3000),
+    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 4500),
     timeoutMs: int(process.env.ANTHROPIC_TIMEOUT_MS, 60000),
   },
 

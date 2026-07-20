@@ -31,9 +31,9 @@ const FENCE = '```';
 const REPORT_JSON_RULE = `## Hisobot uchun tuzilmali ma'lumot (majburiy)
 To'liq hisobot so'ralganda, hisobot matnidan KEYIN, eng oxirida faqat bitta ${FENCE}json bloki yozing:
 ${FENCE}json
-{"levels": {"mantiq": "...", "psixologiya": "...", "harakat": "..."}, "sports": ["...", "..."]}
+{"levels": {"mantiq": "...", "psixologiya": "...", "harakat": "..."}, "sports": ["...", "..."], "riasec": ["...", "..."]}
 ${FENCE}
-"levels" qiymatlari faqat shakllanmoqda / meyorda / kuchli bo'lsin (yo'nalish baholanmagan bo'lsa null). "sports" — tavsiya etilgan sport nomlari ro'yxati. Bu blok kattalarga ko'rsatilmaydi va tizim tomonidan o'qiladi.`;
+"levels" qiymatlari faqat shakllanmoqda / meyorda / kuchli bo'lsin (yo'nalish baholanmagan bo'lsa null). "sports" — tavsiya etilgan sport nomlari ro'yxati. "riasec" — aniqlangan 1–2 moyillik harfi (R/I/A/S/E/C); aniq moyillik bo'lmasa bo'sh ro'yxat. Bu blok kattalarga ko'rsatilmaydi va tizim tomonidan o'qiladi.`;
 
 let _prompt = null;
 let _version = null;
@@ -83,6 +83,9 @@ function buildReportRequest(name, partial) {
     ' Endi hisobotni tayyorlang. Hisobotni faqat shu suhbatdagi haqiqiy javoblar va kuzatuvlarga asoslang — hech narsa uydirmang. Faqat hisobot matnini yozing (kirish izohisiz, blockquote ishlatmang), Markdown formatida, aynan quyidagi ## sarlavhalar bilan:\n\n' +
     '## Surat\n3–5 ta kuchli tomon: har biri "- **Nomi** — qisqa izoh" ko‘rinishida (faqat javoblardan ko‘ringanicha; asos kam bo‘lsa kamroq yozing).\n\n' +
     '## Hozirgi o‘rni\nHar bir BAHOLANGAN yo‘nalish uchun bitta qator: "- **Mantiq va tafakkur** — Me‘yorda. Kuzatuvlar..." (daraja faqat: Shakllanmoqda / Me‘yorda / Kuchli). Baholanmagan yo‘nalishni "- **Nomi** — baholanmadi" deb belgilang va JSON‘da uning darajasini null qoldiring.\n\n' +
+    '## Iqtidorlar xaritasi\nGardner modeli bo‘yicha FAQAT shu suhbatda kuzatilgan iqtidorlar (til-nutq, mantiqiy-matematik, fazoviy-vizual, musiqiy-ritmik, tana-harakat, shaxslararo, ichki-shaxsiy, tabiat): har biri "- **Iqtidor** — yaqqol namoyon bo‘ldi / belgilari bor / kam kuzatildi; qisqa dalil (bola nima qildi yoki dedi)". Kuzatilmagan iqtidorni umuman yozmang.\n\n' +
+    '## Qiziqishlar kompasi\nRIASEC bo‘yicha eng kuchli 1–2 moyillik (Quruvchi / Tadqiqotchi / Ijodkor / Yordamchi / Tashkilotchi / Tartib ustasi), har biri bolaning aniq javobiga tayangan 1–2 jumla izoh bilan; buni "hozirgi moyillik" sifatida taqdim eting. Aniq moyillik ko‘rinmasa, buni ochiq yozing.\n\n' +
+    '## O‘sish tafakkuri va o‘z-o‘zini boshqarish\n2–4 ta kuzatuv: xatoga munosabat, qat‘iyat, diqqat, sabr — har biri suhbatdagi aniq holatga bog‘langan, yorliqsiz, bittadan rivojlantirish taklifi bilan.\n\n' +
     '## Maqsad va yo‘l xaritasi\nBirinchi xatboshi — maqsad. So‘ng kelgusi 3–6 oy uchun 3–4 bosqich raqamlangan ro‘yxat: "1. ...".\n\n' +
     '## Nimani o‘rganish va mashq qilish\nHar bir soha "- **Soha** — haftalik hajmdagi aniq taklif" ko‘rinishida.\n\n' +
     '## Tavsiya etilgan sport va mashg‘ulotlar\nBolaning javoblaridan mos sabab topilsa, 1–3 ta variant: "- **Sport nomi** — bolaning o‘z javobiga bog‘langan bir qatorlik sabab". Agar javoblarda yetarli asos bo‘lmasa, sport to‘qib chiqarmang — "— yetarli ma‘lumot yo‘q" deb yozing. Har birini bir necha hafta sinab ko‘rishni va yangi sport oldidan oddiy tibbiy ko‘rikni eslating (Kattalar uchun bo‘limida).\n\n' +
