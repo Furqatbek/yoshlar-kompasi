@@ -101,6 +101,20 @@ What you get:
 To change the domain later: update `DOMAIN` + `PUBLIC_BASE_URL` in `.env`, run
 `make cert` for the new name, `make prod-up`.
 
+**Prefer raw `docker compose` (no make)?** Add `COMPOSE_PROFILES=prod` to
+`.env` — then plain `docker compose up -d --build` includes nginx + certbot:
+
+```bash
+# one-time certificate (port 80 free; run before the first start)
+docker compose run --rm -p 80:80 --entrypoint certbot certbot \
+  certonly --standalone -d kompas.example.uz -m you@example.com --agree-tos --no-eff-email
+
+docker compose up -d --build          # start/update everything
+docker compose logs -f app nginx cron # watch app + proxy + scheduled jobs
+docker compose exec cron sh /app/server/scripts/backup.sh   # manual backup now
+gunzip -c backups/yik-XXXX.sql.gz | docker compose exec -T db psql -U yik yik  # restore
+```
+
 ### Using a managed / in-country Postgres instead
 
 Set `DATABASE_URL` in `.env` (add `?sslmode=require` if needed) and remove the
