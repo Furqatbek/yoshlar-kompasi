@@ -204,7 +204,38 @@ docker compose exec cron node /app/server/db/purge.js              # purge now
 
 ---
 
-## 4. Troubleshooting
+## 4. Self-hosting on your own machine (home/office)
+
+The production flow (§2) works from any machine that the internet can reach.
+What differs is getting reachable:
+
+1. **Public IP check (make-or-break).** Compare your router's WAN IP with
+   what https://ifconfig.me shows. If they differ — or the WAN IP starts with
+   `100.64–100.127`, `10.`, or `192.168.` — you are behind CGNAT and port
+   forwarding cannot work. Ask your ISP for a public (ideally static) IP; in
+   Uzbekistan this is a routine paid add-on.
+2. **Fix the machine's LAN address** via a DHCP reservation in the router.
+3. **Port-forward** WAN 80 → machine:80 and WAN 443 → machine:443. Nothing
+   else — only nginx listens publicly.
+4. **DNS:**
+   - Static public IP: one A record at your registrar → done.
+   - Dynamic IP: free dynamic DNS, e.g. DuckDNS — create `name.duckdns.org`,
+     then keep it updated from the machine:
+     `*/5 * * * * curl -s "https://www.duckdns.org/update?domains=name&token=TOKEN&ip="`
+     Optionally CNAME a subdomain of your real domain to it.
+   - If Cloudflare manages your DNS, keep the record **DNS only (grey cloud)**
+     — the orange-cloud proxy's ~100 s timeout kills the report call.
+5. **Certificate + start**: exactly §2.3–§2.4 with your domain.
+6. **Verify from OUTSIDE** — use mobile data, not your own Wi-Fi (hairpin NAT
+   makes inside-the-LAN tests unreliable), then run the §2.5 checks.
+
+Realities of home hosting: disable sleep and enable Docker on boot
+(`systemctl enable docker`; containers are `restart: unless-stopped`); if the
+ISP blocks inbound 80, switch certbot to a DNS-01 challenge; the machine now
+physically holds children's data — keep the OS patched, consider disk
+encryption, and keep backup copies OFF the machine.
+
+## 5. Troubleshooting
 
 | Symptom | Cause / fix |
 |---|---|
@@ -220,7 +251,7 @@ docker compose exec cron node /app/server/db/purge.js              # purge now
 
 ---
 
-## 5. Deploy checklist (print this)
+## 6. Deploy checklist (print this)
 
 ```
 Before:   [ ] .env secrets set     [ ] OpenRouter balance OK
