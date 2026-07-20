@@ -53,6 +53,10 @@ and never the form's goal/notes fields (those stay in the database).
 
 ## Quick start (Docker)
 
+> **Step-by-step guide with verification and troubleshooting:**
+> [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — covers local, production
+> (nginx + TLS), updates, domain changes and the deploy checklist.
+
 Prerequisites: Docker + Docker Compose, and an LLM key — either an Anthropic API
 key (default) or an [OpenRouter](https://openrouter.ai) key (see below).
 
