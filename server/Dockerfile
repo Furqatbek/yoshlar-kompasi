@@ -16,6 +16,7 @@ COPY Kompas.dc.html ../Kompas.dc.html
 COPY support.js ../support.js
 COPY _ds ../_ds
 COPY uploads ../uploads
+COPY robots.txt favicon.svg ../
 
 # Assemble the static frontend into server/public.
 RUN npm run build:web
