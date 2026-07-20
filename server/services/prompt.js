@@ -57,7 +57,11 @@ function promptVersion() {
   return _version;
 }
 
-// First user turn — mirrors the original kompas-prompt buildIntro.
+// First user turn. Data-minimization rule (spec §7, hardened): ONLY the
+// child's nickname, grade and age ever leave our server for the LLM. The
+// form's goal/notes fields stay in our database — if the goal matters for the
+// roadmap, the model asks about dreams/goals during the conversation and the
+// adult decides what to share.
 function buildIntro(c) {
   const grade = Number(c.grade);
   const grp = grade <= 2 ? 'A' : 'B';
@@ -67,9 +71,7 @@ function buildIntro(c) {
     '- Ismi: ' + c.nickname + '\n' +
     '- Sinfi: ' + grade + '-sinf (' + grp + ' guruh savollari)';
   if (c.age) s += '\n- Yoshi: ' + c.age;
-  if (c.goal) s += '\n- Maqsad yoki orzu: ' + c.goal;
-  if (c.notes) s += '\n- Qo‘shimcha izoh: ' + c.notes;
-  s += "\nMeni qisqa kutib oling, bolaning ismi va sinfini tasdiqlang va darhol birinchi savollar guruhini bering.";
+  s += "\nMeni qisqa kutib oling, bolaning ismi va sinfini tasdiqlang va darhol birinchi savollar guruhini bering. Bolaning maqsadi yoki orzusini suhbat davomida o'zimizdan so'rang.";
   return s;
 }
 

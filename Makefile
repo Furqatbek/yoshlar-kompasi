@@ -49,7 +49,7 @@ psql:
 	$(COMPOSE) exec db psql -U $${POSTGRES_USER:-yik} $${POSTGRES_DB:-yik}
 
 # ---- Local (no Docker) ----
-.PHONY: install build-web migrate seed dev start
+.PHONY: install build-web migrate seed dev start billing-check
 install:
 	cd server && npm install
 
@@ -64,6 +64,9 @@ seed:
 
 purge:
 	cd server && npm run purge
+
+billing-check:
+	cd server && npm run billing-check
 
 dev:
 	cd server && npm run dev

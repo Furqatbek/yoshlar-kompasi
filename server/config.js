@@ -42,6 +42,10 @@ const config = {
     // timeout. Give it its own budget. (A TLS/reverse proxy in front must have
     // a read timeout at least this long.)
     reportTimeoutMs: int(process.env.REPORT_TIMEOUT_MS, 180000),
+    // USD per 1M tokens for the active model — drives the admin cost estimate
+    // only (defaults are the claude-sonnet-4.6 list prices).
+    priceInPerMtok: Number(process.env.PRICE_INPUT_PER_MTOK || 3),
+    priceOutPerMtok: Number(process.env.PRICE_OUTPUT_PER_MTOK || 15),
   },
 
   // Anthropic / Claude (used when LLM_PROVIDER=anthropic).

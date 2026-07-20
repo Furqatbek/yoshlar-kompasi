@@ -91,7 +91,10 @@ async function completeAnthropic({ system, model, maxTokens, messages, timeoutMs
   const body = {
     model: model || config.anthropic.model,
     max_tokens: maxTokens,
-    system,
+    // Cache the (identical on every call) system prompt: cache reads bill at
+    // 0.1x input price, writes at 1.25x — a large net saving since the system
+    // prompt dominates our input tokens.
+    system: system ? [{ type: 'text', text: String(system), cache_control: { type: 'ephemeral' } }] : undefined,
     messages: normalizeForAnthropic(messages),
   };
 
@@ -153,10 +156,13 @@ async function completeAnthropic({ system, model, maxTokens, messages, timeoutMs
 
 // OpenAI-format messages: a leading system message, then the turns. Unlike
 // Anthropic, alternation is not required, so we map the history straight through
-// (a dangling user turn is fine) and skip empty turns.
+// (a dangling user turn is fine) and skip empty turns. The system prompt is
+// marked as an explicit cache breakpoint — OpenRouter forwards it to Anthropic
+// (0.1x price on cache reads) and converts/ignores it gracefully for other
+// providers per their docs.
 function toOpenAIMessages(system, messages) {
   const out = [];
-  if (system) out.push({ role: 'system', content: String(system) });
+  if (system) out.push({ role: 'system', content: [{ type: 'text', text: String(system), cache_control: { type: 'ephemeral' } }] });
   for (const m of messages) {
     const role = m.role === 'assistant' ? 'assistant' : 'user';
     const content = String(m.content == null ? '' : m.content);

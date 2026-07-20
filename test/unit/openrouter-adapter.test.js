@@ -105,7 +105,9 @@ async function main() {
     ok('body.model set', lastReq.body.model === 'anthropic/claude-sonnet-4.5', lastReq.body.model);
     ok('body.max_tokens set', lastReq.body.max_tokens === 1500, String(lastReq.body.max_tokens));
     const m = lastReq.body.messages;
-    ok('first message is system', m[0].role === 'system' && m[0].content === 'SYS-PROMPT', JSON.stringify(m[0]));
+    const sys0 = m[0] && Array.isArray(m[0].content) ? m[0].content[0] : null;
+    ok('first message is system (cached block)', m[0].role === 'system' && sys0 && sys0.text === 'SYS-PROMPT', JSON.stringify(m[0]));
+    ok('system block carries cache_control (0.1x cache reads)', !!(sys0 && sys0.cache_control && sys0.cache_control.type === 'ephemeral'), JSON.stringify(sys0 && sys0.cache_control));
     ok('system NOT a top-level field (OpenAI format)', lastReq.body.system === undefined, String(lastReq.body.system));
     ok('history mapped as user/assistant turns', m[1].role === 'user' && m[2].role === 'assistant' && m[3].role === 'user', JSON.stringify(m.map((x) => x.role)));
     ok('meta flag stripped from wire message', m[1].meta === undefined, JSON.stringify(m[1]));

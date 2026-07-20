@@ -139,7 +139,7 @@ runtime.
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | yes | Seeded admin account (bcrypt-hashed) |
 | `PUBLIC_BASE_URL` | prod | Origin used to build report links for delivery |
 | `COOKIE_SECURE` | no | `true` in prod; `false` for local http |
-| `DELIVERY_PROVIDER` | no | `console` (default) or `telegram` |
+| `DELIVERY_PROVIDER` | no | `console` (default) or `telegram` — note: a Telegram deep-link only reaches parents who have ALREADY started your bot; for everyone else it silently does nothing. The report is therefore shown and saved in-app at finish; use the admin panel's report link to send SMS manually (an Eskiz.uz SMS provider can be added later) |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_USERNAME` | if telegram | Bot credentials |
 | `TELEGRAM_WEBHOOK_SECRET` | no | Verifies webhook calls |
 | `CONSENT_TEXT_VERSION` | no | Stamped on each recorded consent |
@@ -227,11 +227,36 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
   `reverse_proxy` transport timeouts, Cloudflare) must allow at least that
   long on `POST /api/sessions/*/report`, or users will see a proxy timeout
   even though the server would have finished.
-- **Backups:** `make backup` (nightly via cron recommended); `make restore F=…`.
+- **Backups:** `make backup` (nightly via cron); `make restore F=…`. Copy dumps
+  off the server (rclone/scp to a second location) and test a restore monthly —
+  an untested backup is a hope, not a backup.
 - **Retention:** `make purge` on a cron (respects `RETENTION_MONTHS`).
-- **Monitoring:** watch three numbers — sessions finished/day, average tokens
-  per session (input/output tokens are logged per session), and delivery success.
-  `GET /readyz` for liveness.
+- **Cost / billing alerts:** the admin panel (Statistika → LLM xarajati) shows
+  total tokens and estimated spend (tune `PRICE_INPUT_PER_MTOK` /
+  `PRICE_OUTPUT_PER_MTOK` to your model's prices). `make billing-check` queries
+  OpenRouter's credits API and exits non-zero when the remaining balance drops
+  below `BILLING_ALERT_MIN_USD` — cron it daily with `MAILTO` set (or wrap it
+  in a curl to a Telegram/healthchecks.io hook) so you hear about low credit
+  before sessions start dying mid-assessment.
+- **Uptime monitoring:** point a free external pinger (UptimeRobot,
+  Better Stack) at `GET /healthz` (process up) and `GET /readyz` (DB reachable),
+  1–5 min interval. This is what tells you it broke at 21:00, not a parent.
+- **Error tracking:** logs are stdout-only (`make logs`). Minimum: enable Docker
+  log rotation (`logging: driver: json-file, options: {max-size: "10m",
+  max-file: "5"}`) and grep for `[error]`. Recommended: self-hosted GlitchTip
+  (Sentry-compatible, keeps error payloads off US SaaS) or Sentry with PII
+  scrubbing on — our logs are already id-only, never child data.
+- **Suggested crontab** (adjust paths):
+  ```cron
+  MAILTO=admin@markaz.uz
+  15 2 * * *  cd /opt/yoshlar-kompasi && make backup
+  30 2 1 * *  cd /opt/yoshlar-kompasi && make purge
+  0  8 * * *  cd /opt/yoshlar-kompasi && make billing-check
+  ```
+- **Before every deploy / prompt change:** run the live smoke test against the
+  real model (`BASE_URL=... node test/live-smoke.js`, costs a few cents) — stub
+  tests prove the plumbing, only this proves the model still follows the
+  prompt contract.
 - **Prompt versioning:** every session stamps `prompt_version` (a hash of the
   assembled prompt), so old reports stay explainable after prompt edits.
 - **Scaling:** rate limiting is in-memory (single instance). For multiple app

@@ -58,6 +58,8 @@ services:
       CONVERSATION_MAX_TOKENS: ${CONVERSATION_MAX_TOKENS:-1500}
       REPORT_MAX_TOKENS: ${REPORT_MAX_TOKENS:-4500}
       REPORT_TIMEOUT_MS: ${REPORT_TIMEOUT_MS:-180000}
+      PRICE_INPUT_PER_MTOK: ${PRICE_INPUT_PER_MTOK:-3}
+      PRICE_OUTPUT_PER_MTOK: ${PRICE_OUTPUT_PER_MTOK:-15}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 30s

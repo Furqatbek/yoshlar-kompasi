@@ -26,6 +26,16 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 | `api/gate-test.js` | Report engagement gate: zero-answer report refused (even with model-emitted completion markers), allowed after a real answer |
 | `api/stale-model-test.js` | Sessions stamped under one LLM provider keep working after switching providers |
 
+## Live smoke test (real model, costs money)
+
+`BASE_URL=http://127.0.0.1:8080 node test/live-smoke.js` drives one short REAL
+session (greeting + 2 turns + report, ~$0.05-0.20) against a running app with a
+real LLM key. Hard-asserts the wire contract (session, report, ## sections,
+JSON levels block); prints WARN lines for prompt-quality signals (premature
+markers, fabricated-looking levels) and the report link for human review. Run
+after every prompt change and before every deploy — stub tests cannot catch a
+model that stops following the prompt.
+
 ## Browser suites (local only, not in CI)
 
 Need Playwright + Chromium (`CHROMIUM_PATH` optional if Playwright's own

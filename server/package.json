@@ -2,7 +2,7 @@
   "name": "yoshlar-kompasi-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend for Yosh Iste'dodlar Kompasi — Claude proxy, persistence, lead capture, admin.",
+  "description": "Backend for Yosh Iste'dodlar Kompasi \u2014 Claude proxy, persistence, lead capture, admin.",
   "license": "UNLICENSED",
   "type": "commonjs",
   "engines": {
@@ -14,7 +14,8 @@
     "seed": "node db/seed.js",
     "purge": "node db/purge.js",
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "billing-check": "node scripts/billing-check.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

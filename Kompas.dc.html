@@ -324,7 +324,7 @@ input, textarea, button, select { font-family: var(--font-body); }
       </details>
       <details style="border-top: 1px solid var(--color-divider);">
         <summary style="cursor: pointer; font-family: var(--font-heading); font-weight: 700; font-size: 16px; padding: var(--space-3) 0;">Hisobot qanday keladi?</summary>
-        <p class="text-muted" style="margin: 0 0 var(--space-3); max-width: 60ch;">Yakunda havola telefon raqamingizga yuboriladi; hisobot shu yerning o'zida ham ochiladi va PDF qilib saqlab olish mumkin.</p>
+        <p class="text-muted" style="margin: 0 0 var(--space-3); max-width: 60ch;">Hisobot yakunda shu yerning o'zida ochiladi — PDF qilib saqlab olish va havolani nusxalash mumkin. Telefon raqam qoldirsangiz, markaz havolani keyin SMS orqali ham yuborishi mumkin.</p>
       </details>
       <details style="border-top: 1px solid var(--color-divider);">
         <summary style="cursor: pointer; font-family: var(--font-heading); font-weight: 700; font-size: 16px; padding: var(--space-3) 0;">To'xtatib, keyin davom etsam bo'ladimi?</summary>
@@ -376,10 +376,12 @@ input, textarea, button, select { font-family: var(--font-body); }
       <div class="field">
         <label for="yik-goal">Maqsad yoki orzu (ixtiyoriy)</label>
         <input class="input" id="yik-goal" placeholder="Masalan: matematikada kuchli bo'lish, futbolchi bo'lish…" value="{{ goalVal }}" onChange="{{ onGoal }}">
+        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Faqat bizning serverda saqlanadi — AI xizmatiga yuborilmaydi</span>
       </div>
       <div class="field">
         <label for="yik-notes">Qo'shimcha izoh (ixtiyoriy)</label>
         <textarea class="input" id="yik-notes" rows="2" placeholder="Sog'liq cheklovlari, uyatchanlik yoki bilish muhim bo'lgan boshqa narsalar" value="{{ notesVal }}" onChange="{{ onNotes }}"></textarea>
+        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Faqat bizning serverda saqlanadi — AI xizmatiga yuborilmaydi</span>
       </div>
       <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px; max-width: 60ch;">
         <input type="checkbox" checked="{{ consentVal }}" onChange="{{ onConsent }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
@@ -559,8 +561,8 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div data-screen-label="Kontakt darvozasi" style="position: fixed; inset: 0; z-index: 65; background: var(--color-bg); overflow: auto;">
       <div style="max-width: 520px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
         <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">Oxirgi qadam</h6>
-        <h2 style="margin-bottom: var(--space-2); max-width: 18ch;">{{ childName }}ning hisoboti tayyor! Qayerga yuboraylik?</h2>
-        <p class="text-muted" style="margin-bottom: var(--space-6); max-width: 48ch;">Hisobot havolasini yuboramiz — keyin ham istalgan payt ochib ko'ra olasiz.</p>
+        <h2 style="margin-bottom: var(--space-2); max-width: 18ch;">{{ childName }}ning hisoboti tayyor!</h2>
+        <p class="text-muted" style="margin-bottom: var(--space-6); max-width: 48ch;">Hisobot hozir shu yerning o'zida ochiladi va saqlanadi — keyin ham istalgan payt ochib ko'ra olasiz. Telefon raqamingizni qoldirsangiz, markaz havolani SMS orqali yuborishi va siz bilan bog'lanishi mumkin.</p>
         <div style="display: flex; flex-direction: column; gap: var(--space-4);">
           <div class="field">
             <label for="yik-parent">Ismingiz *</label>
@@ -575,7 +577,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           </div>
           <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px;">
             <input type="checkbox" checked="{{ cDeliveryVal }}" onChange="{{ onCDelivery }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
-            <span>Hisobot havolasi shu raqamga yuborilishiga roziman. *</span>
+            <span>Markaz shu raqamga hisobot havolasini yuborishi va bog'lanishi mumkinligiga roziman. *</span>
           </label>
           <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px;" class="text-muted">
             <input type="checkbox" checked="{{ cMarketingVal }}" onChange="{{ onCMarketing }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
@@ -584,8 +586,8 @@ input, textarea, button, select { font-family: var(--font-body); }
           <sc-if value="{{ gateError }}" hint-placeholder-val="{{ false }}">
             <div style="color: var(--color-accent-700); font-weight: 600; font-size: 14px;">{{ gateError }}</div>
           </sc-if>
-          <div><button type="button" class="btn btn-primary" onClick="{{ gateSubmit }}" style="font-size: 16px; padding: 12px 20px;">Hisobotni olish</button></div>
-          <div><button type="button" onClick="{{ gateViewOnly }}" style="background: none; border: 0; padding: 0; cursor: pointer; font-size: 13px; color: var(--color-neutral-600); text-decoration: underline; text-underline-offset: 3px;">Hisobotni faqat shu yerda ko'rish</button></div>
+          <div><button type="button" class="btn btn-primary" onClick="{{ gateSubmit }}" style="font-size: 16px; padding: 12px 20px;">Hisobotni ochish</button></div>
+          <div><button type="button" onClick="{{ gateViewOnly }}" style="background: none; border: 0; padding: 0; cursor: pointer; font-size: 13px; color: var(--color-neutral-600); text-decoration: underline; text-underline-offset: 3px;">Raqam qoldirmasdan ko'rish</button></div>
         </div>
       </div>
     </div>
@@ -797,7 +799,7 @@ input, textarea, button, select { font-family: var(--font-body); }
     </div>
     <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
       <h4 style="margin-bottom: var(--space-2);">Qayerda saqlanadi</h4>
-      <p style="margin: 0; max-width: 60ch;">Mashg'ulot yozuvi va hisobot serverimizda saqlanadi — shu tufayli mashg'ulotni istalgan qurilmada davom ettirasiz va hisobot havolasi keyin ham ochiladi. Savollar tuzish uchun yozganlaringiz Claude modeli xizmatiga yuboriladi — to'g'ridan-to'g'ri Anthropic orqali yoki OpenRouter vositachi xizmati orqali. Ota-onaning ismi va telefon raqami bu xizmatlarga hech qachon yuborilmaydi.</p>
+      <p style="margin: 0; max-width: 60ch;">Mashg'ulot yozuvi va hisobot serverimizda saqlanadi — shu tufayli mashg'ulotni istalgan qurilmada davom ettirasiz va hisobot havolasi keyin ham ochiladi. Savollar tuzish uchun AI xizmatiga (Claude modeli — to'g'ridan-to'g'ri Anthropic yoki OpenRouter orqali) faqat bolaning ismi/taxallusi, sinfi, yoshi va mashg'ulot davomidagi yozishmalar yuboriladi. Maqsad va qo'shimcha izoh maydonlari, ota-onaning ismi va telefon raqami bu xizmatlarga hech qachon yuborilmaydi — ular faqat bizning serverimizda saqlanadi.</p>
     </div>
     <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
       <h4 style="margin-bottom: var(--space-2);">Qancha saqlanadi va qanday o'chiriladi</h4>
@@ -1021,6 +1023,13 @@ input, textarea, button, select { font-family: var(--font-body); }
           </tbody>
         </table>
       </div>
+      <h6 style="margin: var(--space-6) 0 var(--space-2);">LLM xarajati</h6>
+      <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; border-top: 2px solid var(--color-divider); padding-top: var(--space-3);">
+        <div><div class="text-muted" style="font-size: 12px;">Jami token (kirish / chiqish)</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ costTokens }}</div></div>
+        <div><div class="text-muted" style="font-size: 12px;">Taxminiy jami xarajat</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ costTotal }}</div></div>
+        <div><div class="text-muted" style="font-size: 12px;">O'rtacha, yakunlangan mashg'ulot boshiga</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ costPer }}</div></div>
+      </div>
+      <p class="text-muted" style="font-size: 12px; margin: var(--space-2) 0 0;">Narxlar PRICE_INPUT_PER_MTOK / PRICE_OUTPUT_PER_MTOK sozlamalaridan; kesh chegirmalari hisobga olinmagan (real xarajat pastroq bo'lishi mumkin).</p>
     </div>
   </main>
   </sc-if>
@@ -1376,7 +1385,7 @@ class Component extends DCLogic {
     }
   }
   async fetchStats() {
-    try { const d = await this.api('/admin/stats'); this.setState({ stats: d.buckets || null }); }
+    try { const d = await this.api('/admin/stats'); this.setState({ stats: d.buckets || null, statsCost: d.cost || null }); }
     catch (e) { this._adminUnauth(e); }
   }
   _setLeadLocal(patch) {
@@ -1573,6 +1582,11 @@ class Component extends DCLogic {
       { label: 'Hisobot yetkazilgan', n: b0.delivered, w: Math.round(100 * b0.delivered / maxN) + '%' }
     ];
     const wLabels = ['Shu hafta', 'O‘tgan hafta', '2 hafta oldin', '3 hafta oldin'];
+    const cc = S.statsCost;
+    const nfmt = (n) => (n == null ? '—' : Number(n).toLocaleString('en-US'));
+    const costTokens = cc ? nfmt(cc.input_tokens) + ' / ' + nfmt(cc.output_tokens) : '—';
+    const costTotal = cc && cc.est_usd != null ? '$' + cc.est_usd : '—';
+    const costPer = cc && cc.per_finished_usd != null ? '$' + cc.per_finished_usd : '—';
     const weekRows = buckets.map((b, i) => ({
       label: wLabels[i], started: String(b.started), finished: String(b.finished), contact: String(b.contact), delivered: String(b.delivered),
       conv: b.started ? Math.round(100 * b.contact / b.started) + '%' : '—'
@@ -1683,7 +1697,7 @@ class Component extends DCLogic {
       onLdNotes: e => { const v = e.target.value; this._setLeadLocal({ admin_notes: v }); clearTimeout(this._noteTimer); this._noteTimer = setTimeout(() => this.patchLead({ admin_notes: v }), 600); },
       ldDelete: () => this.deleteLead(),
       ldChildren,
-      funnel, weekRows
+      funnel, weekRows, costTokens, costTotal, costPer
     };
   }
 }

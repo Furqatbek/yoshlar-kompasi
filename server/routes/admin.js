@@ -156,7 +156,17 @@ router.get(
   adminAuth,
   asyncHandler(async (req, res) => {
     const buckets = await repo.weeklyBuckets();
-    res.json({ buckets });
+    const t = await repo.tokenTotals();
+    const estUsd = (t.inputTokens / 1e6) * config.llm.priceInPerMtok + (t.outputTokens / 1e6) * config.llm.priceOutPerMtok;
+    res.json({
+      buckets,
+      cost: {
+        sessions: t.sessions, finished: t.finished,
+        input_tokens: t.inputTokens, output_tokens: t.outputTokens,
+        est_usd: Math.round(estUsd * 100) / 100,
+        per_finished_usd: t.finished ? Math.round((estUsd / t.finished) * 100) / 100 : null,
+      },
+    });
   })
 );
 

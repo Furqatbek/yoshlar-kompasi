@@ -68,7 +68,9 @@ router.post(
     });
 
     // Store the generated intro as an internal (meta) user turn, then greet.
-    await repo.addMessage(session.id, 'user', prompt.buildIntro({ nickname, grade, age, goal, notes }), true);
+    // Data minimization: goal/notes are stored in OUR db only — buildIntro
+    // sends nothing but nickname/grade/age to the LLM.
+    await repo.addMessage(session.id, 'user', prompt.buildIntro({ nickname, grade, age }), true);
 
     const base = {
       session_id: session.id,
