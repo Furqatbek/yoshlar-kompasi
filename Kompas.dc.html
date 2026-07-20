@@ -19,10 +19,24 @@ a { color: var(--color-accent-700); }
 a:hover { color: var(--color-accent-600); }
 input, textarea, button, select { font-family: var(--font-body); }
 @keyframes yikBlink { 0%, 80%, 100% { opacity: 0.15; } 40% { opacity: 1; } }
+@page { margin: 14mm; }
 @media print {
   .no-print { display: none !important; }
-  body { background: #fff; }
+  html, body { background: #fff !important; }
   #yik-report { max-width: none !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
+  /* Pagination: keep atomic blocks whole; glue headings to their content. */
+  #yik-report h1, #yik-report h3, #yik-report h4, #yik-report h6 { break-after: avoid-page; break-inside: avoid; }
+  #yik-report p { orphans: 3; widows: 3; }
+  .rep-item, .rep-letter { break-inside: avoid; }
+  /* Print-safe colors: browsers commonly drop CSS backgrounds when printing
+     ("background graphics" off), which would leave light text invisible on
+     white and colored blocks sliced at page edges. Restyle those blocks to
+     dark-on-white with printed borders (borders and text always print). */
+  .rep-letter { background: #fff !important; color: var(--color-text) !important; border: 3px solid var(--color-accent) !important; }
+  .rep-letter h6 { color: var(--color-accent-700) !important; }
+  .rep-msn { background: #fff !important; color: var(--color-text) !important; border: 2px solid var(--color-text) !important; box-sizing: border-box !important; }
+  .rep-dot { background: transparent !important; border: 4px solid var(--color-accent) !important; box-sizing: border-box !important; }
+  #yik-report .tag { border: 1px solid currentColor !important; }
 }
 </style>
 </helmet>
@@ -630,7 +644,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Surat</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-3);">
             <sc-for list="{{ strengths }}" as="it" hint-placeholder-count="3">
-              <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-2);">
+              <div class="rep-item" style="border-top: 2px solid var(--color-text); padding-top: var(--space-2);">
                 <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 4px;">{{ it.main }}</div>
                 <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px;">{{ it.sub }}</div></sc-if>
               </div>
@@ -643,11 +657,40 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Hozirgi o'rni</h3>
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ levels }}" as="lv" hint-placeholder-count="3">
-              <div style="display: grid; grid-template-columns: minmax(150px, 220px) auto 1fr; gap: var(--space-3); align-items: start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+              <div class="rep-item" style="display: grid; grid-template-columns: minmax(150px, 220px) auto 1fr; gap: var(--space-3); align-items: start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
                 <div style="font-family: var(--font-heading); font-weight: 800;">{{ lv.name }}</div>
                 <span class="{{ lv.cls }}" style="justify-self: start;">{{ lv.level }}</span>
                 <div class="text-muted" style="font-size: 14px;">{{ lv.text }}</div>
               </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ miHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Iqtidorlar xaritasi</h3>
+          <div style="display: flex; flex-direction: column;">
+            <sc-for list="{{ mi }}" as="it" hint-placeholder-count="3">
+              <div class="rep-item" style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+                <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 2px;">{{ it.main }}</div>
+                <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px; max-width: 65ch;">{{ it.sub }}</div></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ compassHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Qiziqishlar kompasi</h3>
+          <sc-for list="{{ compass }}" as="cp" hint-placeholder-count="1"><p style="max-width: 65ch;">{{ cp.t }}</p></sc-for>
+        </sc-if>
+
+        <sc-if value="{{ mindsetHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">O'sish tafakkuri va o'z-o'zini boshqarish</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+            <sc-for list="{{ mindset }}" as="it" hint-placeholder-count="3">
+              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
             </sc-for>
           </div>
         </sc-if>
@@ -658,8 +701,8 @@ input, textarea, button, select { font-family: var(--font-body); }
           <sc-if value="{{ goal }}" hint-placeholder-val="{{ false }}"><p style="max-width: 65ch; font-weight: 600;">{{ goal }}</p></sc-if>
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ milestones }}" as="ms" hint-placeholder-count="3">
-              <div style="display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-divider);">
-                <div style="width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-text); color: var(--color-neutral-100); font-family: var(--font-heading); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;">{{ ms.n }}</div>
+              <div class="rep-item" style="display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-divider);">
+                <div class="rep-msn" style="width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-text); color: var(--color-neutral-100); font-family: var(--font-heading); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;">{{ ms.n }}</div>
                 <div style="align-self: center;">{{ ms.t }}</div>
               </div>
             </sc-for>
@@ -671,7 +714,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Nimani o'rganish va mashq qilish</h3>
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ learn }}" as="it" hint-placeholder-count="3">
-              <div style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+              <div class="rep-item" style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
                 <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 2px;">{{ it.main }}</div>
                 <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px; max-width: 65ch;">{{ it.sub }}</div></sc-if>
               </div>
@@ -684,7 +727,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Tavsiya etilgan sport va mashg'ulotlar</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3);">
             <sc-for list="{{ sports }}" as="sp" hint-placeholder-count="3">
-              <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
+              <div class="rep-item" style="border: 2px solid var(--color-divider); padding: var(--space-4);">
                 <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">0{{ sp.n }} · Sinab ko'ring</h6>
                 <h4 style="margin-bottom: var(--space-2);">{{ sp.main }}</h4>
                 <p class="text-muted" style="font-size: 14px; margin: 0;">{{ sp.sub }}</p>
@@ -694,7 +737,7 @@ input, textarea, button, select { font-family: var(--font-body); }
         </sc-if>
 
         <sc-if value="{{ letterHas }}" hint-placeholder-val="{{ false }}">
-          <div style="margin-top: var(--space-6); background: var(--color-accent); color: var(--color-neutral-100); padding: clamp(20px, 4vw, 40px);">
+          <div class="rep-letter" style="margin-top: var(--space-6); background: var(--color-accent); color: var(--color-neutral-100); padding: clamp(20px, 4vw, 40px);">
             <h6 style="color: var(--color-accent-200); margin-bottom: var(--space-3);">{{ repName }} uchun xat · ovoz chiqarib o'qib bering</h6>
             <sc-for list="{{ letter }}" as="par" hint-placeholder-count="2">
               <p style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.4vw, 26px); line-height: 1.35; margin: 0 0 var(--space-3); max-width: 30ch;">{{ par.t }}</p>
@@ -707,7 +750,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Kattalar uchun</h3>
           <div style="display: flex; flex-direction: column; gap: var(--space-2);">
             <sc-for list="{{ adults }}" as="it" hint-placeholder-count="3">
-              <div style="display: flex; gap: 10px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
+              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
             </sc-for>
           </div>
         </sc-if>
@@ -721,9 +764,9 @@ input, textarea, button, select { font-family: var(--font-body); }
         </sc-for>
 
         <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
-        <div style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; justify-content: space-between;">
+        <div class="rep-item" style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="width: 12px; height: 12px; background: var(--color-accent); display: inline-block;"></span>
+            <span class="rep-dot" style="width: 12px; height: 12px; background: var(--color-accent); display: inline-block;"></span>
             <div>
               <div style="font-family: var(--font-heading); font-weight: 800;">{{ brand }}</div>
               <div class="text-muted" style="font-size: 13px;">Hisobotdagi tavsiyalarga mos dasturlarimiz bor — birinchi dars bepul.</div>
@@ -1419,7 +1462,7 @@ class Component extends DCLogic {
     return { main: name || rest, sub: name ? rest : '', hasSub: !!(name && rest) };
   }
   parseReport(md) {
-    const out = { strengths: [], levels: [], goal: '', milestones: [], learn: [], sports: [], letter: [], adults: [], extra: [], intro: '' };
+    const out = { strengths: [], levels: [], mi: [], compass: [], mindset: [], goal: '', milestones: [], learn: [], sports: [], letter: [], adults: [], extra: [], intro: '' };
     if (!md) return out;
     const parts = String(md).split(/^##\s+/m);
     out.intro = this.mdClean(parts[0] || '').trim();
@@ -1442,6 +1485,12 @@ class Component extends DCLogic {
           return { name: this.mdClean(name).trim(), level: lvNorm || '—', cls, text: this.mdClean(rest).trim() };
         });
       }
+      // NOTE: 'iqtidor' must be checked before the roadmap branch — "Iqtidorlar
+      // xaritasi" also contains 'xarita' and would be swallowed (then clobbered
+      // by the real roadmap section), silently dropping the whole MI map.
+      else if (t.indexOf('iqtidor') >= 0) out.mi = this.items(body).map(s => this.boldSplit(s));
+      else if (t.indexOf('kompas') >= 0) out.compass = String(body).split(/\n{2,}/).map(p => this.mdClean(p).trim()).filter(Boolean).map(tt => ({ t: tt }));
+      else if (t.indexOf('tafakkur') >= 0 || t.indexOf('boshqarish') >= 0) out.mindset = this.items(body).map(s => ({ t: this.mdClean(s).trim() })).filter(x => x.t);
       else if (t.indexOf('maqsad') >= 0 || t.indexOf('xarita') >= 0) {
         const its = []; const paras = [];
         String(body).split('\n').forEach(l => {
@@ -1590,6 +1639,9 @@ class Component extends DCLogic {
       copyLabel: S.copied ? 'Nusxalandi' : 'Havolani nusxalash',
       repIntro: rep.intro, strengths: rep.strengths, strengthsHas: rep.strengths.length > 0,
       levels: rep.levels, levelsHas: rep.levels.length > 0,
+      mi: rep.mi, miHas: rep.mi.length > 0,
+      compass: rep.compass, compassHas: rep.compass.length > 0,
+      mindset: rep.mindset, mindsetHas: rep.mindset.length > 0,
       goal: rep.goal, milestones: rep.milestones, roadmapHas: !!(rep.goal || rep.milestones.length),
       learn: rep.learn, learnHas: rep.learn.length > 0,
       sports: rep.sports, sportsHas: rep.sports.length > 0,
