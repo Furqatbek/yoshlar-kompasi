@@ -54,13 +54,18 @@ router.post(
   newSessionLimiter,
   asyncHandler(async (req, res) => {
     const b = req.body || {};
+    // The adult assertion (parent/teacher, 18+, privacy accepted) is enforced
+    // HERE, not only in the UI — client-side checks can be stale or bypassed.
+    if (b.consent !== true) {
+      throw badRequest('Davom etish uchun rozilik belgisini qo‘ying: siz bolaning ota-onasi yoki o‘qituvchisi ekaningizni tasdiqlashingiz kerak.', 'consent_required');
+    }
     const nickname = v.reqStr(b.nickname, 'Ism', 60);
     const grade = v.grade(b.grade);
     const age = v.optAge(b.age);
     const goal = v.optStr(b.goal, 300);
     const notes = v.optStr(b.notes, 500);
 
-    const model = config.anthropic.model;
+    const model = claude.activeModel();
     const promptVersion = prompt.promptVersion();
     const token = sessionToken();
     const { child, session } = await repo.createChildAndSession({
@@ -68,7 +73,9 @@ router.post(
     });
 
     // Store the generated intro as an internal (meta) user turn, then greet.
-    await repo.addMessage(session.id, 'user', prompt.buildIntro({ nickname, grade, age, goal, notes }), true);
+    // Data minimization: goal/notes are stored in OUR db only — buildIntro
+    // sends nothing but nickname/grade/age to the LLM.
+    await repo.addMessage(session.id, 'user', prompt.buildIntro({ nickname, grade, age }), true);
 
     const base = {
       session_id: session.id,
@@ -81,7 +88,7 @@ router.post(
       const history = await repo.getMessages(session.id);
       const out = await claude.complete({
         system: prompt.systemPrompt(), model,
-        maxTokens: config.anthropic.conversationMaxTokens, messages: history,
+        maxTokens: config.llm.conversationMaxTokens, messages: history,
       });
       await repo.addMessage(session.id, 'assistant', out.text, false);
       const updated = await repo.applyTurn(session.id, {
@@ -90,6 +97,10 @@ router.post(
       const messages = await repo.getMessages(session.id);
       return res.status(201).json({ ...base, messages, progress: progressOf(updated), done: allDone(updated) });
     } catch (err) {
+      // Log the real cause server-side (bad model / key / credits show up here)
+      // so operators can diagnose; the client only gets a generic message.
+      // eslint-disable-next-line no-console
+      console.error('[error] POST /api/sessions greeting failed session=' + session.id + ': ' + err.message);
       // The session exists; let the client enter it and retry the first turn.
       const messages = await repo.getMessages(session.id);
       // Never surface upstream Claude error text to the client.
@@ -147,8 +158,8 @@ router.post(
 
     const history = await repo.getMessages(session.id);
     const out = await claude.complete({
-      system: prompt.systemPrompt(), model: session.model,
-      maxTokens: config.anthropic.conversationMaxTokens, messages: history,
+      system: prompt.systemPrompt(), model: claude.modelFor(session.model),
+      maxTokens: config.llm.conversationMaxTokens, messages: history,
     });
     await repo.addMessage(session.id, 'assistant', out.text, false);
     const updated = await repo.applyTurn(session.id, {
@@ -235,8 +246,21 @@ router.post(
     const child = await repo.getChildById(session.child_id);
     const partial = !allDone(session);
 
-    // Append the report-request meta turn once (retry-safe).
+    // Engagement gate: a report is only ever built from the child's real answers
+    // (spec §4 / the product promise). Count real (non-meta) answers only — we
+    // deliberately do NOT accept a completed [YAKUN] direction as a substitute,
+    // since the model controls those markers and could emit one with no answers,
+    // bypassing the gate. A legitimately-assessed direction always has answers.
     const msgs = await repo.getMessages(session.id);
+    const realAnswers = msgs.filter((m) => m.role === 'user' && !m.meta).length;
+    if (realAnswers < config.caps.minAnswersForReport) {
+      throw badRequest(
+        'Hisobot uchun avval bolaning savollarga bergan javobini yozing — hisobot aynan shu javoblardan tuziladi.',
+        'insufficient_engagement'
+      );
+    }
+
+    // Append the report-request meta turn once (retry-safe).
     const last = msgs[msgs.length - 1];
     if (!(last && last.role === 'user' && last.meta)) {
       await repo.addMessage(session.id, 'user', prompt.buildReportRequest(child.nickname, partial), true);
@@ -244,8 +268,9 @@ router.post(
 
     const history = await repo.getMessages(session.id);
     const out = await claude.complete({
-      system: prompt.systemPrompt(), model: session.model,
-      maxTokens: config.anthropic.reportMaxTokens, messages: history,
+      system: prompt.systemPrompt(), model: claude.modelFor(session.model),
+      maxTokens: config.llm.reportMaxTokens, messages: history,
+      timeoutMs: config.llm.reportTimeoutMs,
     });
     await repo.applyTurn(session.id, { inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: false });
 

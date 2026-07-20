@@ -1,6 +1,9 @@
 # Build context is the repository ROOT (see docker-compose.yml).
 FROM node:22-alpine
 
+# pg_dump for the in-stack backup cron (same image runs app and cron).
+RUN apk add --no-cache postgresql16-client
+
 ENV NODE_ENV=production
 WORKDIR /app/server
 
@@ -16,6 +19,7 @@ COPY Kompas.dc.html ../Kompas.dc.html
 COPY support.js ../support.js
 COPY _ds ../_ds
 COPY uploads ../uploads
+COPY robots.txt favicon.svg ../
 
 # Assemble the static frontend into server/public.
 RUN npm run build:web

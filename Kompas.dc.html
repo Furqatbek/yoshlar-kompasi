@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yosh Iste'dodlar Kompasi</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -17,14 +19,30 @@ a { color: var(--color-accent-700); }
 a:hover { color: var(--color-accent-600); }
 input, textarea, button, select { font-family: var(--font-body); }
 @keyframes yikBlink { 0%, 80%, 100% { opacity: 0.15; } 40% { opacity: 1; } }
+@page { margin: 14mm; }
 @media print {
   .no-print { display: none !important; }
-  body { background: #fff; }
+  /* Kill every page-level background: the app shell's grey (--color-bg) would
+     otherwise print across the sheet and be sliced at page edges. */
+  html, body, #yik-app, main { background: #fff !important; }
+  #yik-app { min-height: 0 !important; }
   #yik-report { max-width: none !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
+  /* Pagination: keep atomic blocks whole; glue headings to their content. */
+  #yik-report h1, #yik-report h3, #yik-report h4, #yik-report h6 { break-after: avoid-page; break-inside: avoid; }
+  #yik-report p { orphans: 3; widows: 3; }
+  .rep-item, .rep-letter { break-inside: avoid; }
+  /* Keep the report's real colors when printing (the letter card is accent-red
+     with light text, number chips are dark, dots are accent). print-color-adjust
+     asks the browser not to economize them away. If the user prints WITHOUT
+     background graphics, Chromium auto-darkens the light text and the accent
+     border below still frames the letter card, so it stays readable. */
+  .rep-letter, .rep-msn, .rep-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rep-letter { border: 3px solid var(--color-accent) !important; }
+  #yik-report .tag { border: 1px solid currentColor !important; }
 }
 </style>
 </helmet>
-<div style="min-height: 100vh; display: flex; flex-direction: column; background: var(--color-bg); color: var(--color-text);">
+<div id="yik-app" style="min-height: 100vh; display: flex; flex-direction: column; background: var(--color-bg); color: var(--color-text);">
 
 <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
 <nav class="nav no-print" style="position: sticky; top: 0; z-index: 40; background: var(--color-bg);">
@@ -306,7 +324,7 @@ input, textarea, button, select { font-family: var(--font-body); }
       </details>
       <details style="border-top: 1px solid var(--color-divider);">
         <summary style="cursor: pointer; font-family: var(--font-heading); font-weight: 700; font-size: 16px; padding: var(--space-3) 0;">Hisobot qanday keladi?</summary>
-        <p class="text-muted" style="margin: 0 0 var(--space-3); max-width: 60ch;">Yakunda havola telefon raqamingizga yuboriladi; hisobot shu yerning o'zida ham ochiladi va PDF qilib saqlab olish mumkin.</p>
+        <p class="text-muted" style="margin: 0 0 var(--space-3); max-width: 60ch;">Hisobot yakunda shu yerning o'zida ochiladi — PDF qilib saqlab olish va havolani nusxalash mumkin. Telefon raqam qoldirsangiz, markaz havolani keyin SMS orqali ham yuborishi mumkin.</p>
       </details>
       <details style="border-top: 1px solid var(--color-divider);">
         <summary style="cursor: pointer; font-family: var(--font-heading); font-weight: 700; font-size: 16px; padding: var(--space-3) 0;">To'xtatib, keyin davom etsam bo'ladimi?</summary>
@@ -358,10 +376,12 @@ input, textarea, button, select { font-family: var(--font-body); }
       <div class="field">
         <label for="yik-goal">Maqsad yoki orzu (ixtiyoriy)</label>
         <input class="input" id="yik-goal" placeholder="Masalan: matematikada kuchli bo'lish, futbolchi bo'lish…" value="{{ goalVal }}" onChange="{{ onGoal }}">
+        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Faqat bizning serverda saqlanadi — AI xizmatiga yuborilmaydi</span>
       </div>
       <div class="field">
         <label for="yik-notes">Qo'shimcha izoh (ixtiyoriy)</label>
         <textarea class="input" id="yik-notes" rows="2" placeholder="Sog'liq cheklovlari, uyatchanlik yoki bilish muhim bo'lgan boshqa narsalar" value="{{ notesVal }}" onChange="{{ onNotes }}"></textarea>
+        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Faqat bizning serverda saqlanadi — AI xizmatiga yuborilmaydi</span>
       </div>
       <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px; max-width: 60ch;">
         <input type="checkbox" checked="{{ consentVal }}" onChange="{{ onConsent }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
@@ -385,7 +405,10 @@ input, textarea, button, select { font-family: var(--font-body); }
           <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Taxminan 30 daqiqa ajrating — istalgan payt tanaffus qilish mumkin.</span></div>
           <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Savollarni bolaga ovoz chiqarib o'qib berasiz, javobini yozasiz.</span></div>
         </div>
-        <button type="button" class="btn btn-primary" onClick="{{ startSession }}" style="font-size: 16px; padding: 12px 20px;">Mashg'ulotni boshlash</button>
+        <button type="button" class="btn btn-primary" onClick="{{ startSession }}" disabled="{{ starting }}" style="font-size: 16px; padding: 12px 20px;">{{ startLabel }}</button>
+        <sc-if value="{{ starting }}" hint-placeholder-val="{{ false }}">
+          <p style="margin: var(--space-3) 0 0; font-size: 14px; color: var(--color-accent-700); font-weight: 600;">Sun'iy intellekt birinchi savollarni tayyorlamoqda — odatda 10–20 soniya. Sahifani yopmang.</p>
+        </sc-if>
       </div>
     </sc-if>
   </div>
@@ -413,6 +436,22 @@ input, textarea, button, select { font-family: var(--font-body); }
 
   <main style="flex: 1;">
     <div style="max-width: 880px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8); display: flex; flex-direction: column; gap: var(--space-6);">
+      <sc-if value="{{ sessionLoading }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; gap: 5px; align-items: center; padding: var(--space-4) 0;">
+          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0s;"></span>
+          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.2s;"></span>
+          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.4s;"></span>
+          <span class="text-muted" style="margin-left: 8px;">Yuklanmoqda…</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sessionFailed }}" hint-placeholder-val="{{ false }}">
+        <div style="border: 2px solid var(--color-accent-300); background: var(--color-accent-100); padding: var(--space-6);">
+          <h4 style="margin-bottom: var(--space-2);">Birinchi savollar tayyorlanmadi</h4>
+          <p style="color: var(--color-accent-700); font-weight: 600; margin-bottom: var(--space-2);">{{ apiError }}</p>
+          <p class="text-muted" style="margin-bottom: var(--space-4); max-width: 60ch;">Sun'iy intellekt bilan bog'lanishda muammo bo'ldi. Bir oz kuting va qayta urinib ko'ring. (Agar takrorlansa, markazga xabar bering.)</p>
+          <button type="button" class="btn btn-primary" onClick="{{ retry }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Qayta urinish</button>
+        </div>
+      </sc-if>
       <sc-if value="{{ sessionEmpty }}" hint-placeholder-val="{{ false }}">
         <div style="border: 2px solid var(--color-divider); padding: var(--space-6);">
           <h4 style="margin-bottom: var(--space-2);">Mashg'ulot topilmadi</h4>
@@ -499,6 +538,20 @@ input, textarea, button, select { font-family: var(--font-body); }
         <div class="dialog-actions" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
           <button type="button" class="btn btn-primary" onClick="{{ confirmFinish }}">Ha, davom etamiz</button>
           <button type="button" class="btn btn-ghost" onClick="{{ cancelFinish }}">Ortga</button>
+          <button type="button" class="btn btn-ghost" onClick="{{ exitSession }}">Hisobotsiz chiqish</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ lowEngage }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-text) 55%, transparent);">
+      <div class="dialog elev-lg" style="background: var(--color-bg); border: 2px solid var(--color-text); padding: var(--space-6); max-width: 440px; margin: var(--space-4);">
+        <h3 class="dialog-title" style="margin-bottom: var(--space-2);">Hali javoblar yo'q</h3>
+        <p class="dialog-body text-muted" style="margin-bottom: var(--space-4);">Hisobot aynan bolaning javoblaridan tuziladi, shuning uchun javobsiz hisobot bo'lmaydi. Davom etib bolaning javoblarini yozishingiz — yoki hisobotsiz chiqishingiz mumkin: mashg'ulot saqlanadi va keyin davom ettirsa bo'ladi.</p>
+        <div class="dialog-actions" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" onClick="{{ dismissLowEngage }}">Davom etamiz</button>
+          <button type="button" class="btn btn-ghost" onClick="{{ exitSession }}">Hisobotsiz chiqish</button>
         </div>
       </div>
     </div>
@@ -508,8 +561,8 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div data-screen-label="Kontakt darvozasi" style="position: fixed; inset: 0; z-index: 65; background: var(--color-bg); overflow: auto;">
       <div style="max-width: 520px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
         <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">Oxirgi qadam</h6>
-        <h2 style="margin-bottom: var(--space-2); max-width: 18ch;">{{ childName }}ning hisoboti tayyor! Qayerga yuboraylik?</h2>
-        <p class="text-muted" style="margin-bottom: var(--space-6); max-width: 48ch;">Hisobot havolasini yuboramiz — keyin ham istalgan payt ochib ko'ra olasiz.</p>
+        <h2 style="margin-bottom: var(--space-2); max-width: 18ch;">{{ childName }}ning hisoboti tayyor!</h2>
+        <p class="text-muted" style="margin-bottom: var(--space-6); max-width: 48ch;">Hisobot hozir shu yerning o'zida ochiladi va saqlanadi — keyin ham istalgan payt ochib ko'ra olasiz. Telefon raqamingizni qoldirsangiz, markaz havolani SMS orqali yuborishi va siz bilan bog'lanishi mumkin.</p>
         <div style="display: flex; flex-direction: column; gap: var(--space-4);">
           <div class="field">
             <label for="yik-parent">Ismingiz *</label>
@@ -524,7 +577,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           </div>
           <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px;">
             <input type="checkbox" checked="{{ cDeliveryVal }}" onChange="{{ onCDelivery }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
-            <span>Hisobot havolasi shu raqamga yuborilishiga roziman. *</span>
+            <span>Markaz shu raqamga hisobot havolasini yuborishi va bog'lanishi mumkinligiga roziman. *</span>
           </label>
           <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px;" class="text-muted">
             <input type="checkbox" checked="{{ cMarketingVal }}" onChange="{{ onCMarketing }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
@@ -533,8 +586,8 @@ input, textarea, button, select { font-family: var(--font-body); }
           <sc-if value="{{ gateError }}" hint-placeholder-val="{{ false }}">
             <div style="color: var(--color-accent-700); font-weight: 600; font-size: 14px;">{{ gateError }}</div>
           </sc-if>
-          <div><button type="button" class="btn btn-primary" onClick="{{ gateSubmit }}" style="font-size: 16px; padding: 12px 20px;">Hisobotni olish</button></div>
-          <div><button type="button" onClick="{{ gateViewOnly }}" style="background: none; border: 0; padding: 0; cursor: pointer; font-size: 13px; color: var(--color-neutral-600); text-decoration: underline; text-underline-offset: 3px;">Hisobotni faqat shu yerda ko'rish</button></div>
+          <div><button type="button" class="btn btn-primary" onClick="{{ gateSubmit }}" style="font-size: 16px; padding: 12px 20px;">Hisobotni ochish</button></div>
+          <div><button type="button" onClick="{{ gateViewOnly }}" style="background: none; border: 0; padding: 0; cursor: pointer; font-size: 13px; color: var(--color-neutral-600); text-decoration: underline; text-underline-offset: 3px;">Raqam qoldirmasdan ko'rish</button></div>
         </div>
       </div>
     </div>
@@ -549,7 +602,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <span style="width: 14px; height: 14px; background: var(--color-accent); animation: yikBlink 1.4s infinite 0.5s;"></span>
         </div>
         <h3 style="margin-bottom: var(--space-2);">{{ childName }}ning hisoboti tayyorlanmoqda…</h3>
-        <p class="text-muted">Odatda 10–30 soniya. Sahifani yopmang.</p>
+        <p class="text-muted">To'liq hisobot 1–3 daqiqa olishi mumkin. Sahifani yopmang.</p>
       </div>
     </div>
   </sc-if>
@@ -595,7 +648,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Surat</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-3);">
             <sc-for list="{{ strengths }}" as="it" hint-placeholder-count="3">
-              <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-2);">
+              <div class="rep-item" style="border-top: 2px solid var(--color-text); padding-top: var(--space-2);">
                 <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 4px;">{{ it.main }}</div>
                 <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px;">{{ it.sub }}</div></sc-if>
               </div>
@@ -608,11 +661,40 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Hozirgi o'rni</h3>
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ levels }}" as="lv" hint-placeholder-count="3">
-              <div style="display: grid; grid-template-columns: minmax(150px, 220px) auto 1fr; gap: var(--space-3); align-items: start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+              <div class="rep-item" style="display: grid; grid-template-columns: minmax(150px, 220px) auto 1fr; gap: var(--space-3); align-items: start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
                 <div style="font-family: var(--font-heading); font-weight: 800;">{{ lv.name }}</div>
                 <span class="{{ lv.cls }}" style="justify-self: start;">{{ lv.level }}</span>
                 <div class="text-muted" style="font-size: 14px;">{{ lv.text }}</div>
               </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ miHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Iqtidorlar xaritasi</h3>
+          <div style="display: flex; flex-direction: column;">
+            <sc-for list="{{ mi }}" as="it" hint-placeholder-count="3">
+              <div class="rep-item" style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+                <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 2px;">{{ it.main }}</div>
+                <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px; max-width: 65ch;">{{ it.sub }}</div></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ compassHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">Qiziqishlar kompasi</h3>
+          <sc-for list="{{ compass }}" as="cp" hint-placeholder-count="1"><p style="max-width: 65ch;">{{ cp.t }}</p></sc-for>
+        </sc-if>
+
+        <sc-if value="{{ mindsetHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-3);">O'sish tafakkuri va o'z-o'zini boshqarish</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+            <sc-for list="{{ mindset }}" as="it" hint-placeholder-count="3">
+              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
             </sc-for>
           </div>
         </sc-if>
@@ -623,8 +705,8 @@ input, textarea, button, select { font-family: var(--font-body); }
           <sc-if value="{{ goal }}" hint-placeholder-val="{{ false }}"><p style="max-width: 65ch; font-weight: 600;">{{ goal }}</p></sc-if>
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ milestones }}" as="ms" hint-placeholder-count="3">
-              <div style="display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-divider);">
-                <div style="width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-text); color: var(--color-neutral-100); font-family: var(--font-heading); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;">{{ ms.n }}</div>
+              <div class="rep-item" style="display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-divider);">
+                <div class="rep-msn" style="width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-text); color: var(--color-neutral-100); font-family: var(--font-heading); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;">{{ ms.n }}</div>
                 <div style="align-self: center;">{{ ms.t }}</div>
               </div>
             </sc-for>
@@ -636,7 +718,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Nimani o'rganish va mashq qilish</h3>
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ learn }}" as="it" hint-placeholder-count="3">
-              <div style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
+              <div class="rep-item" style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
                 <div style="font-family: var(--font-heading); font-weight: 800; margin-bottom: 2px;">{{ it.main }}</div>
                 <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ false }}"><div class="text-muted" style="font-size: 14px; max-width: 65ch;">{{ it.sub }}</div></sc-if>
               </div>
@@ -649,7 +731,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Tavsiya etilgan sport va mashg'ulotlar</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3);">
             <sc-for list="{{ sports }}" as="sp" hint-placeholder-count="3">
-              <div style="border: 2px solid var(--color-divider); padding: var(--space-4);">
+              <div class="rep-item" style="border: 2px solid var(--color-divider); padding: var(--space-4);">
                 <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">0{{ sp.n }} · Sinab ko'ring</h6>
                 <h4 style="margin-bottom: var(--space-2);">{{ sp.main }}</h4>
                 <p class="text-muted" style="font-size: 14px; margin: 0;">{{ sp.sub }}</p>
@@ -659,7 +741,7 @@ input, textarea, button, select { font-family: var(--font-body); }
         </sc-if>
 
         <sc-if value="{{ letterHas }}" hint-placeholder-val="{{ false }}">
-          <div style="margin-top: var(--space-6); background: var(--color-accent); color: var(--color-neutral-100); padding: clamp(20px, 4vw, 40px);">
+          <div class="rep-letter" style="margin-top: var(--space-6); background: var(--color-accent); color: var(--color-neutral-100); padding: clamp(20px, 4vw, 40px);">
             <h6 style="color: var(--color-accent-200); margin-bottom: var(--space-3);">{{ repName }} uchun xat · ovoz chiqarib o'qib bering</h6>
             <sc-for list="{{ letter }}" as="par" hint-placeholder-count="2">
               <p style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.4vw, 26px); line-height: 1.35; margin: 0 0 var(--space-3); max-width: 30ch;">{{ par.t }}</p>
@@ -672,7 +754,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Kattalar uchun</h3>
           <div style="display: flex; flex-direction: column; gap: var(--space-2);">
             <sc-for list="{{ adults }}" as="it" hint-placeholder-count="3">
-              <div style="display: flex; gap: 10px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
+              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
             </sc-for>
           </div>
         </sc-if>
@@ -686,9 +768,9 @@ input, textarea, button, select { font-family: var(--font-body); }
         </sc-for>
 
         <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
-        <div style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; justify-content: space-between;">
+        <div class="rep-item" style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="width: 12px; height: 12px; background: var(--color-accent); display: inline-block;"></span>
+            <span class="rep-dot" style="width: 12px; height: 12px; background: var(--color-accent); display: inline-block;"></span>
             <div>
               <div style="font-family: var(--font-heading); font-weight: 800;">{{ brand }}</div>
               <div class="text-muted" style="font-size: 13px;">Hisobotdagi tavsiyalarga mos dasturlarimiz bor — birinchi dars bepul.</div>
@@ -717,7 +799,7 @@ input, textarea, button, select { font-family: var(--font-body); }
     </div>
     <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
       <h4 style="margin-bottom: var(--space-2);">Qayerda saqlanadi</h4>
-      <p style="margin: 0; max-width: 60ch;">Mashg'ulot yozuvi va hisobot serverimizda saqlanadi — shu tufayli mashg'ulotni istalgan qurilmada davom ettirasiz va hisobot havolasi keyin ham ochiladi. Savollar tuzish uchun yozganlaringiz Claude (Anthropic API) xizmatiga yuboriladi.</p>
+      <p style="margin: 0; max-width: 60ch;">Mashg'ulot yozuvi va hisobot serverimizda saqlanadi — shu tufayli mashg'ulotni istalgan qurilmada davom ettirasiz va hisobot havolasi keyin ham ochiladi. Savollar tuzish uchun AI xizmatiga (Claude modeli — to'g'ridan-to'g'ri Anthropic yoki OpenRouter orqali) faqat bolaning ismi/taxallusi, sinfi, yoshi va mashg'ulot davomidagi yozishmalar yuboriladi. Maqsad va qo'shimcha izoh maydonlari, ota-onaning ismi va telefon raqami bu xizmatlarga hech qachon yuborilmaydi — ular faqat bizning serverimizda saqlanadi.</p>
     </div>
     <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
       <h4 style="margin-bottom: var(--space-2);">Qancha saqlanadi va qanday o'chiriladi</h4>
@@ -941,6 +1023,13 @@ input, textarea, button, select { font-family: var(--font-body); }
           </tbody>
         </table>
       </div>
+      <h6 style="margin: var(--space-6) 0 var(--space-2);">LLM xarajati</h6>
+      <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; border-top: 2px solid var(--color-divider); padding-top: var(--space-3);">
+        <div><div class="text-muted" style="font-size: 12px;">Jami token (kirish / chiqish)</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ costTokens }}</div></div>
+        <div><div class="text-muted" style="font-size: 12px;">Taxminiy jami xarajat</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ costTotal }}</div></div>
+        <div><div class="text-muted" style="font-size: 12px;">O'rtacha, yakunlangan mashg'ulot boshiga</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ costPer }}</div></div>
+      </div>
+      <p class="text-muted" style="font-size: 12px; margin: var(--space-2) 0 0;">Narxlar PRICE_INPUT_PER_MTOK / PRICE_OUTPUT_PER_MTOK sozlamalaridan; kesh chegirmalari hisobga olinmagan (real xarajat pastroq bo'lishi mumkin).</p>
     </div>
   </main>
   </sc-if>
@@ -983,14 +1072,14 @@ class Component extends DCLogic {
   state = {
     route: (typeof location !== 'undefined' && location.hash ? location.hash.replace(/^#/, '') : '/') || '/',
     name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
-    messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
+    messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, lowEngage: false, generating: false,
     status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
     token: '', shareToken: '', reportPartial: false, resumeName: '',
     gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false, copied: false,
     admAuthed: false, admEmail: '', admPass: '', admError: '',
     fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
     // server-fetched, route-scoped data
-    report: null, reportLoading: false, reportNotFound: false, deliveryLink: '',
+    report: null, reportLoading: false, reportNotFound: false, deliveryLink: '', sessLoading: false,
     leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null
   };
 
@@ -1024,6 +1113,7 @@ class Component extends DCLogic {
   async loadSession(token) {
     if (!token || this._loadingSession === token) return;
     this._loadingSession = token; this._stok = token;
+    this.setState({ sessLoading: true });
     try {
       const d = await this.api('/api/sessions/' + encodeURIComponent(token));
       this._loadedSession = token;
@@ -1033,7 +1123,7 @@ class Component extends DCLogic {
         goal: d.child.goal || '', notes: d.child.notes || '',
         messages: d.messages || [], progress: this._prog(d.progress), status: d.status, token: token,
         shareToken: d.report ? d.report.share_token : '', reportPartial: d.report ? !!d.report.partial : false,
-        paused: d.status === 'paused',
+        paused: d.status === 'paused', lowEngage: false, finishConfirm: false,
         resumeName: (d.status === 'active' || d.status === 'paused') ? (d.child.nickname || 'Bola') : ''
       });
       this.saveHandle();
@@ -1043,6 +1133,7 @@ class Component extends DCLogic {
       if (e && (e.status === 401 || e.status === 404)) { this.clearHandle(); this._stok = null; this._loadedSession = null; }
     } finally {
       this._loadingSession = null;
+      this.setState({ sessLoading: false });
     }
   }
 
@@ -1051,7 +1142,7 @@ class Component extends DCLogic {
       const r = (location.hash || '#/').replace(/^#/, '') || '/';
       if (r === '/admin' && this.state.admAuthed) { location.hash = '#/admin/leads'; return; }
       if (r === '/mashgulot' && this._stok) { location.hash = '#/mashgulot/' + this._stok; return; }
-      this.setState({ route: r, copied: false }, () => this.syncRoute());
+      this.setState({ route: r, copied: false, lowEngage: false }, () => this.syncRoute());
       if (!r.startsWith('/mashgulot')) window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', this._hash);
@@ -1111,12 +1202,21 @@ class Component extends DCLogic {
   }
 
   async startSession() {
-    if (this._busy) return; this._busy = true;
+    // Guard on state, not only the instance field: the dc-runtime can swap the
+    // logic instance (losing _busy) while state carries over, so state.sending
+    // is the reliable double-click latch.
+    if (this._busy || this.state.sending) return; this._busy = true;
     const S = this.state;
+    // Re-validate at the moment of starting: the box may have been unchecked
+    // after step 2 was unlocked. The server enforces this too (consent_required).
+    if (!S.consent) {
+      this.setState({ formError: 'Davom etish uchun rozilik belgisini qo‘ying.', prepared: false });
+      this._busy = false; return;
+    }
     this.setState({ formError: '', sending: true });
     try {
       const d = await this.api('/api/sessions', { method: 'POST', body: {
-        nickname: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim()
+        nickname: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim(), consent: true
       } });
       this._stok = d.session_token; this._loadedSession = d.session_token; this._loadedReportToken = null; this._lastN = 0;
       this.saveHandle();
@@ -1161,7 +1261,24 @@ class Component extends DCLogic {
     }
   }
 
+  _realAnswers() {
+    return (this.state.messages || []).filter((m) => m.role === 'user' && !m.meta).length;
+  }
+
+  exitSession() {
+    // Leave the assessment WITHOUT a report. Nothing is deleted: the session
+    // handle stays saved, so the landing banner offers resume or a fresh start.
+    this.setState(
+      { lowEngage: false, finishConfirm: false, gate: false, paused: false, resumeName: this.state.name || 'Bola' },
+      () => { location.hash = '#/'; }
+    );
+  }
+
   askFinish() {
+    // A report is built from the child's answers — block the finish/contact flow
+    // outright if nothing has been answered yet. Mirrors the server gate, which
+    // counts real (non-meta) answers only (not model-emitted [YAKUN] markers).
+    if (this._realAnswers() === 0) return this.setState({ lowEngage: true });
     const p = this.state.progress;
     if (p.MANTIQ && p.PSIXOLOGIYA && p.HARAKAT) this.setState({ gate: true, gateError: '' });
     else this.setState({ finishConfirm: true });
@@ -1195,7 +1312,7 @@ class Component extends DCLogic {
   gateViewOnly() { this.setState({ gate: false }, () => this.generate()); }
 
   async generate() {
-    if (this._busy) return; this._busy = true;
+    if (this._busy || this.state.generating) return; this._busy = true;
     this.setState({ finishConfirm: false, generating: true, status: 'generating', apiError: '' });
     try {
       const d = await this.api('/api/sessions/' + this._stok + '/report', { method: 'POST', body: {} });
@@ -1206,7 +1323,13 @@ class Component extends DCLogic {
         generating: false, status: 'done', resumeName: ''
       }, () => { location.hash = '#/hisobot/' + d.share_token; });
     } catch (e) {
-      this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + this._errMsg(e) });
+      // The server's engagement gate isn't a failure to retry — nudge the user
+      // back to answering rather than locking the composer with apiError.
+      if (e && e.data && e.data.code === 'insufficient_engagement') {
+        this.setState({ generating: false, status: 'active', gate: false, lowEngage: true });
+      } else {
+        this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + this._errMsg(e) });
+      }
     }
     this._busy = false;
   }
@@ -1268,7 +1391,7 @@ class Component extends DCLogic {
     }
   }
   async fetchStats() {
-    try { const d = await this.api('/admin/stats'); this.setState({ stats: d.buckets || null }); }
+    try { const d = await this.api('/admin/stats'); this.setState({ stats: d.buckets || null, statsCost: d.cost || null }); }
     catch (e) { this._adminUnauth(e); }
   }
   _setLeadLocal(patch) {
@@ -1315,7 +1438,7 @@ class Component extends DCLogic {
     this.clearHandle(); this._stok = null; this._loadedSession = null; this._lastN = 0; this._loadedReportToken = null; this._busy = false;
     this.setState({
       name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
-      messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, generating: false,
+      messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, lowEngage: false, generating: false,
       status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
       token: '', shareToken: '', reportPartial: false, resumeName: '',
       gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false,
@@ -1356,7 +1479,7 @@ class Component extends DCLogic {
     return { main: name || rest, sub: name ? rest : '', hasSub: !!(name && rest) };
   }
   parseReport(md) {
-    const out = { strengths: [], levels: [], goal: '', milestones: [], learn: [], sports: [], letter: [], adults: [], extra: [], intro: '' };
+    const out = { strengths: [], levels: [], mi: [], compass: [], mindset: [], goal: '', milestones: [], learn: [], sports: [], letter: [], adults: [], extra: [], intro: '' };
     if (!md) return out;
     const parts = String(md).split(/^##\s+/m);
     out.intro = this.mdClean(parts[0] || '').trim();
@@ -1379,6 +1502,12 @@ class Component extends DCLogic {
           return { name: this.mdClean(name).trim(), level: lvNorm || '—', cls, text: this.mdClean(rest).trim() };
         });
       }
+      // NOTE: 'iqtidor' must be checked before the roadmap branch — "Iqtidorlar
+      // xaritasi" also contains 'xarita' and would be swallowed (then clobbered
+      // by the real roadmap section), silently dropping the whole MI map.
+      else if (t.indexOf('iqtidor') >= 0) out.mi = this.items(body).map(s => this.boldSplit(s));
+      else if (t.indexOf('kompas') >= 0) out.compass = String(body).split(/\n{2,}/).map(p => this.mdClean(p).trim()).filter(Boolean).map(tt => ({ t: tt }));
+      else if (t.indexOf('tafakkur') >= 0 || t.indexOf('boshqarish') >= 0) out.mindset = this.items(body).map(s => ({ t: this.mdClean(s).trim() })).filter(x => x.t);
       else if (t.indexOf('maqsad') >= 0 || t.indexOf('xarita') >= 0) {
         const its = []; const paras = [];
         String(body).split('\n').forEach(l => {
@@ -1459,6 +1588,11 @@ class Component extends DCLogic {
       { label: 'Hisobot yetkazilgan', n: b0.delivered, w: Math.round(100 * b0.delivered / maxN) + '%' }
     ];
     const wLabels = ['Shu hafta', 'O‘tgan hafta', '2 hafta oldin', '3 hafta oldin'];
+    const cc = S.statsCost;
+    const nfmt = (n) => (n == null ? '—' : Number(n).toLocaleString('en-US'));
+    const costTokens = cc ? nfmt(cc.input_tokens) + ' / ' + nfmt(cc.output_tokens) : '—';
+    const costTotal = cc && cc.est_usd != null ? '$' + cc.est_usd : '—';
+    const costPer = cc && cc.per_finished_usd != null ? '$' + cc.per_finished_usd : '—';
     const weekRows = buckets.map((b, i) => ({
       label: wLabels[i], started: String(b.started), finished: String(b.finished), contact: String(b.contact), delivered: String(b.delivered),
       conv: b.started ? Math.round(100 * b.contact / b.started) + '%' : '—'
@@ -1481,17 +1615,22 @@ class Component extends DCLogic {
       ageVal: S.age, onAge: e => this.setState({ age: e.target.value }),
       goalVal: S.goal, onGoal: e => this.setState({ goal: e.target.value }),
       notesVal: S.notes, onNotes: e => this.setState({ notes: e.target.value }),
-      consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '' }),
+      // Unchecking the consent box re-locks step 2 — starting requires the
+      // assertion to hold NOW, not to have held once.
+      consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '', prepared: e.target.checked ? S.prepared : false }),
       gradeOpts, formError: S.formError, prepared: S.prepared, notPrepared: !S.prepared,
+      starting: S.sending, startLabel: S.sending ? 'Tayyorlanmoqda…' : "Mashg'ulotni boshlash",
       submitForm: () => this.submitForm(), startSession: () => this.startSession(),
       childName: S.name.trim() || 'Bola', gradeLabel: S.grade ? S.grade + '-sinf' : '',
       chipMantiq: chipCls('MANTIQ'), chipPsix: chipCls('PSIXOLOGIYA'), chipHarakat: chipCls('HARAKAT'),
-      sessionEmpty: !chat.length,
+      sessionEmpty: !chat.length && !S.apiError && !S.sessLoading && !S.sending,
+      sessionFailed: !chat.length && !!S.apiError,
+      sessionLoading: !chat.length && S.sessLoading,
       chat, sending: S.sending, apiError: S.apiError,
       draftVal: S.draft, onDraft: e => this.setState({ draft: e.target.value }),
       onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
       sendNow: () => this.send(),
-      sendDisabled: S.sending || S.generating || S.paused || S.gate || !!S.apiError,
+      sendDisabled: S.sending || S.generating || S.paused || S.gate || S.lowEngage || !!S.apiError,
       chipCant: () => this.send('Javob berolmadi'),
       chipSkip: () => this.send("O'tkazib yuborish"),
       chipEasier: () => this.send('Soddaroq savol bering'),
@@ -1502,6 +1641,8 @@ class Component extends DCLogic {
       confirmFinish: () => this.setState({ finishConfirm: false, gate: true, gateError: '' }),
       cancelFinish: () => this.setState({ finishConfirm: false }),
       finishConfirm: S.finishConfirm, paused: S.paused, generating: S.generating,
+      lowEngage: S.lowEngage, dismissLowEngage: () => this.setState({ lowEngage: false }),
+      exitSession: () => this.exitSession(),
       gate: S.gate,
       parentVal: S.parentName, onParent: e => this.setState({ parentName: e.target.value, gateError: '' }),
       phoneVal: S.phone, onPhone: e => this.setState({ phone: this.fmtPhone(e.target.value), gateError: '' }),
@@ -1522,6 +1663,9 @@ class Component extends DCLogic {
       copyLabel: S.copied ? 'Nusxalandi' : 'Havolani nusxalash',
       repIntro: rep.intro, strengths: rep.strengths, strengthsHas: rep.strengths.length > 0,
       levels: rep.levels, levelsHas: rep.levels.length > 0,
+      mi: rep.mi, miHas: rep.mi.length > 0,
+      compass: rep.compass, compassHas: rep.compass.length > 0,
+      mindset: rep.mindset, mindsetHas: rep.mindset.length > 0,
       goal: rep.goal, milestones: rep.milestones, roadmapHas: !!(rep.goal || rep.milestones.length),
       learn: rep.learn, learnHas: rep.learn.length > 0,
       sports: rep.sports, sportsHas: rep.sports.length > 0,
@@ -1561,7 +1705,7 @@ class Component extends DCLogic {
       onLdNotes: e => { const v = e.target.value; this._setLeadLocal({ admin_notes: v }); clearTimeout(this._noteTimer); this._noteTimer = setTimeout(() => this.patchLead({ admin_notes: v }), 600); },
       ldDelete: () => this.deleteLead(),
       ldChildren,
-      funnel, weekRows
+      funnel, weekRows, costTokens, costTotal, costPer
     };
   }
 }

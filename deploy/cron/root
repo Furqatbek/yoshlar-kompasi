@@ -1,0 +1,16 @@
+# Crontab for the in-stack `cron` service (busybox crond, UTC).
+# Output goes to the container log: docker compose logs cron
+#
+# min hour dom mon dow  command
+
+# Nightly DB backup (02:15 UTC) -> /backups (host-mounted ./backups), pruned
+# after BACKUP_KEEP_DAYS days.
+15 2 * * * sh /app/server/scripts/backup.sh >> /proc/1/fd/1 2>&1
+
+# Monthly retention purge (02:40 UTC on the 1st) — deletes data with no session
+# activity for RETENTION_MONTHS months (see server/db/purge.js).
+40 2 1 * * cd /app/server && node db/purge.js >> /proc/1/fd/1 2>&1
+
+# Daily LLM credit check (08:00 UTC) — prints [billing] ALERT when the
+# remaining OpenRouter balance is below BILLING_ALERT_MIN_USD.
+0 8 * * * cd /app/server && node scripts/billing-check.js >> /proc/1/fd/1 2>&1

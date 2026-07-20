@@ -263,7 +263,22 @@ async function updateLead(parentId, { leadStatus, adminNotes }) {
 }
 
 // Weekly funnel counts for the last 4 weeks (bucket 0 = this week).
+// Token/cost accounting: totals across all sessions (input/output tokens are
+// accumulated per session by applyTurn). Powers the admin cost estimate.
+async function tokenTotals() {
+  const { rows } = await query(
+    `SELECT count(*)::int AS sessions,
+            count(*) FILTER (WHERE finished_at IS NOT NULL)::int AS finished,
+            coalesce(sum(input_tokens),0)::bigint AS input_tokens,
+            coalesce(sum(output_tokens),0)::bigint AS output_tokens
+       FROM sessions`
+  );
+  const r = rows[0];
+  return { sessions: r.sessions, finished: r.finished, inputTokens: Number(r.input_tokens), outputTokens: Number(r.output_tokens) };
+}
+
 async function weeklyBuckets() {
+
   const buckets = [0, 1, 2, 3].map(() => ({ started: 0, finished: 0, contact: 0, delivered: 0 }));
   const runOne = async (key, sql) => {
     const { rows } = await query(sql);
@@ -293,5 +308,5 @@ module.exports = {
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,
   getReportBySession, createReport, getReportByShareToken, markReportDelivered,
-  getAdminByEmail, listLeads, getParent, getLeadChildren, updateLead, deleteParent, weeklyBuckets,
+  getAdminByEmail, listLeads, getParent, getLeadChildren, updateLead, deleteParent, weeklyBuckets, tokenTotals,
 };

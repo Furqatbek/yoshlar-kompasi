@@ -1,8 +1,18 @@
 'use strict';
 
-// Claude proxy (backend-spec §1/§4). Holds the API key server-side and forwards
-// the conversation to the Anthropic Messages API. Returns text plus token usage
-// so callers can log cost onto the session.
+// LLM proxy (backend-spec §1/§4). Holds the API key server-side and forwards the
+// conversation to the configured provider. Two providers are supported and both
+// return the same shape — { text, inputTokens, outputTokens, stopReason } — so
+// the rest of the app never needs to know which one is active:
+//
+//   LLM_PROVIDER=anthropic   -> Anthropic Messages API (default)
+//   LLM_PROVIDER=openrouter  -> OpenRouter (OpenAI-compatible Chat Completions)
+//
+// OpenRouter exists as an escape hatch: where direct Anthropic API billing is
+// unavailable (e.g. cards the Anthropic Console rejects), OpenRouter accepts the
+// same conversation and can route to an anthropic/* model. The system prompt and
+// stored history only ever contain nickname/grade/age/answers — never the
+// parent's contact details (spec §7) — regardless of provider.
 
 const { config } = require('../config');
 
@@ -14,6 +24,46 @@ class ClaudeError extends Error {
     this.retryable = retryable;
   }
 }
+
+// 429 and 5xx are transient (retryable); 4xx (bad request, auth, credits) are not.
+function statusIsRetryable(status) {
+  return status === 429 || status >= 500;
+}
+
+// Turn a fetch/network failure into a retryable ClaudeError.
+function networkError(err) {
+  const aborted = err && (err.name === 'TimeoutError' || err.name === 'AbortError');
+  return new ClaudeError(aborted ? 'Model javob bermadi (timeout).' : 'Model bilan bog‘lanib bo‘lmadi.', {
+    status: 504,
+    retryable: true,
+  });
+}
+
+// The model id that new sessions are stamped with, for the active provider.
+function activeModel() {
+  return config.llm.provider === 'openrouter' ? config.openrouter.model : config.anthropic.model;
+}
+
+// The model id to actually send for a session. session.model is stamped once at
+// creation and is provider-specific: an Anthropic native id (`claude-sonnet-4-6`)
+// is meaningless to OpenRouter, and an OpenRouter slug (`anthropic/claude-...`)
+// is meaningless to the Anthropic API. If the deployment's provider no longer
+// matches the id the session was stamped with (e.g. sessions created before a
+// switch to LLM_PROVIDER=openrouter), fall back to the active provider's
+// configured model instead of sending an id the provider will reject.
+// OpenRouter ids are namespaced (`vendor/model`); Anthropic native ids are not,
+// which is a stable enough invariant to tell them apart.
+function modelFor(storedModel) {
+  const m = String(storedModel || '');
+  if (config.llm.provider === 'openrouter') {
+    return m.includes('/') ? m : config.openrouter.model;
+  }
+  return (m && !m.includes('/')) ? m : config.anthropic.model;
+}
+
+// ---------------------------------------------------------------------------
+// Anthropic
+// ---------------------------------------------------------------------------
 
 // Anthropic requires the first message to be `user` and roles to alternate.
 // Our stored history always alternates, but a failed turn can leave a dangling
@@ -34,14 +84,17 @@ function normalizeForAnthropic(messages) {
   return out;
 }
 
-async function complete({ system, model, maxTokens, messages }) {
+async function completeAnthropic({ system, model, maxTokens, messages, timeoutMs }) {
   if (!config.anthropic.apiKey) {
     throw new ClaudeError('Claude API kaliti sozlanmagan.', { status: 500, retryable: false });
   }
   const body = {
     model: model || config.anthropic.model,
     max_tokens: maxTokens,
-    system,
+    // Cache the (identical on every call) system prompt: cache reads bill at
+    // 0.1x input price, writes at 1.25x — a large net saving since the system
+    // prompt dominates our input tokens.
+    system: system ? [{ type: 'text', text: String(system), cache_control: { type: 'ephemeral' } }] : undefined,
     messages: normalizeForAnthropic(messages),
   };
 
@@ -55,14 +108,10 @@ async function complete({ system, model, maxTokens, messages }) {
         'content-type': 'application/json',
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(config.anthropic.timeoutMs),
+      signal: AbortSignal.timeout(timeoutMs || config.anthropic.timeoutMs),
     });
   } catch (err) {
-    const aborted = err && (err.name === 'TimeoutError' || err.name === 'AbortError');
-    throw new ClaudeError(aborted ? 'Claude javob bermadi (timeout).' : 'Claude bilan bog‘lanib bo‘lmadi.', {
-      status: 504,
-      retryable: true,
-    });
+    throw networkError(err);
   }
 
   if (!res.ok) {
@@ -71,15 +120,22 @@ async function complete({ system, model, maxTokens, messages }) {
       const j = await res.json();
       detail = (j && j.error && j.error.message) || '';
     } catch (_) { /* ignore */ }
-    // 429 and 5xx are retryable; 4xx (bad request, auth) are not.
-    const retryable = res.status === 429 || res.status >= 500;
+    const retryable = statusIsRetryable(res.status);
     throw new ClaudeError('Claude xatosi (' + res.status + ')' + (detail ? ': ' + detail : ''), {
       status: retryable ? 502 : 500,
       retryable,
     });
   }
 
-  const data = await res.json();
+  // The body read races the same abort signal: a long generation can deliver
+  // headers in time and still time out mid-body. Surface that as the same
+  // clean retryable error, never a raw AbortError -> 500.
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    throw networkError(err);
+  }
   const text = (data.content || [])
     .filter((b) => b && b.type === 'text')
     .map((b) => b.text)
@@ -94,4 +150,129 @@ async function complete({ system, model, maxTokens, messages }) {
   };
 }
 
-module.exports = { complete, normalizeForAnthropic, ClaudeError };
+// ---------------------------------------------------------------------------
+// OpenRouter (OpenAI-compatible Chat Completions)
+// ---------------------------------------------------------------------------
+
+// OpenAI-format messages: a leading system message, then the turns. Unlike
+// Anthropic, alternation is not required, so we map the history straight through
+// (a dangling user turn is fine) and skip empty turns. The system prompt is
+// marked as an explicit cache breakpoint — OpenRouter forwards it to Anthropic
+// (0.1x price on cache reads) and converts/ignores it gracefully for other
+// providers per their docs.
+function toOpenAIMessages(system, messages) {
+  const out = [];
+  if (system) out.push({ role: 'system', content: [{ type: 'text', text: String(system), cache_control: { type: 'ephemeral' } }] });
+  for (const m of messages) {
+    const role = m.role === 'assistant' ? 'assistant' : 'user';
+    const content = String(m.content == null ? '' : m.content);
+    if (content === '') continue;
+    out.push({ role, content });
+  }
+  return out;
+}
+
+async function completeOpenRouter({ system, model, maxTokens, messages, timeoutMs }) {
+  if (!config.openrouter.apiKey) {
+    throw new ClaudeError('OpenRouter API kaliti sozlanmagan.', { status: 500, retryable: false });
+  }
+  const body = {
+    model: model || config.openrouter.model,
+    max_tokens: maxTokens,
+    messages: toOpenAIMessages(system, messages),
+  };
+
+  const headers = {
+    'authorization': 'Bearer ' + config.openrouter.apiKey,
+    'content-type': 'application/json',
+  };
+  // Optional attribution headers OpenRouter surfaces on its dashboard/rankings.
+  if (config.openrouter.siteUrl) headers['HTTP-Referer'] = config.openrouter.siteUrl;
+  if (config.openrouter.siteName) headers['X-Title'] = config.openrouter.siteName;
+
+  let res;
+  try {
+    res = await fetch(config.openrouter.baseUrl + '/chat/completions', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs || config.openrouter.timeoutMs),
+    });
+  } catch (err) {
+    throw networkError(err);
+  }
+
+  if (!res.ok) {
+    let detail = '';
+    try {
+      const j = await res.json();
+      // OpenRouter/OpenAI errors: { error: { message } }; sometimes a string.
+      detail = (j && j.error && (j.error.message || j.error)) || '';
+      if (typeof detail !== 'string') detail = '';
+    } catch (_) { /* ignore */ }
+    const retryable = statusIsRetryable(res.status);
+    throw new ClaudeError('OpenRouter xatosi (' + res.status + ')' + (detail ? ': ' + detail : ''), {
+      status: retryable ? 502 : 500,
+      retryable,
+    });
+  }
+
+  // The body read races the same abort signal: a long generation can deliver
+  // headers in time and still time out mid-body — surface that cleanly too.
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    throw networkError(err);
+  }
+  // A 200 can still carry a failure, in two places (per OpenRouter's error
+  // contract). Treat both as retryable so the client's "Qayta urinish" works.
+  // (1) Request-level: a top-level { error }.
+  if (data && data.error) {
+    const msg = (data.error.message || (typeof data.error === 'string' ? data.error : '')) || 'noma’lum xato';
+    throw new ClaudeError('OpenRouter xatosi: ' + msg, { status: 502, retryable: true });
+  }
+  const choice = (data.choices && data.choices[0]) || null;
+  // (2) Provider-level: non-streaming provider failures come back 200 with the
+  // error embedded on the choice (finish_reason 'error' + choice.error), not at
+  // the top level — so an unchecked path would store a partial/blank reply as if
+  // it succeeded.
+  if (choice && (choice.finish_reason === 'error' || choice.error)) {
+    const msg = (choice.error && choice.error.message) || 'model xatosi';
+    throw new ClaudeError('OpenRouter xatosi: ' + msg, { status: 502, retryable: true });
+  }
+  const text = ((choice && choice.message && choice.message.content) || '').trim();
+  // An empty completion (no choices, or null/blank content) is a failed
+  // generation, not a valid assistant turn. Surface it as retryable instead of
+  // storing a blank reply and silently consuming the turn.
+  if (!text) {
+    throw new ClaudeError('Model bo‘sh javob qaytardi.', { status: 502, retryable: true });
+  }
+  const usage = data.usage || {};
+  return {
+    text,
+    inputTokens: usage.prompt_tokens || 0,
+    outputTokens: usage.completion_tokens || 0,
+    stopReason: (choice && choice.finish_reason) || null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Dispatcher
+// ---------------------------------------------------------------------------
+
+async function complete(opts) {
+  if (config.llm.provider === 'openrouter') return completeOpenRouter(opts);
+  return completeAnthropic(opts);
+}
+
+module.exports = {
+  complete,
+  completeAnthropic,
+  completeOpenRouter,
+  activeModel,
+  modelFor,
+  normalizeForAnthropic,
+  toOpenAIMessages,
+  ClaudeError,
+};

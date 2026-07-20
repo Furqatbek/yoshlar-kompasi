@@ -16,3 +16,4 @@ backups/
 *.sql.gz
 .DS_Store
 **/.DS_Store
+letsencrypt/

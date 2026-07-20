@@ -27,7 +27,28 @@ const config = {
   // Postgres.
   databaseUrl: process.env.DATABASE_URL || '',
 
-  // Anthropic / Claude.
+  // LLM provider selection. 'anthropic' talks to the Anthropic Messages API
+  // directly; 'openrouter' routes through OpenRouter's OpenAI-compatible API
+  // (useful where direct Anthropic billing is unavailable — e.g. cards that the
+  // Anthropic API Console rejects). The rest of the app is provider-agnostic:
+  // both paths return { text, inputTokens, outputTokens } (see services/claude.js).
+  llm: {
+    provider: (process.env.LLM_PROVIDER || 'anthropic').toLowerCase(), // anthropic | openrouter
+    // Shared generation budgets, applied regardless of provider.
+    conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
+    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 4500),
+    // The report generates up to reportMaxTokens in one non-streaming call —
+    // at real model speeds that is often 1-3 minutes, far beyond the per-turn
+    // timeout. Give it its own budget. (A TLS/reverse proxy in front must have
+    // a read timeout at least this long.)
+    reportTimeoutMs: int(process.env.REPORT_TIMEOUT_MS, 180000),
+    // USD per 1M tokens for the active model — drives the admin cost estimate
+    // only (defaults are the claude-sonnet-4.6 list prices).
+    priceInPerMtok: Number(process.env.PRICE_INPUT_PER_MTOK || 3),
+    priceOutPerMtok: Number(process.env.PRICE_OUTPUT_PER_MTOK || 15),
+  },
+
+  // Anthropic / Claude (used when LLM_PROVIDER=anthropic).
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY || '',
     baseUrl: (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, ''),
@@ -36,14 +57,36 @@ const config = {
     // cost. Override per your Anthropic account access.
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
-    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 3000),
+    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 4500),
     timeoutMs: int(process.env.ANTHROPIC_TIMEOUT_MS, 60000),
+  },
+
+  // OpenRouter (used when LLM_PROVIDER=openrouter). OpenAI-compatible chat API.
+  // Pick a model slug from https://openrouter.ai/models — the prompt is tuned
+  // for Claude, so an anthropic/* slug behaves closest to the direct path.
+  openrouter: {
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+    baseUrl: (process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, ''),
+    // Default mirrors the Anthropic default (claude-sonnet-4-6) so switching
+    // providers keeps the same tier. OpenRouter uses vendor/model slugs with dot
+    // versions — the bare Anthropic id `claude-sonnet-4-6` is NOT valid here.
+    model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.6',
+    // Optional attribution headers OpenRouter shows on your dashboard/rankings.
+    siteUrl: process.env.OPENROUTER_SITE_URL || (process.env.PUBLIC_BASE_URL || ''),
+    siteName: process.env.OPENROUTER_SITE_NAME || 'Yoshlar Kompasi',
+    timeoutMs: int(process.env.OPENROUTER_TIMEOUT_MS, int(process.env.ANTHROPIC_TIMEOUT_MS, 60000)),
   },
 
   // Assessment caps (spec §4/§6).
   caps: {
     maxTurns: int(process.env.MAX_TURNS, 60),
     maxMessageChars: int(process.env.MAX_MESSAGE_CHARS, 2000),
+    // A report must be grounded in real answers, never fabricated. Refuse to
+    // generate one until the child has actually answered at least this many
+    // turns. The default (1) blocks only the "finished without answering
+    // anything" case; raise it to demand more substance. Floored at 1 so the
+    // safeguard can never be silently disabled (0/negative would void the gate).
+    minAnswersForReport: Math.max(1, int(process.env.MIN_ANSWERS_FOR_REPORT, 1)),
   },
 
   // Rate limits (spec §6). In-memory; single-instance. See README for scaling.
@@ -86,7 +129,12 @@ const config = {
 function assertProdConfig() {
   const missing = [];
   if (!config.databaseUrl) missing.push('DATABASE_URL');
-  if (!config.anthropic.apiKey) missing.push('ANTHROPIC_API_KEY');
+  // Only the active provider's credentials are required.
+  if (config.llm.provider === 'openrouter') {
+    if (!config.openrouter.apiKey) missing.push('OPENROUTER_API_KEY (required when LLM_PROVIDER=openrouter)');
+  } else {
+    if (!config.anthropic.apiKey) missing.push('ANTHROPIC_API_KEY');
+  }
   if (!config.admin.jwtSecret || config.admin.jwtSecret.length < 16) missing.push('JWT_SECRET (>=16 chars)');
   // Report/resume links are built from this in prod; without it we would fall
   // back to the (spoofable) Host header when generating delivered links.
@@ -95,14 +143,29 @@ function assertProdConfig() {
   if (config.isProd && config.delivery.provider === 'telegram' && !process.env.TELEGRAM_WEBHOOK_SECRET) {
     missing.push('TELEGRAM_WEBHOOK_SECRET (required when DELIVERY_PROVIDER=telegram)');
   }
+
+  // Model-id shape check. The most common — and hardest to diagnose —
+  // misconfiguration is a provider/model-format mismatch: OpenRouter needs a
+  // namespaced `vendor/model` slug (anthropic/claude-sonnet-4.6), while the
+  // Anthropic API uses ids WITHOUT a slash (claude-sonnet-4-6). A wrong shape
+  // makes every LLM call fail with "not a valid model id", so fail fast at boot
+  // with a pointed message instead of 400-ing on each request.
+  if (config.llm.provider === 'openrouter') {
+    if (config.openrouter.model && !config.openrouter.model.includes('/')) {
+      missing.push('OPENROUTER_MODEL="' + config.openrouter.model + '" is not a valid OpenRouter slug — it needs a vendor prefix, e.g. anthropic/claude-sonnet-4.6 (see https://openrouter.ai/models)');
+    }
+  } else if (config.anthropic.model && config.anthropic.model.includes('/')) {
+    missing.push('ANTHROPIC_MODEL="' + config.anthropic.model + '" contains a "/" — that is an OpenRouter-style slug; the Anthropic API uses ids like claude-sonnet-4-6 (set LLM_PROVIDER=openrouter to use vendor/model slugs)');
+  }
+
   if (config.isProd && missing.length) {
     // eslint-disable-next-line no-console
-    console.error('[config] Missing required environment: ' + missing.join(', '));
+    console.error('[config] Invalid or missing required environment: ' + missing.join(', '));
     process.exit(1);
   }
   if (!config.isProd && missing.length) {
     // eslint-disable-next-line no-console
-    console.warn('[config] (dev) missing/weak: ' + missing.join(', ') + ' — some features will error until set.');
+    console.warn('[config] (dev) missing/weak/invalid: ' + missing.join(', ') + ' — some features will error until set.');
   }
 }
 

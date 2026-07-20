@@ -44,6 +44,10 @@ function main() {
   copyInto(path.join(ROOT, 'support.js'), PUBLIC);
   copyInto(path.join(ROOT, '_ds'), PUBLIC);
 
+  // Crawler/browser basics — served by express.static ahead of the SPA
+  // fallback, so /robots.txt and /favicon.svg stop returning the HTML shell.
+  for (const f of ['robots.txt', 'favicon.svg']) copyInto(path.join(ROOT, f), PUBLIC);
+
   // Vendored React (committed under server/vendor).
   const vendorSrc = path.join(SERVER, 'vendor');
   const vendorDest = path.join(PUBLIC, 'vendor');

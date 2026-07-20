@@ -22,6 +22,7 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+    image: yoshlar-kompasi-app
     restart: unless-stopped
     depends_on:
       db:
@@ -30,8 +31,14 @@ services:
       NODE_ENV: production
       PORT: 8080
       DATABASE_URL: postgres://${POSTGRES_USER:-yik}:${POSTGRES_PASSWORD:-yik}@db:5432/${POSTGRES_DB:-yik}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # LLM provider: anthropic (default) or openrouter.
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-anthropic/claude-sonnet-4.6}
+      OPENROUTER_SITE_URL: ${OPENROUTER_SITE_URL:-}
+      OPENROUTER_SITE_NAME: ${OPENROUTER_SITE_NAME:-Yoshlar Kompasi}
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
@@ -42,8 +49,83 @@ services:
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
       CONSENT_TEXT_VERSION: ${CONSENT_TEXT_VERSION:-uz-2026-07}
+      RETENTION_MONTHS: ${RETENTION_MONTHS:-24}
+      # Caps & rate limits (tune for load testing / local dev).
+      MAX_TURNS: ${MAX_TURNS:-60}
+      MAX_MESSAGE_CHARS: ${MAX_MESSAGE_CHARS:-2000}
+      RL_MESSAGES_PER_MIN: ${RL_MESSAGES_PER_MIN:-20}
+      RL_SESSIONS_PER_DAY: ${RL_SESSIONS_PER_DAY:-5}
+      RL_ADMIN_LOGIN_PER_MIN: ${RL_ADMIN_LOGIN_PER_MIN:-5}
+      CONVERSATION_MAX_TOKENS: ${CONVERSATION_MAX_TOKENS:-1500}
+      REPORT_MAX_TOKENS: ${REPORT_MAX_TOKENS:-4500}
+      REPORT_TIMEOUT_MS: ${REPORT_TIMEOUT_MS:-180000}
+      PRICE_INPUT_PER_MTOK: ${PRICE_INPUT_PER_MTOK:-3}
+      PRICE_OUTPUT_PER_MTOK: ${PRICE_OUTPUT_PER_MTOK:-15}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     ports:
-      - "${APP_PORT:-8080}:8080"
+      # Localhost-only: reachable for local use and by nginx over the compose
+      # network, but never directly from the internet.
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+
+  # In-stack scheduler: nightly DB backup, monthly retention purge, daily LLM
+  # credit check. Same image as the app (plus pg_dump); watch it with
+  # `docker compose logs cron`.
+  cron:
+    image: yoshlar-kompasi-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-yik}:${POSTGRES_PASSWORD:-yik}@db:5432/${POSTGRES_DB:-yik}
+      RETENTION_MONTHS: ${RETENTION_MONTHS:-24}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      BILLING_ALERT_MIN_USD: ${BILLING_ALERT_MIN_USD:-5}
+    volumes:
+      - ./deploy/cron/root:/etc/crontabs/root:ro
+      - ./backups:/backups
+    command: ["crond", "-f", "-l", "8"]
+
+  # TLS terminator — production only: `make prod-up` (compose profile "prod").
+  # Set DOMAIN in .env; certificates live under ./letsencrypt (make cert).
+  nginx:
+    image: nginx:1.27-alpine
+    profiles: ["prod"]
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx:/etc/nginx/templates:ro
+      - ${LETSENCRYPT_DIR:-./letsencrypt}:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot
+    # Reload every 6h so renewed certificates are picked up without downtime.
+    command: ["/bin/sh", "-c", "while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec nginx -g 'daemon off;'"]
+
+  # Automatic certificate renewal (webroot) — production only.
+  certbot:
+    image: certbot/certbot
+    profiles: ["prod"]
+    restart: unless-stopped
+    volumes:
+      - ${LETSENCRYPT_DIR:-./letsencrypt}:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"]
 
 volumes:
   db_data:
+  certbot_www:

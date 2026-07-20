@@ -75,6 +75,13 @@ app.use(errorHandler);
 const server = app.listen(config.port, () => {
   // eslint-disable-next-line no-console
   console.log('[yoshlar-kompasi] listening on :' + config.port + ' (' + config.nodeEnv + ')');
+  // Surface which LLM is actually wired up (a mismatched model id is the most
+  // common misconfiguration) and which prompt version this build carries, so a
+  // stale image is immediately visible in the logs. Never logs the API key.
+  const claude = require('./services/claude');
+  const prompt = require('./services/prompt');
+  // eslint-disable-next-line no-console
+  console.log('[llm] provider=' + config.llm.provider + ' model=' + claude.activeModel() + ' prompt=' + prompt.promptVersion());
 });
 
 function shutdown(sig) {
