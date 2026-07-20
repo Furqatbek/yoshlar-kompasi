@@ -22,7 +22,10 @@ input, textarea, button, select { font-family: var(--font-body); }
 @page { margin: 14mm; }
 @media print {
   .no-print { display: none !important; }
-  html, body { background: #fff !important; }
+  /* Kill every page-level background: the app shell's grey (--color-bg) would
+     otherwise print across the sheet and be sliced at page edges. */
+  html, body, #yik-app, main { background: #fff !important; }
+  #yik-app { min-height: 0 !important; }
   #yik-report { max-width: none !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
   /* Pagination: keep atomic blocks whole; glue headings to their content. */
   #yik-report h1, #yik-report h3, #yik-report h4, #yik-report h6 { break-after: avoid-page; break-inside: avoid; }
@@ -40,7 +43,7 @@ input, textarea, button, select { font-family: var(--font-body); }
 }
 </style>
 </helmet>
-<div style="min-height: 100vh; display: flex; flex-direction: column; background: var(--color-bg); color: var(--color-text);">
+<div id="yik-app" style="min-height: 100vh; display: flex; flex-direction: column; background: var(--color-bg); color: var(--color-text);">
 
 <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
 <nav class="nav no-print" style="position: sticky; top: 0; z-index: 40; background: var(--color-bg);">
