@@ -4,25 +4,27 @@
 
 **Qanday foydalaniladi:** **[A]** belgili topshiriqlar 1–2-sinflarga (~6–8 yosh), **[B]** belgililari 3–4-sinflarga (~8–11 yosh), belgisizlari ikkala guruhga mos. Kattalar savollarni bolaga ovoz chiqarib o'qib beradi va javoblarni yozib boradi. To'g'ri javob bor bo'lsa, (qavs ichida) ko'rsatilgan. Har javobdan keyin nafaqat NIMA deganini, balki QANDAY javob berganini ham yozib boring (tez/sekin, ishonch bilan/ikkilanib, tushuntira oldimi) — iqtidor belgilari ko'pincha ana shunda ko'rinadi.
 
+**MUHIM — bank bu andaza, ssenariy emas.** Topshiriqlarni har mashg'ulotda AYNAN shu matnda emas, shu tur va shu qiyinlikdagi YANGI variant qilib bering: raqamlar, narsalar, ismlar va misollarni almashtiring (mahalliy ismlar, taomlar, o'yinlar — 6–11 yoshli bolaga tanish narsalar). Bankdagi matnni so'zma-so'z o'qib bermang, bir mashg'ulot ichida savolni takrorlamang va ketma-ket mashg'ulotlarda bir xil savollar chiqmasin.
+
 ---
 
 ## 1. Mantiq va tafakkur
 *(MI belgilari: mantiqiy-matematik, til-nutq, fazoviy-vizual, xotira)*
 
 ### Qonuniyatlar va ketma-ketliklar (mantiqiy-matematik)
-1. [A] Keyin nima keladi: doira, kvadrat, doira, kvadrat, doira, ...? (kvadrat)
-2. [A] Sonlarni davom ettir: 2, 4, 6, 8, ...? (10)
-3. [B] Davom ettir: 3, 6, 12, 24, ...? (48 — har bir son ikki baravar ortadi)
-4. [A] Qaysi biri ortiqcha: mushuk, it, chumchuq, sigir? Nega? (chumchuq — u qush / ucha oladi)
-5. [B] Qaysi biri ortiqcha: olma, banan, sabzi, gilos? Nega? (sabzi — u sabzavot)
+1. [A] Keyin nima keladi: qizil munchoq, ko'k munchoq, ko'k, qizil, ko'k, ko'k, ...? (qizil) — har safar boshqa juftlik oling: shakllar, mevalar, chapak ritmi (chap-chap-CHAP)
+2. [A] Sonlarni davom ettir: 5, 10, 15, 20, ...? (25) — variantlar: 1, 3, 5, 7 (9); 10, 9, 8 (7 — kamayuvchi)
+3. [B] Davom ettir: 4, 8, 16, 32, ...? (64 — har bir son ikki baravar ortadi)
+4. [A] Qaysi biri ortiqcha: qoshiq, piyola, lagan, koptok? Nega? (koptok — u idish emas)
+5. [B] Qaysi biri ortiqcha: avtobus, poyezd, velosiped, tramvay? Nega? (velosiped — motorsiz, pedal bilan yuradi; boshqa asosli izoh ham qabul qilinadi)
 6. [B] Davom ettir: 1, 1, 2, 3, 5, ...? (8 — har bir son oldingi ikkitasining yig'indisi)
 
 ### Arifmetik mulohaza
-7. [A] Senda 3 ta konfet bor edi, do'sting yana 2 ta berdi. Endi nechta bo'ldi? (5)
-8. [A] Shoxda 4 ta qush o'tirgan edi, bittasi uchib ketdi. Nechtasi qoldi? (3)
-9. [B] Bitta qalam 2 ta tanga turadi. 10 ta tangaga nechta qalam olish mumkin? (5)
-10. [B] Aziza Bekdan baland. Bek Temurdan baland. Eng balandi kim? (Aziza) — ismlarni bolaga tanish ismlarga almashtirsa bo'ladi
-11. [B] Kitob 60 betdan iborat. Har kuni 10 betdan o'qisang, necha kunda tugatasan? (6)
+7. [A] Dasturxonda 6 ta kulcha bor edi, 2 tasi yeyildi. Nechta qoldi? (4)
+8. [A] Akang senga 3 ta yong'oq berdi, buving yana 4 ta qo'shdi. Hammasi nechta bo'ldi? (7)
+9. [B] Bitta daftar 3 ming so'm turadi. 12 ming so'mga nechta daftar olish mumkin? (4)
+10. [B] Aziza Bekdan baland. Bek Temurdan baland. Eng balandi kim? (Aziza) — ismlarni bolaga tanish ismlarga almashtiring
+11. [B] Multfilm 40 daqiqa davom etadi. Yarmini ko'rgan bo'lsang, yana necha daqiqa qoldi? (20)
 
 ### Fazoviy tasavvur (fazoviy-vizual)
 12. [A] "b" harfiga oynada qarasang, u qaysi harfga o'xshab ko'rinadi? ("d")
@@ -31,8 +33,8 @@
 15. [B] Qog'oz varag'ini xayolan ikki marta buklab, bir chetidan kessang, ochganda nechta kesik ko'rinadi — bitta yoki bir nechta? (bir nechta; bola qanday tasavvur qilganini so'rang)
 
 ### Xotira
-16. [A] Kattalar: quyidagi ro'yxatni bir marta, sekin o'qib bering — *mushuk, quyosh, koptok, daraxt* — so'ng boladan takrorlashni so'rang. (Nechta so'zni va qaysi tartibda eslaganini yozib oling)
-17. [B] Kattalar: bir marta o'qing — *non, daryo, yetti, deraza, qo'shiq, oyoq kiyim* — so'ng takrorlashni so'rang. (Eslangan so'zlarni yozib oling)
+16. [A] Kattalar: 4 ta oddiy so'zdan iborat ro'yxatni bir marta, sekin o'qib bering (masalan: *mushuk, quyosh, koptok, daraxt* — so'zlarni har mashg'ulotda almashtiring), so'ng boladan takrorlashni so'rang. (Nechta so'zni va qaysi tartibda eslaganini yozib oling)
+17. [B] Kattalar: 6 ta so'zli ro'yxatni bir marta o'qing (masalan: *non, daryo, yetti, deraza, qo'shiq, oyoq kiyim* — har safar yangi ro'yxat tuzing), so'ng takrorlashni so'rang. (Eslangan so'zlarni yozib oling)
 18. [B] Sonlarni TESKARI tartibda takrorla: 7–2–9. (9–2–7) Uddalasa: 3–8–1–5. (5–1–8–3) — ishchi xotira belgisi
 
 ### Til va nutq (til-nutq iqtidori)

@@ -385,7 +385,10 @@ input, textarea, button, select { font-family: var(--font-body); }
           <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Taxminan 30 daqiqa ajrating — istalgan payt tanaffus qilish mumkin.</span></div>
           <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Savollarni bolaga ovoz chiqarib o'qib berasiz, javobini yozasiz.</span></div>
         </div>
-        <button type="button" class="btn btn-primary" onClick="{{ startSession }}" style="font-size: 16px; padding: 12px 20px;">Mashg'ulotni boshlash</button>
+        <button type="button" class="btn btn-primary" onClick="{{ startSession }}" disabled="{{ starting }}" style="font-size: 16px; padding: 12px 20px;">{{ startLabel }}</button>
+        <sc-if value="{{ starting }}" hint-placeholder-val="{{ false }}">
+          <p style="margin: var(--space-3) 0 0; font-size: 14px; color: var(--color-accent-700); font-weight: 600;">Sun'iy intellekt birinchi savollarni tayyorlamoqda — odatda 10–20 soniya. Sahifani yopmang.</p>
+        </sc-if>
       </div>
     </sc-if>
   </div>
@@ -1141,7 +1144,10 @@ class Component extends DCLogic {
   }
 
   async startSession() {
-    if (this._busy) return; this._busy = true;
+    // Guard on state, not only the instance field: the dc-runtime can swap the
+    // logic instance (losing _busy) while state carries over, so state.sending
+    // is the reliable double-click latch.
+    if (this._busy || this.state.sending) return; this._busy = true;
     const S = this.state;
     this.setState({ formError: '', sending: true });
     try {
@@ -1233,7 +1239,7 @@ class Component extends DCLogic {
   gateViewOnly() { this.setState({ gate: false }, () => this.generate()); }
 
   async generate() {
-    if (this._busy) return; this._busy = true;
+    if (this._busy || this.state.generating) return; this._busy = true;
     this.setState({ finishConfirm: false, generating: true, status: 'generating', apiError: '' });
     try {
       const d = await this.api('/api/sessions/' + this._stok + '/report', { method: 'POST', body: {} });
@@ -1527,6 +1533,7 @@ class Component extends DCLogic {
       notesVal: S.notes, onNotes: e => this.setState({ notes: e.target.value }),
       consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '' }),
       gradeOpts, formError: S.formError, prepared: S.prepared, notPrepared: !S.prepared,
+      starting: S.sending, startLabel: S.sending ? 'Tayyorlanmoqda…' : "Mashg'ulotni boshlash",
       submitForm: () => this.submitForm(), startSession: () => this.startSession(),
       childName: S.name.trim() || 'Bola', gradeLabel: S.grade ? S.grade + '-sinf' : '',
       chipMantiq: chipCls('MANTIQ'), chipPsix: chipCls('PSIXOLOGIYA'), chipHarakat: chipCls('HARAKAT'),
