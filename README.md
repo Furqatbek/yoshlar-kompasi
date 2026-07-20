@@ -2,10 +2,12 @@
 
 An AI-assisted strengths assessment for primary-school children (grades 1–4) in
 Uzbek. An adult (parent or teacher) reads questions aloud, records the child's
-answers, and Claude produces a personalized report — a strengths profile, a
-"where they are now" read across three tracks, a 3–6 month roadmap, study tips
-and sport recommendations. The centre gets a lead panel with reports, statuses,
-notes and a weekly funnel.
+answers, and Claude produces a personalized report: a strengths profile, a
+"where they are now" read across three tracks, a Gardner multiple-intelligences
+map, a RIASEC interests compass, growth-mindset and self-regulation
+observations, a 3–6 month roadmap, study tips and sport recommendations. The
+centre gets a lead panel with reports, statuses, notes, a weekly funnel and an
+LLM cost estimate.
 
 This repository contains both halves of the product:
 
@@ -31,15 +33,21 @@ Express (server/)
    ├─ routes/reports   public report by share_token
    ├─ routes/admin     login · leads · lead · stats · CSV
    ├─ routes/telegram  delivery webhook
-   ├─ services/claude  → api.anthropic.com/v1/messages   (key server-side)
+   ├─ services/claude  → Anthropic OR OpenRouter (LLM_PROVIDER; key server-side,
+   │                     system prompt sent as a cached breakpoint)
    ├─ services/prompt  system prompt = uploads/*.md + protocol + json rule
    └─ db (pg)          parents · children · sessions · messages · reports · admins
    ▼
 PostgreSQL
 ```
 
+In production (`prod` compose profile) nginx terminates TLS in front of the app,
+a certbot sidecar renews certificates, and a `cron` container runs nightly
+backups, the monthly retention purge and a daily LLM-credit check.
+
 The API key never reaches the browser. The model only ever sees the child's
-nickname, grade, age and answers — never a parent's name or phone.
+nickname, grade, age and the session messages — never a parent's name or phone,
+and never the form's goal/notes fields (those stay in the database).
 
 ---
 
@@ -191,21 +199,31 @@ runtime.
 | `TELEGRAM_WEBHOOK_SECRET` | no | Verifies webhook calls |
 | `CONSENT_TEXT_VERSION` | no | Stamped on each recorded consent |
 | `MAX_TURNS` / `MAX_MESSAGE_CHARS` | no | Abuse caps (60 / 2000) |
+| `MIN_ANSWERS_FOR_REPORT` | no | Real answers required before a report (default 1, floored at 1) |
 | `RL_MESSAGES_PER_MIN` / `RL_SESSIONS_PER_DAY` / `RL_ADMIN_LOGIN_PER_MIN` | no | Rate limits |
+| `CONVERSATION_MAX_TOKENS` / `REPORT_MAX_TOKENS` | no | Generation budgets (1500 / 4500) |
+| `REPORT_TIMEOUT_MS` | no | Report LLM-call timeout (180000; any extra proxy must allow ≥ this) |
+| `PRICE_INPUT_PER_MTOK` / `PRICE_OUTPUT_PER_MTOK` | no | $/1M tokens for the admin cost estimate (3 / 15) |
+| `BILLING_ALERT_MIN_USD` | no | Daily credit-check alert threshold (5) |
+| `RETENTION_MONTHS` | no | Data retention window for the monthly purge (24) |
+| `DOMAIN` / `LETSENCRYPT_DIR` | prod profile | nginx TLS domain + certificate dir (`./letsencrypt`) |
+| `BACKUP_KEEP_DAYS` | no | Local backup retention (14) |
 
 ---
 
 ## API
 
-Parent-facing (session token in the `X-Session-Token` header):
+Parent-facing — the unguessable 256-bit session token IS the credential and the
+`:token` path segment (no header; the session URL `/mashgulot/:token` resumes
+from any device):
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/api/sessions` | Create child + session, greeting + first questions |
-| POST | `/api/sessions/:id/messages` | Adult's turn (`{content}` or `{retry:true}`) |
-| GET | `/api/sessions/:id` | Resume: full state |
-| POST | `/api/sessions/:id/contact` | The report gate (parent + consent) |
-| POST | `/api/sessions/:id/report` | Generate, parse, store, deliver |
+| POST | `/api/sessions` | Create child + session (requires `consent: true`), greeting + first questions |
+| POST | `/api/sessions/:token/messages` | Adult's turn (`{content}` or `{retry:true}`) |
+| GET | `/api/sessions/:token` | Resume: full state |
+| POST | `/api/sessions/:token/contact` | Contact gate (parent name, optional phone + consents) |
+| POST | `/api/sessions/:token/report` | Generate, parse, store (refused with `insufficient_engagement` until the child has actually answered) |
 | GET | `/api/reports/:share_token` | Public report data (no login) |
 
 Admin (httpOnly JWT cookie):
@@ -221,10 +239,16 @@ Clean links `/(hisobot|mashgulot)/:token` 302-redirect into the hash-routed SPA.
 
 ---
 
-## Report delivery (Telegram)
+## Report delivery
 
-Phase 1 ships Telegram (spec's recommended channel for Uzbekistan) with a
-`console` fallback that just logs the link.
+**The primary delivery IS the app**: when the assessment finishes, the report
+opens on screen, is stored server-side, and the parent can save it as PDF or
+copy the share link. Phone numbers collected at the gate let the centre follow
+up and send the link manually (admin panel → lead → report link).
+
+Optional Telegram automation exists but has a hard limitation: a bot deep-link
+only reaches parents who have ALREADY started the bot — for everyone else it
+silently does nothing. If you still want it:
 
 1. Create a bot with @BotFather; set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`,
    `DELIVERY_PROVIDER=telegram`.
@@ -238,7 +262,9 @@ Phase 1 ships Telegram (spec's recommended channel for Uzbekistan) with a
    `/start <token>` handler sends the report link and becomes a re-engagement
    channel for the centre.
 
-SMS (Eskiz) can be added later behind the same `services/delivery` interface.
+SMS (Eskiz.uz) can be added later behind the same `services/delivery`
+interface — that would make phone delivery reliable without the
+prior-subscription problem.
 
 ---
 
@@ -251,18 +277,24 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
   ~20 messages/min per session, ~5 new sessions/day per IP, and an "off-topic →
   decline" instruction in the system prompt.
 - **Children's data minimization** — the schema has no column for surname,
-  address, school number or photo, and the model never receives parent contact
-  fields. Only nickname + answers cross the border to Anthropic.
+  address, school number or photo. Only the child's nickname, grade, age and
+  the session messages are sent to the LLM provider (Anthropic direct or via
+  OpenRouter); parent contact fields and the form's goal/notes fields never
+  leave the server.
+- **Server-side gates** — creating a session requires the adult assertion
+  (`consent: true`, HTTP 400 otherwise); a report is refused until the child
+  has actually answered (`insufficient_engagement`), so no fabricated
+  assessments; the prompt additionally forbids inventing observations.
 - **Uzbekistan data localization** — host Postgres with an in-country provider
   (Docker Compose makes this portable), and have a local specialist review the
   consent texts and the fact that AI processing runs on foreign servers.
 - Honor deletion requests now: `DELETE /admin/leads/:id` (a button on the lead
   detail page) removes the parent and cascades to their children, sessions,
   messages and reports.
-- Enforce a retention window with `make purge` (or `npm run purge`) —
-  `RETENTION_MONTHS` (default 24) deletes children/sessions/reports whose last
-  session activity is older than the window, plus any orphaned parent. Schedule
-  it from cron.
+- Retention runs automatically (in-stack cron, monthly): `RETENTION_MONTHS`
+  (default 24) deletes children/sessions/reports whose last session activity is
+  older than the window, plus any orphaned parent. `make purge` runs it
+  manually.
 
 ---
 
@@ -271,17 +303,17 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
 - **Reverse proxy timeouts:** the bundled nginx config already allows 300s for
   the long report call. If you put anything ELSE in front (Cloudflare, another
   proxy), its read timeout must also exceed `REPORT_TIMEOUT_MS` (180s default).
-- **Backups:** `make backup` (nightly via cron); `make restore F=…`. Copy dumps
-  off the server (rclone/scp to a second location) and test a restore monthly —
-  an untested backup is a hope, not a backup.
-- **Retention:** `make purge` on a cron (respects `RETENTION_MONTHS`).
+- **Backups are automatic** (in-stack cron, nightly → `./backups`, pruned after
+  `BACKUP_KEEP_DAYS`). Your two jobs: copy dumps off the server (rclone/scp — a
+  backup on the same disk dies with the disk) and test a restore monthly.
+  Manual: `docker compose exec cron sh /app/server/scripts/backup.sh`; restore
+  with `make restore F=…`.
 - **Cost / billing alerts:** the admin panel (Statistika → LLM xarajati) shows
   total tokens and estimated spend (tune `PRICE_INPUT_PER_MTOK` /
-  `PRICE_OUTPUT_PER_MTOK` to your model's prices). `make billing-check` queries
-  OpenRouter's credits API and exits non-zero when the remaining balance drops
-  below `BILLING_ALERT_MIN_USD` — cron it daily with `MAILTO` set (or wrap it
-  in a curl to a Telegram/healthchecks.io hook) so you hear about low credit
-  before sessions start dying mid-assessment.
+  `PRICE_OUTPUT_PER_MTOK` to your model's prices). the in-stack cron also runs a daily credit
+  check — watch `docker compose logs cron` for `[billing] ALERT` lines, which
+  fire when the remaining OpenRouter balance drops below
+  `BILLING_ALERT_MIN_USD`. Top up before sessions start dying mid-assessment.
 - **Uptime monitoring (optional at small scale):** a free pinger (UptimeRobot)
   on `GET /healthz` + `GET /readyz` takes 5 minutes to set up whenever traffic
   grows enough to care.
@@ -311,15 +343,32 @@ SMS (Eskiz) can be added later behind the same `services/delivery` interface.
 Kompas.dc.html          frontend SPA (rewired to the API)
 support.js  _ds/        x-dc runtime + Modernist design system
 uploads/                prompt sources (instructions + question bank) + specs
+robots.txt  favicon.svg crawler/browser basics (copied into public/ by build:web)
 server/
   index.js              Express app, static serving, redirects
-  config.js             env config
-  db/                   pool, migrations, migrate + seed runners, repo (all SQL)
+  config.js             env config (provider switch, budgets, prices, gates)
+  db/                   pool, migrations, migrate + seed + purge, repo (all SQL)
   routes/               sessions, reports, admin, telegram
-  services/             claude, prompt, reportParse, delivery/{telegram,console}
+  services/             claude (Anthropic/OpenRouter dispatcher), prompt,
+                        reportParse, delivery/{telegram,console}
   middleware/           auth, rateLimit, security, errorHandler
   utils/                phone, tokens, validate, leadStatus, reportUrl, http
-  scripts/build-web.js  assembles server/public
+  scripts/              build-web, backup.sh, billing-check
   vendor/               React + ReactDOM UMD (pinned)
+deploy/
+  nginx/                TLS reverse-proxy template (${DOMAIN}-parameterized)
+  cron/                 in-stack crontab (backup / purge / billing check)
+test/                   unit, API, browser and live-smoke suites (see test/README.md)
+.github/workflows/      CI: unit + API suites against real Postgres, stubbed LLM
 docker-compose.yml  Makefile  .env.example
 ```
+
+---
+
+## Testing
+
+`test/README.md` has the full guide. Summary: `bash test/run-api-tests.sh`
+(with a throwaway `DATABASE_URL`) runs the unit + API suites against a real
+Postgres with a stubbed LLM — the same thing CI runs on every push. Browser
+suites verify the UI under the production CSP, and `test/live-smoke.js` runs
+one REAL model session before deploys/prompt changes.
