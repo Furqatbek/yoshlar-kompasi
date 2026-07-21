@@ -49,6 +49,10 @@ node test/browser/exit-test.js       # quit-without-report -> resume banner -> r
 node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
 ```
 
+`test/browser/storefront-test.js` is separate: it covers `Storefront.dc.html`
+(the white-label storefront app, see `docs/STOREFRONT.md`), serves its own
+temp webroot with vendored React and needs no build step.
+
 ## Stubs
 
 - `stubs/openrouter-stub.js` — OpenAI-format `/chat/completions`; rejects bare

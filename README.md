@@ -346,6 +346,8 @@ prior-subscription problem.
 ```
 Kompas.dc.html          frontend SPA (rewired to the API)
 support.js  _ds/        x-dc runtime + Modernist design system
+Storefront.dc.html      separate app: white-label storefront (docs/STOREFRONT.md)
+iOS Storefront.dc.html  its imported design (claude.ai/design)
 uploads/                prompt sources (instructions + question bank) + specs
 robots.txt  favicon.svg crawler/browser basics (copied into public/ by build:web)
 server/

@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Дўкон</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23177A3E'/%3E%3Cpath d='M20 26h24l3 26H17l3-26Z' fill='none' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M25 26v-3a7 7 0 0 1 14 0v3' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{
+--brand:oklch(52% 0.13 155);--tint:oklch(52% 0.13 155 / .12);--page:#E9E9EE;
+--bg:#F2F2F7;--surface:#FFFFFF;--fill:rgba(118,118,128,.12);--tile:#F0F0F3;--bar:rgba(250,250,252,.92);
+--text:#0B0B0F;--text2:#4C4C55;--text3:#85858E;--sep:rgba(60,60,67,.29);
+--red:#D70015;--redt:rgba(215,0,21,.1);--green:#177A3E;--greent:rgba(52,199,89,.15);--orange:#B25000;--oranget:rgba(255,159,10,.16);
+--c2:11px;--c1:13px;--sub:15px;--body:17px;--t3:20px;--t2:22px;--t1:28px;--lt:34px;--card-min:148px;
+--i-house:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5M5.5 9.5V20h13V9.5'/%3E%3C/svg%3E");
+--i-search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.5 16.5 21 21'/%3E%3C/svg%3E");
+--i-bag:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 8.5h11l1.2 11.5H5.3L6.5 8.5Z'/%3E%3Cpath d='M9 8.5V7a3 3 0 0 1 6 0v1.5'/%3E%3C/svg%3E");
+--i-person:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4.5 20c1-3.8 4.3-5.5 7.5-5.5s6.5 1.7 7.5 5.5'/%3E%3C/svg%3E");
+--i-heart:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 20.7C6.2 16 3.5 12.8 3.5 9.4 3.5 6.9 5.4 5 7.8 5c1.7 0 3.3 1 4.2 2.6C12.9 6 14.5 5 16.2 5c2.4 0 4.3 1.9 4.3 4.4 0 3.4-2.7 6.6-8.5 11.3Z'/%3E%3C/svg%3E");
+--i-heartf:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Cpath d='M12 20.7C6.2 16 3.5 12.8 3.5 9.4 3.5 6.9 5.4 5 7.8 5c1.7 0 3.3 1 4.2 2.6C12.9 6 14.5 5 16.2 5c2.4 0 4.3 1.9 4.3 4.4 0 3.4-2.7 6.6-8.5 11.3Z'/%3E%3C/svg%3E");
+--i-chevl:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 4.5 7.5 12l7.5 7.5'/%3E%3C/svg%3E");
+--i-chevr:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4.5l7.5 7.5L9 19.5'/%3E%3C/svg%3E");
+--i-plus:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+--i-minus:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E");
+--i-x:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E");
+--i-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5 10 18 19.5 7'/%3E%3C/svg%3E");
+--i-trash:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5'/%3E%3C/svg%3E");
+--i-bell:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5a6 6 0 0 1 6 6V13l2 3.5H4L6 13V9.5a6 6 0 0 1 6-6Z'/%3E%3Cpath d='M10 20a2.2 2.2 0 0 0 4 0'/%3E%3C/svg%3E");
+--i-star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 3.5l2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-3-5.4 3 1.1-6L3.2 9.9l6.1-.8Z'/%3E%3C/svg%3E");
+--i-box:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3Z'/%3E%3Cpath d='M3 7.5l9 4.5 9-4.5M12 12v9'/%3E%3C/svg%3E");
+--i-ticket:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M3.5 7.5h17v3.2a2.3 2.3 0 0 0 0 4.6v3.2h-17v-3.2a2.3 2.3 0 0 0 0-4.6Z'/%3E%3Cpath d='M14.5 9v6.5' stroke-dasharray='2 3'/%3E%3C/svg%3E");
+--i-truck:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M2.5 6.5h12v9.5h-12Z'/%3E%3Cpath d='M14.5 9.5h3.8l2.7 3.2v3.3h-6.5'/%3E%3Ccircle cx='6.5' cy='18.5' r='1.9'/%3E%3Ccircle cx='17.5' cy='18.5' r='1.9'/%3E%3C/svg%3E");
+--i-slash:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M6.5 17.5 17.5 6.5'/%3E%3C/svg%3E");
+--i-alert:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5v5.5M12 16.5v.01'/%3E%3C/svg%3E");
+--i-cash:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Crect x='2.5' y='6' width='19' height='12' rx='2'/%3E%3Ccircle cx='12' cy='12' r='2.8'/%3E%3C/svg%3E");
+--i-phone:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M7.2 3.5c.8 0 1.5.5 1.7 1.3l.8 2.8a1.8 1.8 0 0 1-.5 1.8L7.7 10.8a12.5 12.5 0 0 0 5.5 5.5l1.4-1.5a1.8 1.8 0 0 1 1.8-.5l2.8.8c.8.2 1.3.9 1.3 1.7v1.9c0 1.1-.9 2-2 1.9C10.7 20 4 13.3 3.5 5.5c-.1-1.1.8-2 1.9-2Z'/%3E%3C/svg%3E");
+--i-pct:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='7.5' cy='7.5' r='2.2'/%3E%3Ccircle cx='16.5' cy='16.5' r='2.2'/%3E%3Cpath d='M18 6 6 18'/%3E%3C/svg%3E");
+--i-clock:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E");
+}
+html,body{margin:0;padding:0;height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--page);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:var(--brand)}a:hover{color:var(--brand);text-decoration:underline}
+h1,h2,h3{margin:0;font-size:inherit;font-weight:inherit}
+button{font:inherit;color:inherit;background:none;border:0;border-radius:0;padding:0;margin:0;text-align:inherit;line-height:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,textarea{font:inherit;color:inherit}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+[data-scroll]{scrollbar-width:none;overscroll-behavior:contain}
+[data-scroll]::-webkit-scrollbar{display:none}
+.sf-app{width:100%;max-width:448px;height:100%;position:relative;overflow:hidden}
+@media (min-width:480px){.sf-app{box-shadow:0 0 0 1px var(--sep),0 24px 64px rgba(0,0,0,.22)}}
+@keyframes shimmer{0%{background-position:130% 0}100%{background-position:-130% 0}}
+@keyframes toastIn{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{transform:translateY(55%)}to{transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{0%{opacity:0;transform:scale(.8)}100%{opacity:1;transform:none}}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--tint)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}}
+</style>
+</helmet>
+<div style="{{ themeVars }}">
+<div style="position:fixed;inset:0;display:flex;justify-content:center;background:var(--page)">
+<div class="sf-app" style="background:var(--bg);color:var(--text);font-size:var(--body);line-height:1.35">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)">
+    <main style="flex:1;position:relative;overflow:hidden">
+
+      <sc-if value="{{ isHome }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding-bottom:calc(70px + env(safe-area-inset-bottom))">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px 4px">
+              <div style="flex:none;width:44px;height:44px;border-radius:13px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700" aria-hidden="true">{{ storeInit }}</div>
+              <div style="flex:1;min-width:0">
+                <h1 style="font-size:var(--body);font-weight:700">{{ storeName }}</h1>
+                <div style="font-size:var(--c1);color:var(--text2)">{{ storeTag }}</div>
+              </div>
+              <button onClick="{{ openNotifs }}" aria-label="Билдиришномалар" style="flex:none;width:44px;height:44px;border-radius:22px;background:var(--fill);display:flex;align-items:center;justify-content:center;position:relative" style-active="transform:scale(.94)">
+                <span style="width:23px;height:23px;background:var(--text);-webkit-mask:var(--i-bell) center/contain no-repeat;mask:var(--i-bell) center/contain no-repeat"></span>
+                <sc-if value="{{ notifDot }}"><span style="position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:5px;background:var(--red);border:2px solid var(--bg)"></span></sc-if>
+              </button>
+            </div>
+            <button onClick="{{ goSearchTap }}" style="margin:10px 16px 0;width:calc(100% - 32px);min-height:44px;border-radius:12px;background:var(--fill);display:flex;align-items:center;gap:8px;padding:0 12px">
+              <span style="flex:none;width:20px;height:20px;background:var(--text3);-webkit-mask:var(--i-search) center/contain no-repeat;mask:var(--i-search) center/contain no-repeat"></span>
+              <span style="font-size:var(--body);color:var(--text3)">Маҳсулот қидириш…</span>
+            </button>
+            <sc-if value="{{ hasSale }}">
+              <button onClick="{{ salePick }}" style="margin:12px 16px 0;width:calc(100% - 32px);border-radius:16px;background:var(--tint);display:flex;align-items:center;gap:12px;padding:14px">
+                <span style="flex:none;width:28px;height:28px;background:var(--brand);-webkit-mask:var(--i-pct) center/contain no-repeat;mask:var(--i-pct) center/contain no-repeat"></span>
+                <span style="flex:1;text-align:left">
+                  <span style="display:block;font-size:var(--body);font-weight:700">Ҳафта чегирмалари</span>
+                  <span style="display:block;font-size:var(--c1);color:var(--text2)">Танланган маҳсулотлар арзонроқ</span>
+                </span>
+                <span style="flex:none;width:18px;height:18px;background:var(--text3);-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+              </button>
+            </sc-if>
+            <div data-scroll="1" style="display:flex;gap:8px;overflow-x:auto;padding:14px 16px 6px" role="group" aria-label="Категориялар">
+              <sc-for list="{{ cats }}" as="c">
+                <button onClick="{{ c.pick }}" aria-pressed="{{ c.cur }}" style="flex:none;min-height:44px;display:inline-flex;align-items:center;padding:0 18px;border-radius:22px;font-size:var(--sub);font-weight:600;background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;padding:10px 16px 4px">
+              <h2 style="font-size:var(--t3);font-weight:700">Маҳсулотлар</h2>
+              <div style="font-size:var(--c1);color:var(--text3)">{{ prodCount }}</div>
+            </div>
+            <sc-if value="{{ skel }}">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-min),1fr));gap:12px;padding:8px 16px 16px" aria-hidden="true">
+                <div style="background:var(--surface);border-radius:16px;overflow:hidden"><div style="aspect-ratio:1;background:linear-gradient(90deg,var(--fill) 30%,var(--tile) 45%,var(--fill) 60%);background-size:300% 100%;animation:shimmer 1.4s infinite"></div><div style="padding:10px 12px 14px"><div style="height:13px;border-radius:6px;background:var(--fill);margin-bottom:8px"></div><div style="height:13px;width:60%;border-radius:6px;background:var(--fill)"></div></div></div>
+                <div style="background:var(--surface);border-radius:16px;overflow:hidden"><div style="aspect-ratio:1;background:linear-gradient(90deg,var(--fill) 30%,var(--tile) 45%,var(--fill) 60%);background-size:300% 100%;animation:shimmer 1.4s .15s infinite"></div><div style="padding:10px 12px 14px"><div style="height:13px;border-radius:6px;background:var(--fill);margin-bottom:8px"></div><div style="height:13px;width:60%;border-radius:6px;background:var(--fill)"></div></div></div>
+                <div style="background:var(--surface);border-radius:16px;overflow:hidden"><div style="aspect-ratio:1;background:linear-gradient(90deg,var(--fill) 30%,var(--tile) 45%,var(--fill) 60%);background-size:300% 100%;animation:shimmer 1.4s .3s infinite"></div><div style="padding:10px 12px 14px"><div style="height:13px;border-radius:6px;background:var(--fill);margin-bottom:8px"></div><div style="height:13px;width:60%;border-radius:6px;background:var(--fill)"></div></div></div>
+                <div style="background:var(--surface);border-radius:16px;overflow:hidden"><div style="aspect-ratio:1;background:linear-gradient(90deg,var(--fill) 30%,var(--tile) 45%,var(--fill) 60%);background-size:300% 100%;animation:shimmer 1.4s .45s infinite"></div><div style="padding:10px 12px 14px"><div style="height:13px;border-radius:6px;background:var(--fill);margin-bottom:8px"></div><div style="height:13px;width:60%;border-radius:6px;background:var(--fill)"></div></div></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ ready }}">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-min),1fr));gap:12px;padding:8px 16px 16px">
+                <sc-for list="{{ prods }}" as="p">
+                  <div style="position:relative;background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;flex-direction:column">
+                    <button onClick="{{ p.open }}" style="position:relative;display:flex;width:100%;aspect-ratio:1;background:repeating-linear-gradient(45deg,rgba(127,127,127,.055) 0 12px,transparent 12px 24px),var(--tile);align-items:center;justify-content:center" aria-label="{{ p.name }}">
+                      <span style="font-size:44px;font-weight:600;color:var(--text3);opacity:.55" aria-hidden="true">{{ p.letter }}</span>
+                      <sc-if value="{{ p.saleBadge }}"><span style="position:absolute;top:8px;left:8px;background:var(--red);color:#fff;font-size:var(--c1);font-weight:700;border-radius:7px;padding:3px 7px">{{ p.saleBadge }}</span></sc-if>
+                      <sc-if value="{{ p.promo }}"><span style="position:absolute;bottom:8px;left:8px;background:var(--brand);color:#fff;font-size:var(--c2);font-weight:700;border-radius:6px;padding:2px 7px">{{ p.promo }}</span></sc-if>
+                      <sc-if value="{{ p.oos }}">
+                        <span style="position:absolute;inset:0;background:rgba(127,127,127,.28);display:flex;align-items:center;justify-content:center">
+                          <span style="display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:9px;padding:6px 10px;font-size:var(--c1);font-weight:700;color:var(--text2)"><span style="width:15px;height:15px;background:var(--text2);-webkit-mask:var(--i-slash) center/contain no-repeat;mask:var(--i-slash) center/contain no-repeat"></span>Тугаган</span>
+                        </span>
+                      </sc-if>
+                    </button>
+                    <button onClick="{{ p.toggleWish }}" aria-label="{{ p.wishLab }}" aria-pressed="{{ p.wished }}" style="position:absolute;top:6px;right:6px;width:36px;height:36px;border-radius:18px;background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center">
+                      <span style="width:20px;height:20px;background:{{ p.heartC }};-webkit-mask:{{ p.heartMask }} center/contain no-repeat;mask:{{ p.heartMask }} center/contain no-repeat"></span>
+                    </button>
+                    <div style="padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1">
+                      <button onClick="{{ p.open }}" style="font-size:var(--sub);font-weight:600;line-height:1.28;min-height:2.5em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left">{{ p.name }}</button>
+                      <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
+                        <sc-if value="{{ p.oldText }}"><span style="font-size:var(--c1);color:var(--text3);text-decoration:line-through">{{ p.oldText }}</span></sc-if>
+                        <span style="font-size:var(--body);font-weight:700">{{ p.priceMain }}</span><span style="font-size:var(--c1);color:var(--text2)">{{ p.unitSuf }}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:5px;font-size:var(--c2);color:{{ p.stockC }}"><span style="width:13px;height:13px;background:{{ p.stockC }};-webkit-mask:{{ p.stockIcon }} center/contain no-repeat;mask:{{ p.stockIcon }} center/contain no-repeat"></span>{{ p.stockLab }}</div>
+                      <div style="margin-top:auto">
+                        <sc-if value="{{ p.showAdd }}">
+                          <button onClick="{{ p.add }}" style="width:100%;min-height:44px;border-radius:11px;background:var(--tint);color:var(--brand);display:flex;align-items:center;justify-content:center;gap:6px;font-size:var(--sub);font-weight:700" style-active="transform:scale(.97)"><span style="width:16px;height:16px;background:var(--brand);-webkit-mask:var(--i-plus) center/contain no-repeat;mask:var(--i-plus) center/contain no-repeat"></span>Қўшиш</button>
+                        </sc-if>
+                        <sc-if value="{{ p.inCart }}">
+                          <div style="min-height:44px;border-radius:11px;background:var(--brand);color:#fff;display:flex;align-items:stretch;overflow:hidden">
+                            <button onClick="{{ p.dec }}" aria-label="Камайтириш" style="flex:1;display:flex;align-items:center;justify-content:center"><span style="width:17px;height:17px;background:#fff;-webkit-mask:var(--i-minus) center/contain no-repeat;mask:var(--i-minus) center/contain no-repeat"></span></button>
+                            <div style="flex:1.4;display:flex;align-items:center;justify-content:center;font-size:var(--sub);font-weight:700;text-align:center" aria-live="polite">{{ p.qtyText }}</div>
+                            <button onClick="{{ p.inc }}" aria-label="Кўпайтириш" style="flex:1;display:flex;align-items:center;justify-content:center"><span style="width:17px;height:17px;background:#fff;-webkit-mask:var(--i-plus) center/contain no-repeat;mask:var(--i-plus) center/contain no-repeat"></span></button>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ p.oos }}">
+                          <div style="min-height:44px;border-radius:11px;background:var(--fill);color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:var(--sub);font-weight:700">Тугаган</div>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSearch }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="padding:14px 16px 10px">
+            <h1 style="font-size:var(--lt);font-weight:800;letter-spacing:-.5px">Қидирув</h1>
+            <div style="margin-top:10px;min-height:44px;border-radius:12px;background:var(--fill);display:flex;align-items:center;gap:8px;padding:0 12px">
+              <span style="flex:none;width:20px;height:20px;background:var(--text3);-webkit-mask:var(--i-search) center/contain no-repeat;mask:var(--i-search) center/contain no-repeat"></span>
+              <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="Маҳсулот номини ёзинг" aria-label="Маҳсулот қидириш" style="flex:1;border:none;outline:none;background:transparent;font-size:var(--body);min-width:0"></input>
+              <sc-if value="{{ hasQuery }}">
+                <button onClick="{{ clearQ }}" aria-label="Тозалаш" style="flex:none;width:36px;height:36px;margin-right:-6px;display:flex;align-items:center;justify-content:center"><span style="width:17px;height:17px;background:var(--text3);-webkit-mask:var(--i-x) center/contain no-repeat;mask:var(--i-x) center/contain no-repeat"></span></button>
+              </sc-if>
+            </div>
+          </div>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding-bottom:calc(70px + env(safe-area-inset-bottom))">
+            <sc-if value="{{ showSugg }}">
+              <div style="padding:8px 16px">
+                <h2 style="font-size:var(--c1);font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Кўп қидирилади</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <sc-for list="{{ suggChips }}" as="sg">
+                    <button onClick="{{ sg.pick }}" style="min-height:44px;display:inline-flex;align-items:center;padding:0 18px;border-radius:22px;background:var(--surface);font-size:var(--sub);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.06)">{{ sg.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:56px 24px 0;text-align:center">
+                  <span style="width:52px;height:52px;background:var(--text3);opacity:.5;-webkit-mask:var(--i-search) center/contain no-repeat;mask:var(--i-search) center/contain no-repeat"></span>
+                  <div style="font-size:var(--body);font-weight:600;color:var(--text2)">Нима қидиряпмиз?</div>
+                  <div style="font-size:var(--sub);color:var(--text3);max-width:250px">Маҳсулот номини ёзинг ёки юқоридаги сўзлардан танланг</div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ hasResults }}">
+              <div style="padding:2px 16px 6px;font-size:var(--c1);color:var(--text3)" aria-live="polite">{{ resCount }}</div>
+              <div style="background:var(--surface);border-radius:16px;margin:0 16px;overflow:hidden">
+                <sc-for list="{{ results }}" as="r">
+                  <button onClick="{{ r.open }}" style="width:100%;display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 14px;border-bottom:1px solid var(--sep)">
+                    <span style="flex:none;width:46px;height:46px;border-radius:11px;background:repeating-linear-gradient(45deg,rgba(127,127,127,.055) 0 9px,transparent 9px 18px),var(--tile);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;color:var(--text3)" aria-hidden="true">{{ r.letter }}</span>
+                    <span style="flex:1;min-width:0;text-align:left">
+                      <span style="display:block;font-size:var(--sub);font-weight:600;line-height:1.25">{{ r.name }}</span>
+                      <span style="display:flex;align-items:baseline;gap:5px"><span style="font-size:var(--sub);font-weight:700">{{ r.priceMain }}</span><span style="font-size:var(--c1);color:var(--text2)">{{ r.unitSuf }}</span>
+                        <sc-if value="{{ r.oos }}"><span style="font-size:var(--c1);color:var(--text3);font-weight:600">· Тугаган</span></sc-if>
+                      </span>
+                    </span>
+                    <span style="flex:none;width:16px;height:16px;background:var(--text3);opacity:.7;-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ noResults }}">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:64px 24px 0;text-align:center">
+                <span style="width:52px;height:52px;background:var(--text3);opacity:.5;-webkit-mask:var(--i-slash) center/contain no-repeat;mask:var(--i-slash) center/contain no-repeat"></span>
+                <div style="font-size:var(--body);font-weight:700" aria-live="polite">{{ noResText }}</div>
+                <div style="font-size:var(--sub);color:var(--text2);max-width:260px">Бошқа сўз билан уриниб кўринг ёки каталогдан қидиринг</div>
+                <button onClick="{{ clearQ }}" style="margin-top:8px;min-height:44px;display:inline-flex;align-items:center;padding:0 22px;border-radius:12px;background:var(--tint);color:var(--brand);font-size:var(--sub);font-weight:700">Тозалаш</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCart }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="padding:14px 16px 6px;display:flex;align-items:baseline;gap:8px">
+            <h1 style="font-size:var(--lt);font-weight:800;letter-spacing:-.5px">Сават</h1>
+            <div style="font-size:var(--c1);color:var(--text3)">{{ cartCountText }}</div>
+          </div>
+          <sc-if value="{{ cartEmpty }}">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 24px 90px;text-align:center">
+              <span style="width:60px;height:60px;background:var(--text3);opacity:.5;-webkit-mask:var(--i-bag) center/contain no-repeat;mask:var(--i-bag) center/contain no-repeat"></span>
+              <div style="font-size:var(--t3);font-weight:700">Саватингиз бўш</div>
+              <div style="font-size:var(--sub);color:var(--text2);max-width:250px">Каталогдан маҳсулот танланг — биз тез ва эҳтиёткорлик билан етказамиз</div>
+              <button onClick="{{ goCatalog }}" style="margin-top:8px;min-height:50px;display:inline-flex;align-items:center;padding:0 26px;border-radius:13px;background:var(--brand);color:#fff;font-size:var(--body);font-weight:700" style-active="transform:scale(.97)">Каталогга ўтиш</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ cartFull }}">
+            <div data-scroll="1" style="flex:1;overflow-y:auto;padding:6px 16px calc(150px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px">
+              <div style="background:var(--surface);border-radius:16px;overflow:hidden">
+                <sc-for list="{{ lines }}" as="ln">
+                  <div style="display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--sep)">
+                    <button onClick="{{ ln.open }}" aria-label="{{ ln.name }}" style="flex:none;width:60px;height:60px;border-radius:12px;background:repeating-linear-gradient(45deg,rgba(127,127,127,.055) 0 10px,transparent 10px 20px),var(--tile);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;color:var(--text3)">{{ ln.letter }}</button>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+                      <div style="display:flex;gap:8px">
+                        <button onClick="{{ ln.open }}" style="flex:1;font-size:var(--sub);font-weight:600;line-height:1.25;text-align:left">{{ ln.name }}</button>
+                        <button onClick="{{ ln.trash }}" aria-label="Саватдан ўчириш" style="flex:none;width:40px;height:40px;margin:-6px -8px 0 0;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;background:var(--text3);-webkit-mask:var(--i-trash) center/contain no-repeat;mask:var(--i-trash) center/contain no-repeat"></span></button>
+                      </div>
+                      <div style="font-size:var(--c1);color:var(--text2)">{{ ln.unitPriceText }}</div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                        <div style="display:flex;align-items:stretch;min-height:38px;border-radius:10px;background:var(--fill);overflow:hidden">
+                          <button onClick="{{ ln.dec }}" aria-label="Камайтириш" style="width:44px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;background:var(--text);-webkit-mask:var(--i-minus) center/contain no-repeat;mask:var(--i-minus) center/contain no-repeat"></span></button>
+                          <div style="min-width:64px;display:flex;align-items:center;justify-content:center;font-size:var(--sub);font-weight:700;padding:0 4px" aria-live="polite">{{ ln.qtyText }}</div>
+                          <button onClick="{{ ln.inc }}" aria-label="Кўпайтириш" style="width:44px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;background:var(--text);-webkit-mask:var(--i-plus) center/contain no-repeat;mask:var(--i-plus) center/contain no-repeat"></span></button>
+                        </div>
+                        <div style="font-size:var(--body);font-weight:700;white-space:nowrap">{{ ln.lineTotal }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background:var(--surface);border-radius:16px;padding:14px">
+                <h2 style="font-size:var(--sub);font-weight:700;margin-bottom:10px">Купон</h2>
+                <sc-if value="{{ cNotApplied }}">
+                  <div style="display:flex;gap:8px">
+                    <input value="{{ cInput }}" onChange="{{ setCInput }}" placeholder="Купон кодини киритинг" aria-label="Купон коди" style="flex:1;min-width:0;min-height:44px;border:1px solid var(--sep);border-radius:11px;background:var(--bg);padding:0 12px;font-size:var(--body);outline:none"></input>
+                    <button onClick="{{ applyC }}" style="flex:none;min-height:44px;display:flex;align-items:center;padding:0 18px;border-radius:11px;background:var(--tint);color:var(--brand);font-size:var(--sub);font-weight:700">Қўллаш</button>
+                  </div>
+                  <sc-if value="{{ cErr }}">
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--red);font-size:var(--c1)" role="alert"><span style="flex:none;width:15px;height:15px;background:var(--red);-webkit-mask:var(--i-alert) center/contain no-repeat;mask:var(--i-alert) center/contain no-repeat"></span>{{ cErr }}</div>
+                  </sc-if>
+                </sc-if>
+                <sc-if value="{{ cAppliedOn }}">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="flex:none;width:18px;height:18px;background:var(--green);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat"></span>
+                    <span style="flex:1;font-size:var(--sub);color:var(--green);font-weight:600">SALOM10 — 10% чегирма қўлланди</span>
+                    <button onClick="{{ removeC }}" style="flex:none;min-height:44px;display:flex;align-items:center;padding:0 10px;color:var(--red);font-size:var(--sub);font-weight:600">Бекор</button>
+                  </div>
+                </sc-if>
+              </div>
+              <sc-if value="{{ showPtsRow }}">
+                <div style="background:var(--surface);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+                  <span style="flex:none;width:24px;height:24px;background:var(--brand);-webkit-mask:var(--i-star) center/contain no-repeat;mask:var(--i-star) center/contain no-repeat"></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:var(--sub);font-weight:600">Баллардан фойдаланиш</div>
+                    <div style="font-size:var(--c1);color:var(--text2)">{{ ptsBalText }}</div>
+                  </div>
+                  <button onClick="{{ togglePts }}" role="switch" aria-checked="{{ usePointsOn }}" aria-label="Баллардан фойдаланиш" style="flex:none;width:51px;height:31px;border-radius:16px;background:{{ swBg }};position:relative;transition:background .2s">
+                    <span style="position:absolute;top:2px;width:27px;height:27px;border-radius:14px;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25);left:2px;transform:{{ swX }};transition:transform .2s"></span>
+                  </button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ showGuestPts }}">
+                <button onClick="{{ goSignin }}" style="width:100%;background:var(--surface);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+                  <span style="flex:none;width:24px;height:24px;background:var(--brand);-webkit-mask:var(--i-star) center/contain no-repeat;mask:var(--i-star) center/contain no-repeat"></span>
+                  <span style="flex:1;font-size:var(--sub);color:var(--text2);text-align:left">Балл тўплаш учун тизимга киринг — бу ихтиёрий</span>
+                  <span style="flex:none;width:16px;height:16px;background:var(--text3);-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+                </button>
+              </sc-if>
+              <div style="background:var(--surface);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:9px">
+                <div style="display:flex;justify-content:space-between;font-size:var(--sub);color:var(--text2)"><span>Маҳсулотлар</span><span style="font-weight:600;color:var(--text)">{{ subT }}</span></div>
+                <sc-if value="{{ hasDisc }}"><div style="display:flex;justify-content:space-between;font-size:var(--sub);color:var(--green)"><span>Купон чегирмаси</span><span style="font-weight:600">{{ discT }}</span></div></sc-if>
+                <sc-if value="{{ hasPts }}"><div style="display:flex;justify-content:space-between;font-size:var(--sub);color:var(--green)"><span>Баллар</span><span style="font-weight:600">{{ ptsT }}</span></div></sc-if>
+                <div style="display:flex;justify-content:space-between;font-size:var(--sub);color:var(--text2)"><span>Етказиб бериш</span><span>кейинги қадамда</span></div>
+                <div style="border-top:1px solid var(--sep);padding-top:10px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:var(--body);font-weight:700">Жами</span><span style="font-size:var(--t3);font-weight:800">{{ totalT }}</span></div>
+              </div>
+            </div>
+            <div style="position:absolute;left:0;right:0;bottom:calc(50px + env(safe-area-inset-bottom));padding:10px 16px 12px;background:var(--bar);backdrop-filter:blur(18px) saturate(1.8);-webkit-backdrop-filter:blur(18px) saturate(1.8);border-top:1px solid var(--sep)">
+              <button onClick="{{ goCheckout }}" style="width:100%;min-height:56px;border-radius:14px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:var(--body);font-weight:700" style-active="transform:scale(.98)">Расмийлаштириш · {{ totalT }}</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAcc }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <h1 style="padding:14px 16px 6px;font-size:var(--lt);font-weight:800;letter-spacing:-.5px">Профиль</h1>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding:6px 16px calc(70px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px">
+            <sc-if value="{{ isGuest }}">
+              <div style="background:var(--tint);border-radius:16px;padding:16px">
+                <div style="font-size:var(--body);font-weight:700">Тизимга киринг</div>
+                <div style="font-size:var(--sub);color:var(--text2);margin-top:5px">Балл тўпланг, буюртмаларни кузатинг ва севимли маҳсулотларни сақланг. Бу ихтиёрий — харид учун шарт эмас.</div>
+                <button onClick="{{ goSignin }}" style="margin-top:12px;width:100%;min-height:50px;border-radius:13px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:var(--body);font-weight:700" style-active="transform:scale(.98)"><span style="width:19px;height:19px;background:#fff;-webkit-mask:var(--i-phone) center/contain no-repeat;mask:var(--i-phone) center/contain no-repeat"></span>Телефон орқали кириш</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ signedIn }}">
+              <div style="background:var(--surface);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+                <div style="flex:none;width:52px;height:52px;border-radius:26px;background:var(--tint);display:flex;align-items:center;justify-content:center"><span style="width:26px;height:26px;background:var(--brand);-webkit-mask:var(--i-person) center/contain no-repeat;mask:var(--i-person) center/contain no-repeat"></span></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:var(--body);font-weight:700">{{ accPhone }}</div>
+                  <div style="font-size:var(--c1);color:var(--text2)">Доимий мижоз</div>
+                </div>
+                <button onClick="{{ signout }}" style="flex:none;min-height:44px;display:flex;align-items:center;padding:0 10px;color:var(--red);font-size:var(--sub);font-weight:600">Чиқиш</button>
+              </div>
+              <div style="background:var(--surface);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+                <span style="flex:none;width:24px;height:24px;background:var(--brand);-webkit-mask:var(--i-star) center/contain no-repeat;mask:var(--i-star) center/contain no-repeat"></span>
+                <div style="flex:1"><div style="font-size:var(--sub);font-weight:600">Балларим</div><div style="font-size:var(--c1);color:var(--text2)">1 балл = 1 сўм</div></div>
+                <div style="font-size:var(--t3);font-weight:800;color:var(--brand)">{{ ptsBal }}</div>
+              </div>
+            </sc-if>
+            <div style="background:var(--surface);border-radius:16px;overflow:hidden">
+              <button onClick="{{ goOrders }}" style="width:100%;display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 14px;border-bottom:1px solid var(--sep)">
+                <span style="flex:none;width:30px;height:30px;border-radius:8px;background:var(--tint);display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;background:var(--brand);-webkit-mask:var(--i-box) center/contain no-repeat;mask:var(--i-box) center/contain no-repeat"></span></span>
+                <span style="flex:1;font-size:var(--body);text-align:left">Буюртмаларим</span>
+                <span style="font-size:var(--sub);color:var(--text3)">{{ ordersN }}</span>
+                <span style="flex:none;width:15px;height:15px;background:var(--text3);opacity:.7;-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+              </button>
+              <button onClick="{{ goWish }}" style="width:100%;display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 14px;border-bottom:1px solid var(--sep)">
+                <span style="flex:none;width:30px;height:30px;border-radius:8px;background:var(--tint);display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;background:var(--brand);-webkit-mask:var(--i-heart) center/contain no-repeat;mask:var(--i-heart) center/contain no-repeat"></span></span>
+                <span style="flex:1;font-size:var(--body);text-align:left">Севимлилар</span>
+                <span style="font-size:var(--sub);color:var(--text3)">{{ wishN }}</span>
+                <span style="flex:none;width:15px;height:15px;background:var(--text3);opacity:.7;-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+              </button>
+              <button onClick="{{ goCoupons }}" style="width:100%;display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 14px;border-bottom:1px solid var(--sep)">
+                <span style="flex:none;width:30px;height:30px;border-radius:8px;background:var(--tint);display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;background:var(--brand);-webkit-mask:var(--i-ticket) center/contain no-repeat;mask:var(--i-ticket) center/contain no-repeat"></span></span>
+                <span style="flex:1;font-size:var(--body);text-align:left">Купонларим</span>
+                <span style="font-size:var(--sub);color:var(--text3)">2</span>
+                <span style="flex:none;width:15px;height:15px;background:var(--text3);opacity:.7;-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+              </button>
+              <button onClick="{{ goNotifs }}" style="width:100%;display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 14px">
+                <span style="flex:none;width:30px;height:30px;border-radius:8px;background:var(--tint);display:flex;align-items:center;justify-content:center;position:relative"><span style="width:18px;height:18px;background:var(--brand);-webkit-mask:var(--i-bell) center/contain no-repeat;mask:var(--i-bell) center/contain no-repeat"></span><sc-if value="{{ notifDot }}"><span style="position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:5px;background:var(--red);border:2px solid var(--surface)"></span></sc-if></span>
+                <span style="flex:1;font-size:var(--body);text-align:left">Билдиришномалар</span>
+                <span style="flex:none;width:15px;height:15px;background:var(--text3);opacity:.7;-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+              </button>
+            </div>
+            <div style="text-align:center;font-size:var(--c1);color:var(--text3);padding-top:6px">{{ accFoot }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isProduct }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);backdrop-filter:blur(18px) saturate(1.8);-webkit-backdrop-filter:blur(18px) saturate(1.8);border-bottom:1px solid var(--sep);position:relative;z-index:5">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Орқага</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Маҳсулот</h1>
+            <button onClick="{{ pdTgWish }}" aria-label="{{ pdWishLab }}" aria-pressed="{{ pdWished }}" style="margin-left:auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:23px;height:23px;background:{{ pdHeartC }};-webkit-mask:{{ pdHeartMask }} center/contain no-repeat;mask:{{ pdHeartMask }} center/contain no-repeat"></span></button>
+          </div>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding-bottom:calc(96px + env(safe-area-inset-bottom))">
+            <div data-scroll="1" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory" onScroll="{{ onCarScroll }}" role="group" aria-label="{{ carLabel }}">
+              <sc-for list="{{ slides }}" as="sl">
+                <div style="flex:none;width:100%;aspect-ratio:375/264;scroll-snap-align:start;position:relative;background:repeating-linear-gradient(45deg,rgba(127,127,127,.05) 0 14px,transparent 14px 28px),var(--tile);display:flex;align-items:center;justify-content:center">
+                  <span style="font-size:64px;font-weight:600;color:var(--text3);opacity:.5" aria-hidden="true">{{ sl.letter }}</span>
+                  <span style="position:absolute;bottom:10px;right:12px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--text3)">{{ sl.cap }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;justify-content:center;gap:6px;padding:10px 0 2px" aria-hidden="true">
+              <sc-for list="{{ dots }}" as="d"><span style="width:7px;height:7px;border-radius:4px;background:{{ d.bg }}"></span></sc-for>
+            </div>
+            <div style="padding:8px 16px 0;display:flex;flex-direction:column;gap:10px">
+              <sc-if value="{{ pdPromo }}"><div><span style="display:inline-block;background:var(--tint);color:var(--brand);font-size:var(--c1);font-weight:700;border-radius:7px;padding:4px 9px">{{ pdPromo }}</span></div></sc-if>
+              <h2 style="font-size:var(--t2);font-weight:700;line-height:1.22">{{ pdName }}</h2>
+              <div style="display:flex;align-items:center;gap:6px;font-size:var(--sub);color:{{ pdStockC }};font-weight:600"><span style="width:17px;height:17px;background:{{ pdStockC }};-webkit-mask:{{ pdStockIcon }} center/contain no-repeat;mask:{{ pdStockIcon }} center/contain no-repeat"></span>{{ pdStockLab }}<span style="color:var(--text3);font-weight:400">· {{ pdUnitLine }}</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                <sc-if value="{{ pdOld }}"><span style="font-size:var(--body);color:var(--text3);text-decoration:line-through">{{ pdOld }}</span></sc-if>
+                <span style="font-size:var(--t1);font-weight:800">{{ pdPrice }}</span>
+                <sc-if value="{{ pdBadge }}"><span style="background:var(--red);color:#fff;font-size:var(--c1);font-weight:700;border-radius:7px;padding:3px 8px">{{ pdBadge }}</span></sc-if>
+              </div>
+              <div style="font-size:var(--sub);color:var(--text2);line-height:1.45">{{ pdDesc }}</div>
+              <div style="background:var(--surface);border-radius:16px;padding:14px;margin-top:4px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:var(--sub);font-weight:700">Миқдор</span><span style="font-size:var(--c1);color:var(--text3)">{{ pdStepHint }}</span></div>
+                <div style="display:flex;align-items:stretch;min-height:56px;border-radius:13px;background:var(--fill);overflow:hidden">
+                  <button onClick="{{ pdDec }}" aria-label="Камайтириш" style="width:76px;display:flex;align-items:center;justify-content:center" style-active="background:var(--sep)"><span style="width:22px;height:22px;background:var(--text);-webkit-mask:var(--i-minus) center/contain no-repeat;mask:var(--i-minus) center/contain no-repeat"></span></button>
+                  <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:var(--t2);font-weight:700;background:var(--surface);border-left:1px solid var(--sep);border-right:1px solid var(--sep)" aria-live="polite">{{ pdQtyText }}</div>
+                  <button onClick="{{ pdInc }}" aria-label="Кўпайтириш" style="width:76px;display:flex;align-items:center;justify-content:center" style-active="background:var(--sep)"><span style="width:22px;height:22px;background:var(--text);-webkit-mask:var(--i-plus) center/contain no-repeat;mask:var(--i-plus) center/contain no-repeat"></span></button>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-size:var(--sub);color:var(--text2)">Жами</span><span style="font-size:var(--t3);font-weight:800">{{ pdSubT }}</span></div>
+              </div>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:var(--bar);backdrop-filter:blur(18px) saturate(1.8);-webkit-backdrop-filter:blur(18px) saturate(1.8);border-top:1px solid var(--sep)">
+            <button onClick="{{ pdAdd }}" style="width:100%;min-height:56px;border-radius:14px;background:{{ pdAddBg }};color:{{ pdAddFg }};display:flex;align-items:center;justify-content:center;gap:8px;font-size:var(--body);font-weight:700" style-active="transform:scale(.98)">{{ pdAddLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCheckout }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);backdrop-filter:blur(18px) saturate(1.8);-webkit-backdrop-filter:blur(18px) saturate(1.8);border-bottom:1px solid var(--sep);position:relative;z-index:5">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Сават</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Расмийлаштириш</h1>
+          </div>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding:14px 16px calc(130px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div style="display:flex;gap:6px"><span style="flex:1;height:5px;border-radius:3px;background:var(--brand)"></span><span style="flex:1;height:5px;border-radius:3px;background:var(--fill)"></span></div>
+              <div style="font-size:var(--c1);color:var(--text2);margin-top:7px">1-қадам / 2 — Етказиб бериш маълумотлари</div>
+            </div>
+            <div>
+              <label for="sf-co-name" style="display:block;font-size:var(--sub);font-weight:600;margin-bottom:7px">Исм ва фамилия</label>
+              <input id="sf-co-name" value="{{ coName }}" onChange="{{ setCoName }}" autocomplete="name" placeholder="Азиз Каримов" style="width:100%;min-height:48px;border:1px solid var(--sep);border-radius:12px;background:var(--surface);padding:0 14px;font-size:var(--body);outline:none"></input>
+            </div>
+            <div>
+              <label for="sf-co-phone" style="display:block;font-size:var(--sub);font-weight:600;margin-bottom:7px">Телефон рақам</label>
+              <div style="display:flex;align-items:center;min-height:48px;border:1px solid var(--sep);border-radius:12px;background:var(--surface);padding:0 14px;gap:8px">
+                <span style="font-size:var(--body);font-weight:600;color:var(--text2)">+998</span>
+                <input id="sf-co-phone" value="{{ coPhone }}" onChange="{{ setCoPhone }}" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:var(--body)"></input>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:var(--sub);font-weight:600;margin-bottom:7px">Ҳудуд (вилоят, шаҳар)</div>
+              <button onClick="{{ openRegion }}" aria-label="Ҳудуд: {{ regionText }}" style="width:100%;display:flex;align-items:center;min-height:48px;border:1px solid var(--sep);border-radius:12px;background:var(--surface);padding:0 14px">
+                <span style="flex:1;font-size:var(--body);color:{{ regionC }};text-align:left">{{ regionText }}</span>
+                <span style="flex:none;width:16px;height:16px;background:var(--text3);-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+              </button>
+            </div>
+            <div>
+              <div style="font-size:var(--sub);font-weight:600;margin-bottom:7px">Туман ёки қишлоқ</div>
+              <button onClick="{{ openVillage }}" aria-label="Туман ёки қишлоқ: {{ villageText }}" style="width:100%;display:flex;align-items:center;min-height:48px;border:1px solid var(--sep);border-radius:12px;background:var(--surface);padding:0 14px">
+                <span style="flex:1;font-size:var(--body);color:{{ villageC }};text-align:left">{{ villageText }}</span>
+                <span style="flex:none;width:16px;height:16px;background:var(--text3);-webkit-mask:var(--i-chevr) center/contain no-repeat;mask:var(--i-chevr) center/contain no-repeat"></span>
+              </button>
+              <sc-if value="{{ feeNote }}"><div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:var(--c1);color:{{ feeNoteC }}"><span style="flex:none;width:15px;height:15px;background:{{ feeNoteC }};-webkit-mask:var(--i-truck) center/contain no-repeat;mask:var(--i-truck) center/contain no-repeat"></span>{{ feeNote }}</div></sc-if>
+            </div>
+            <div>
+              <label for="sf-co-addr" style="display:block;font-size:var(--sub);font-weight:600;margin-bottom:7px">Манзил (кўча, уй)</label>
+              <textarea id="sf-co-addr" value="{{ coAddr }}" onChange="{{ setCoAddr }}" autocomplete="street-address" placeholder="Кўча, уй рақами, мўлжал" rows="2" style="width:100%;border:1px solid var(--sep);border-radius:12px;background:var(--surface);padding:12px 14px;font-size:var(--body);outline:none;resize:none;line-height:1.35;display:block"></textarea>
+            </div>
+            <div>
+              <label for="sf-co-note" style="display:block;font-size:var(--sub);font-weight:600;margin-bottom:7px">Изоҳ <span style="color:var(--text3);font-weight:400">(ихтиёрий)</span></label>
+              <textarea id="sf-co-note" value="{{ coNote }}" onChange="{{ setCoNote }}" placeholder="Курьер учун изоҳ, масалан: домофон 12" rows="2" style="width:100%;border:1px solid var(--sep);border-radius:12px;background:var(--surface);padding:12px 14px;font-size:var(--body);outline:none;resize:none;line-height:1.35;display:block"></textarea>
+            </div>
+            <div style="background:var(--surface);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:9px">
+              <h2 style="font-size:var(--sub);font-weight:700">Буюртма</h2>
+              <sc-for list="{{ sumLines }}" as="s">
+                <div style="display:flex;justify-content:space-between;gap:10px;font-size:var(--sub)"><span style="color:var(--text2)">{{ s.n }} · {{ s.q }}</span><span style="font-weight:600;white-space:nowrap">{{ s.s }}</span></div>
+              </sc-for>
+              <div style="border-top:1px solid var(--sep);padding-top:9px;display:flex;justify-content:space-between;font-size:var(--sub);color:var(--text2)"><span>Маҳсулотлар</span><span style="font-weight:600;color:var(--text)">{{ subT }}</span></div>
+              <sc-if value="{{ hasDisc }}"><div style="display:flex;justify-content:space-between;font-size:var(--sub);color:var(--green)"><span>Купон чегирмаси</span><span style="font-weight:600">{{ discT }}</span></div></sc-if>
+              <sc-if value="{{ hasPts }}"><div style="display:flex;justify-content:space-between;font-size:var(--sub);color:var(--green)"><span>Баллар</span><span style="font-weight:600">{{ ptsT }}</span></div></sc-if>
+              <div style="display:flex;justify-content:space-between;font-size:var(--sub);color:var(--text2)"><span>Етказиб бериш</span><span style="font-weight:600;color:var(--text)">{{ feeT }}</span></div>
+              <div style="border-top:1px solid var(--sep);padding-top:10px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:var(--body);font-weight:700">Жами</span><span style="font-size:var(--t3);font-weight:800">{{ coTotalT }}</span></div>
+            </div>
+            <div style="background:var(--tint);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center">
+              <span style="flex:none;width:26px;height:26px;background:var(--brand);-webkit-mask:var(--i-cash) center/contain no-repeat;mask:var(--i-cash) center/contain no-repeat"></span>
+              <div style="flex:1"><div style="font-size:var(--sub);font-weight:700">Нақд тўлов</div><div style="font-size:var(--c1);color:var(--text2)">Буюртмани олганда курьерга нақд тўлайсиз. Карта керак эмас.</div></div>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:8px 16px calc(14px + env(safe-area-inset-bottom));background:var(--bar);backdrop-filter:blur(18px) saturate(1.8);-webkit-backdrop-filter:blur(18px) saturate(1.8);border-top:1px solid var(--sep)">
+            <sc-if value="{{ missingText }}">
+              <div style="display:flex;align-items:center;gap:6px;font-size:var(--c1);color:var(--orange);padding:2px 2px 8px"><span style="flex:none;width:15px;height:15px;background:var(--orange);-webkit-mask:var(--i-alert) center/contain no-repeat;mask:var(--i-alert) center/contain no-repeat"></span>{{ missingText }}</div>
+            </sc-if>
+            <button onClick="{{ place }}" style="width:100%;min-height:56px;border-radius:14px;background:{{ placeBg }};color:{{ placeFg }};display:flex;flex-direction:column;align-items:center;justify-content:center" style-active="transform:scale(.98)">
+              <span style="font-size:var(--body);font-weight:700">Буюртма бериш</span>
+              <span style="font-size:var(--c1);opacity:.85">{{ placeSub }}</span>
+            </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSuccess }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);padding:0 24px;text-align:center">
+          <div style="width:96px;height:96px;border-radius:48px;background:var(--greent);display:flex;align-items:center;justify-content:center;animation:popIn .35s"><span style="width:48px;height:48px;background:var(--green);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat"></span></div>
+          <h1 style="font-size:var(--t2);font-weight:800;line-height:1.2" aria-live="polite">Раҳмат!<br>Буюртма қабул қилинди</h1>
+          <div style="background:var(--surface);border-radius:12px;padding:10px 18px;font-size:var(--body);font-weight:700">Буюртма {{ okNo }}</div>
+          <div style="font-size:var(--sub);color:var(--text2);max-width:280px">{{ okMsg }}</div>
+          <button onClick="{{ okTrack }}" style="margin-top:10px;width:100%;min-height:56px;border-radius:14px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--body);font-weight:700" style-active="transform:scale(.98)">Буюртмани кузатиш</button>
+          <button onClick="{{ okHome }}" style="width:100%;min-height:50px;border-radius:13px;background:var(--tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:var(--body);font-weight:700">Асосий саҳифага</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isTracking }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);backdrop-filter:blur(18px) saturate(1.8);-webkit-backdrop-filter:blur(18px) saturate(1.8);border-bottom:1px solid var(--sep);position:relative;z-index:5">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Орқага</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">{{ trNo }}</h1>
+            <sc-if value="{{ trFound }}"><button onClick="{{ trRefresh }}" style="margin-left:auto;min-height:44px;display:flex;align-items:center;padding:0 10px;color:var(--brand);font-size:var(--body)">Янгилаш</button></sc-if>
+          </div>
+          <sc-if value="{{ trFound }}">
+            <div data-scroll="1" style="flex:1;overflow-y:auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px">
+              <div style="background:var(--surface);border-radius:16px;padding:14px">
+                <div style="font-size:var(--sub);color:var(--text2)">{{ trMeta }}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:var(--sub);color:var(--text2)"><span style="flex:none;width:16px;height:16px;background:var(--text3);-webkit-mask:var(--i-truck) center/contain no-repeat;mask:var(--i-truck) center/contain no-repeat"></span>{{ trPlace }}</div>
+              </div>
+              <div style="background:var(--surface);border-radius:16px;padding:16px 14px" role="group" aria-label="Буюртма ҳолати">
+                <sc-for list="{{ steps }}" as="st">
+                  <div style="display:flex;gap:12px">
+                    <div style="display:flex;flex-direction:column;align-items:center">
+                      <div style="width:28px;height:28px;border-radius:14px;background:{{ st.cBg }};display:flex;align-items:center;justify-content:center;animation:{{ st.anim }}">
+                        <sc-if value="{{ st.showCheck }}"><span style="width:14px;height:14px;background:#fff;-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat"></span></sc-if>
+                        <sc-if value="{{ st.showDot }}"><span style="width:10px;height:10px;border-radius:5px;background:#fff"></span></sc-if>
+                      </div>
+                      <sc-if value="{{ st.line }}"><span style="width:2.5px;flex:1;min-height:26px;background:{{ st.lineC }};margin:3px 0"></span></sc-if>
+                    </div>
+                    <div style="padding-bottom:16px;min-width:0">
+                      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:var(--body);font-weight:700;color:{{ st.labC }}">{{ st.lab }}</span><span style="font-size:var(--c1);color:var(--text3)">{{ st.time }}</span></div>
+                      <div style="font-size:var(--c1);color:var(--text2);margin-top:2px">{{ st.desc }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+                <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--sep);padding-top:12px;font-size:var(--c1);color:var(--text2)"><span style="flex:none;width:16px;height:16px;background:var(--text3);-webkit-mask:var(--i-phone) center/contain no-repeat;mask:var(--i-phone) center/contain no-repeat"></span>Курьер етиб боргач сизга қўнғироқ қилади</div>
+              </div>
+              <div style="background:var(--surface);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:9px">
+                <h2 style="font-size:var(--sub);font-weight:700">Таркиби</h2>
+                <sc-for list="{{ trItems }}" as="ti">
+                  <div style="display:flex;justify-content:space-between;gap:10px;font-size:var(--sub)"><span style="color:var(--text2)">{{ ti.n }} · {{ ti.q }}</span><span style="font-weight:600;white-space:nowrap">{{ ti.s }}</span></div>
+                </sc-for>
+                <div style="border-top:1px solid var(--sep);padding-top:9px;display:flex;justify-content:space-between"><span style="font-size:var(--sub);font-weight:700">Жами</span><span style="font-size:var(--body);font-weight:800">{{ trTotal }}</span></div>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ trNotFound }}">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 24px;text-align:center">
+              <span style="width:52px;height:52px;background:var(--text3);opacity:.5;-webkit-mask:var(--i-box) center/contain no-repeat;mask:var(--i-box) center/contain no-repeat"></span>
+              <div style="font-size:var(--body);font-weight:700">Буюртма топилмади</div>
+              <div style="font-size:var(--sub);color:var(--text2);max-width:260px">Бу рақамли буюртма мавжуд эмас ёки бошқа қурилмада очилган</div>
+              <button onClick="{{ goOrders }}" style="margin-top:8px;min-height:44px;display:inline-flex;align-items:center;padding:0 22px;border-radius:12px;background:var(--tint);color:var(--brand);font-size:var(--sub);font-weight:700">Буюртмаларим</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isPhone }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);border-bottom:1px solid var(--sep);position:relative">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Орқага</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Кириш</h1>
+          </div>
+          <div style="padding:22px 20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:6px"><span style="flex:1;height:5px;border-radius:3px;background:var(--brand)"></span><span style="flex:1;height:5px;border-radius:3px;background:var(--fill)"></span></div>
+            <div style="font-size:var(--c1);color:var(--text2)">1-қадам / 2</div>
+            <h2 style="font-size:var(--t2);font-weight:800;margin-top:6px">Телефон рақамингиз</h2>
+            <div style="font-size:var(--sub);color:var(--text2)">SMS орқали 6 хонали тасдиқлаш кодини юборамиз. Пароль керак эмас.</div>
+            <div style="display:flex;align-items:center;min-height:56px;border:1px solid var(--sep);border-radius:14px;background:var(--surface);padding:0 16px;gap:10px;margin-top:8px">
+              <span style="font-size:var(--t3);font-weight:600;color:var(--text2)">+998</span>
+              <input value="{{ siPhone }}" onChange="{{ setSiPhone }}" inputmode="numeric" autocomplete="tel-national" aria-label="Телефон рақам" placeholder="90 123 45 67" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:var(--t3)"></input>
+            </div>
+            <button onClick="{{ sendCode }}" style="width:100%;min-height:56px;border-radius:14px;background:{{ sendBg }};color:{{ sendFg }};display:flex;align-items:center;justify-content:center;font-size:var(--body);font-weight:700;margin-top:4px" style-active="transform:scale(.98)">Кодни юбориш</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOtp }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);border-bottom:1px solid var(--sep);position:relative">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Телефон</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Тасдиқлаш</h1>
+          </div>
+          <div style="padding:22px 20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:6px"><span style="flex:1;height:5px;border-radius:3px;background:var(--brand)"></span><span style="flex:1;height:5px;border-radius:3px;background:var(--brand)"></span></div>
+            <div style="font-size:var(--c1);color:var(--text2)">2-қадам / 2</div>
+            <h2 style="font-size:var(--t2);font-weight:800;margin-top:6px">SMS-кодни киритинг</h2>
+            <div style="font-size:var(--sub);color:var(--text2)">{{ otpSub }}</div>
+            <div style="position:relative;margin-top:8px;animation:{{ otpAnim }}">
+              <div style="display:flex;gap:8px;justify-content:center" aria-hidden="true">
+                <sc-for list="{{ otpBoxes }}" as="b">
+                  <div style="width:48px;height:58px;border-radius:12px;background:var(--surface);border:2px solid {{ b.bc }};display:flex;align-items:center;justify-content:center;font-size:var(--t2);font-weight:700">{{ b.ch }}</div>
+                </sc-for>
+              </div>
+              <input value="{{ otp }}" onChange="{{ onOtp }}" inputmode="numeric" autocomplete="one-time-code" aria-label="SMS-код" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;outline:none;cursor:pointer"></input>
+            </div>
+            <sc-if value="{{ otpErrOn }}">
+              <div style="display:flex;align-items:center;justify-content:center;gap:6px;color:var(--red);font-size:var(--sub);font-weight:600" role="alert"><span style="flex:none;width:17px;height:17px;background:var(--red);-webkit-mask:var(--i-alert) center/contain no-repeat;mask:var(--i-alert) center/contain no-repeat"></span>Код нотўғри. Қайта уриниб кўринг</div>
+            </sc-if>
+            <div style="text-align:center;margin-top:6px">
+              <sc-if value="{{ resendOn }}"><button onClick="{{ resend }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;color:var(--brand);font-size:var(--sub);font-weight:700">Кодни қайта юбориш</button></sc-if>
+              <sc-if value="{{ resendWait }}"><div style="display:inline-flex;align-items:center;min-height:44px;color:var(--text3);font-size:var(--sub)" aria-live="polite">{{ resendText }}</div></sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOrders }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);border-bottom:1px solid var(--sep);position:relative">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Профиль</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Буюртмаларим</h1>
+          </div>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px">
+            <sc-if value="{{ ordEmpty }}">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:70px 24px 0;text-align:center">
+                <span style="width:52px;height:52px;background:var(--text3);opacity:.5;-webkit-mask:var(--i-box) center/contain no-repeat;mask:var(--i-box) center/contain no-repeat"></span>
+                <div style="font-size:var(--body);font-weight:700">Ҳали буюртма йўқ</div>
+                <div style="font-size:var(--sub);color:var(--text2)">Биринчи буюртмангизни каталогдан бошланг</div>
+                <button onClick="{{ goCatalog }}" style="margin-top:8px;min-height:44px;display:inline-flex;align-items:center;padding:0 22px;border-radius:12px;background:var(--tint);color:var(--brand);font-size:var(--sub);font-weight:700">Каталогга ўтиш</button>
+              </div>
+            </sc-if>
+            <sc-for list="{{ ordRows }}" as="o">
+              <button onClick="{{ o.open }}" style="width:100%;background:var(--surface);border-radius:16px;padding:14px;display:block">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <span style="flex:1;font-size:var(--body);font-weight:700;text-align:left">{{ o.no }}</span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;background:{{ o.chipBg }};color:{{ o.chipC }};font-size:var(--c1);font-weight:700;border-radius:8px;padding:4px 9px"><span style="width:13px;height:13px;background:{{ o.chipC }};-webkit-mask:{{ o.chipIcon }} center/contain no-repeat;mask:{{ o.chipIcon }} center/contain no-repeat"></span>{{ o.statusLab }}</span>
+                </span>
+                <span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px">
+                  <span style="font-size:var(--c1);color:var(--text2)">{{ o.meta }}</span>
+                  <span style="font-size:var(--body);font-weight:700">{{ o.totalText }}</span>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isWish }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);border-bottom:1px solid var(--sep);position:relative">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Профиль</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Севимлилар</h1>
+          </div>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom))">
+            <sc-if value="{{ wishEmpty }}">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:70px 24px 0;text-align:center">
+                <span style="width:52px;height:52px;background:var(--text3);opacity:.5;-webkit-mask:var(--i-heart) center/contain no-repeat;mask:var(--i-heart) center/contain no-repeat"></span>
+                <div style="font-size:var(--body);font-weight:700">Севимлилар ҳозирча бўш</div>
+                <div style="font-size:var(--sub);color:var(--text2);max-width:260px">Маҳсулот саҳифасидаги юрак белгисини босинг — у шу ерда сақланади</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ wishFull }}">
+              <div style="background:var(--surface);border-radius:16px;overflow:hidden">
+                <sc-for list="{{ wishRows }}" as="w">
+                  <div style="display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 14px;border-bottom:1px solid var(--sep)">
+                    <button onClick="{{ w.open }}" aria-label="{{ w.name }}" style="flex:none;width:46px;height:46px;border-radius:11px;background:repeating-linear-gradient(45deg,rgba(127,127,127,.055) 0 9px,transparent 9px 18px),var(--tile);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;color:var(--text3)">{{ w.letter }}</button>
+                    <button onClick="{{ w.open }}" style="flex:1;min-width:0;text-align:left">
+                      <span style="display:block;font-size:var(--sub);font-weight:600;line-height:1.25">{{ w.name }}</span>
+                      <span style="display:flex;align-items:baseline;gap:5px"><span style="font-size:var(--sub);font-weight:700">{{ w.priceMain }}</span><span style="font-size:var(--c1);color:var(--text2)">{{ w.unitSuf }}</span></span>
+                    </button>
+                    <button onClick="{{ w.unheart }}" aria-label="Севимлилардан олиб ташлаш" style="flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:22px;height:22px;background:var(--red);-webkit-mask:var(--i-heartf) center/contain no-repeat;mask:var(--i-heartf) center/contain no-repeat"></span></button>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCoupons }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);border-bottom:1px solid var(--sep);position:relative">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Профиль</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Купонларим</h1>
+          </div>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ couponRows }}" as="cp">
+              <div style="background:var(--surface);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;opacity:{{ cp.opa }}">
+                <span style="flex:none;width:28px;height:28px;background:var(--brand);-webkit-mask:var(--i-ticket) center/contain no-repeat;mask:var(--i-ticket) center/contain no-repeat"></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:var(--body);font-weight:800;letter-spacing:.5px">{{ cp.code }}</div>
+                  <div style="font-size:var(--c1);color:var(--text2);margin-top:2px">{{ cp.desc }}</div>
+                </div>
+                <sc-if value="{{ cp.live }}">
+                  <button onClick="{{ cp.copy }}" aria-label="Купон кодини нусхалаш" style="flex:none;min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:11px;background:var(--tint);color:var(--brand);font-size:var(--sub);font-weight:700">Нусха</button>
+                </sc-if>
+              </div>
+            </sc-for>
+            <div style="font-size:var(--c1);color:var(--text3);text-align:center">Купон кодини саватдаги «Купон» қаторига киритинг</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isNotifs }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)">
+          <div style="flex:none;display:flex;align-items:center;min-height:48px;padding:0 8px;background:var(--bar);border-bottom:1px solid var(--sep);position:relative">
+            <button onClick="{{ back }}" style="display:flex;align-items:center;gap:2px;min-height:44px;padding:0 8px;color:var(--brand);font-size:var(--body)"><span style="width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-chevl) center/contain no-repeat;mask:var(--i-chevl) center/contain no-repeat"></span>Орқага</button>
+            <h1 style="position:absolute;left:50%;transform:translateX(-50%);font-size:var(--body);font-weight:600">Билдиришномалар</h1>
+          </div>
+          <div data-scroll="1" style="flex:1;overflow-y:auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom))">
+            <div style="background:var(--surface);border-radius:16px;overflow:hidden">
+              <sc-for list="{{ notifRows }}" as="nf">
+                <div style="display:flex;gap:12px;padding:13px 14px;border-bottom:1px solid var(--sep)">
+                  <span style="flex:none;width:36px;height:36px;border-radius:18px;background:var(--tint);display:flex;align-items:center;justify-content:center;position:relative">
+                    <span style="width:19px;height:19px;background:var(--brand);-webkit-mask:{{ nf.iconMask }} center/contain no-repeat;mask:{{ nf.iconMask }} center/contain no-repeat"></span>
+                    <sc-if value="{{ nf.unread }}"><span style="position:absolute;top:-1px;right:-1px;width:10px;height:10px;border-radius:5px;background:var(--red);border:2px solid var(--surface)"></span></sc-if>
+                  </span>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:var(--sub);font-weight:700">{{ nf.t }}</span><span style="flex:none;font-size:var(--c2);color:var(--text3)">{{ nf.time }}</span></div>
+                    <div style="font-size:var(--c1);color:var(--text2);margin-top:2px;line-height:1.35">{{ nf.s }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showTabs }}">
+        <nav aria-label="Бўлимлар" style="position:absolute;left:0;right:0;bottom:0;background:var(--bar);backdrop-filter:blur(18px) saturate(1.8);-webkit-backdrop-filter:blur(18px) saturate(1.8);border-top:1px solid var(--sep);z-index:20;padding-bottom:env(safe-area-inset-bottom)">
+          <div style="height:50px;display:flex">
+            <button onClick="{{ goHome }}" aria-current="{{ tHomeCur }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+              <span style="width:24px;height:24px;background:{{ tHomeC }};-webkit-mask:var(--i-house) center/contain no-repeat;mask:var(--i-house) center/contain no-repeat"></span>
+              <span style="font-size:var(--c2);font-weight:600;color:{{ tHomeC }}">Асосий</span>
+            </button>
+            <button onClick="{{ goSearchTab }}" aria-current="{{ tSearchCur }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+              <span style="width:24px;height:24px;background:{{ tSearchC }};-webkit-mask:var(--i-search) center/contain no-repeat;mask:var(--i-search) center/contain no-repeat"></span>
+              <span style="font-size:var(--c2);font-weight:600;color:{{ tSearchC }}">Қидирув</span>
+            </button>
+            <button onClick="{{ goCartTab }}" aria-current="{{ tCartCur }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative">
+              <span style="position:relative">
+                <span style="display:block;width:24px;height:24px;background:{{ tCartC }};-webkit-mask:var(--i-bag) center/contain no-repeat;mask:var(--i-bag) center/contain no-repeat"></span>
+                <sc-if value="{{ cartBadge }}"><span style="position:absolute;top:-5px;right:-11px;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px">{{ cartBadge }}</span></sc-if>
+              </span>
+              <span style="font-size:var(--c2);font-weight:600;color:{{ tCartC }}">Сават</span>
+            </button>
+            <button onClick="{{ goAccTab }}" aria-current="{{ tAccCur }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+              <span style="width:24px;height:24px;background:{{ tAccC }};-webkit-mask:var(--i-person) center/contain no-repeat;mask:var(--i-person) center/contain no-repeat"></span>
+              <span style="font-size:var(--c2);font-weight:600;color:{{ tAccC }}">Профиль</span>
+            </button>
+          </div>
+        </nav>
+      </sc-if>
+
+      <sc-if value="{{ toastOn }}">
+        <div role="status" aria-live="polite" style="position:absolute;top:8px;left:16px;right:16px;z-index:40;display:flex;justify-content:center;pointer-events:none">
+          <div style="display:flex;align-items:center;gap:9px;background:rgba(44,44,48,.94);border-radius:14px;padding:12px 18px;animation:toastIn .25s;box-shadow:0 6px 20px rgba(0,0,0,.25)">
+            <span style="flex:none;width:20px;height:20px;border-radius:10px;background:#30D158;display:flex;align-items:center;justify-content:center"><span style="width:11px;height:11px;background:#fff;-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat"></span></span>
+            <span style="font-size:var(--sub);font-weight:600;color:#fff">{{ toastText }}</span>
+          </div>
+        </div>
+      </sc-if>
+    </main>
+  </div>
+
+  <sc-if value="{{ rSheetOn }}">
+    <div style="position:absolute;inset:0;z-index:50">
+      <button onClick="{{ closeSheet }}" aria-label="Ёпиш" style="position:absolute;inset:0;width:100%;background:rgba(0,0,0,.4);animation:fadeIn .2s;cursor:default"></button>
+      <div role="dialog" aria-modal="true" aria-label="Ҳудудни танланг" style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:18px 18px 0 0;animation:sheetUp .28s cubic-bezier(.2,.8,.25,1);max-height:72%;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)">
+        <div style="display:flex;justify-content:center;padding:8px"><span style="width:36px;height:5px;border-radius:3px;background:var(--sep)"></span></div>
+        <h2 style="text-align:center;font-size:var(--body);font-weight:700;padding:2px 16px 10px">Ҳудудни танланг</h2>
+        <div data-scroll="1" style="overflow-y:auto">
+          <sc-for list="{{ regionRows }}" as="rr">
+            <button onClick="{{ rr.pick }}" aria-pressed="{{ rr.on }}" style="width:100%;display:flex;align-items:center;gap:10px;min-height:54px;padding:6px 20px;border-top:1px solid var(--sep)">
+              <span style="flex:1;font-size:var(--body);text-align:left">{{ rr.name }}</span>
+              <span style="font-size:var(--c1);color:{{ rr.feeC }};font-weight:600">{{ rr.feeText }}</span>
+              <sc-if value="{{ rr.on }}"><span style="flex:none;width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat"></span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <button onClick="{{ closeSheet }}" style="margin:10px 16px 16px;min-height:50px;border-radius:13px;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:var(--body);font-weight:700">Бекор қилиш</button>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ vSheetOn }}">
+    <div style="position:absolute;inset:0;z-index:50">
+      <button onClick="{{ closeSheet }}" aria-label="Ёпиш" style="position:absolute;inset:0;width:100%;background:rgba(0,0,0,.4);animation:fadeIn .2s;cursor:default"></button>
+      <div role="dialog" aria-modal="true" aria-label="Туман ёки қишлоқни танланг" style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:18px 18px 0 0;animation:sheetUp .28s cubic-bezier(.2,.8,.25,1);max-height:72%;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)">
+        <div style="display:flex;justify-content:center;padding:8px"><span style="width:36px;height:5px;border-radius:3px;background:var(--sep)"></span></div>
+        <h2 style="text-align:center;font-size:var(--body);font-weight:700;padding:2px 16px 10px">Туман ёки қишлоқни танланг</h2>
+        <div data-scroll="1" style="overflow-y:auto">
+          <sc-for list="{{ villageRows }}" as="vr">
+            <button onClick="{{ vr.pick }}" aria-pressed="{{ vr.on }}" style="width:100%;display:flex;align-items:center;gap:10px;min-height:54px;padding:6px 20px;border-top:1px solid var(--sep)">
+              <span style="flex:1;font-size:var(--body);text-align:left">{{ vr.name }}</span>
+              <sc-if value="{{ vr.on }}"><span style="flex:none;width:19px;height:19px;background:var(--brand);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat"></span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <button onClick="{{ closeSheet }}" style="margin:10px 16px 16px;min-height:50px;border-radius:13px;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:var(--body);font-weight:700">Бекор қилиш</button>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ dlgOn }}">
+    <div style="position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);animation:fadeIn .2s"></div>
+      <div role="alertdialog" aria-modal="true" aria-label="{{ dlgT }}" style="position:relative;width:280px;background:var(--surface);border-radius:16px;overflow:hidden;animation:popIn .22s;text-align:center">
+        <div style="padding:20px 18px 16px">
+          <div style="font-size:var(--body);font-weight:700">{{ dlgT }}</div>
+          <div style="font-size:var(--c1);color:var(--text2);margin-top:6px;line-height:1.4">{{ dlgM }}</div>
+        </div>
+        <div style="display:flex;border-top:1px solid var(--sep)">
+          <button onClick="{{ closeDlg }}" style="flex:1;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:var(--body);color:var(--brand);border-right:1px solid var(--sep)">Бекор қилиш</button>
+          <button onClick="{{ dlgAct }}" style="flex:1;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:var(--body);font-weight:700;color:var(--red)">{{ dlgOk }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLaunch }}">
+    <div role="status" aria-label="Дўкон юкланмоқда" style="position:absolute;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+      <div style="width:88px;height:88px;border-radius:24px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-size:38px;font-weight:700">{{ lInit }}</div>
+      <div style="font-size:var(--t2);font-weight:700;margin-top:6px">{{ lName }}</div>
+      <div style="font-size:var(--sub);color:var(--text2)">{{ lTag }}</div>
+      <div style="display:flex;gap:7px;margin-top:22px" aria-hidden="true">
+        <span style="width:8px;height:8px;border-radius:4px;background:var(--text3);animation:blink 1.2s infinite"></span>
+        <span style="width:8px;height:8px;border-radius:4px;background:var(--text3);animation:blink 1.2s .2s infinite"></span>
+        <span style="width:8px;height:8px;border-radius:4px;background:var(--text3);animation:blink 1.2s .4s infinite"></span>
+      </div>
+      <div style="position:absolute;bottom:calc(26px + env(safe-area-inset-bottom));font-size:var(--c1);color:var(--text3)">Дўкон юкланмоқда…</div>
+    </div>
+  </sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:900},&quot;tenant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;grocery&quot;,&quot;options&quot;:[&quot;grocery&quot;,&quot;electronics&quot;,&quot;clothing&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;White-label&quot;},&quot;appearance&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;auto&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;White-label&quot;},&quot;textSize&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;default&quot;,&quot;options&quot;:[&quot;default&quot;,&quot;accessibility-xl&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Accessibility&quot;}}">
+// White-label storefront — production implementation of "iOS Storefront.dc.html".
+// Same visual system and copy as the design; adds hash routing, per-tenant
+// localStorage persistence, system dark mode and real navigation semantics.
+class Component extends DCLogic {
+  constructor(p){ super(p);
+    this.state = Object.assign(this.fresh(), {
+      route: this.parse(),
+      sysDark: (typeof window!=='undefined' && window.matchMedia) ? window.matchMedia('(prefers-color-scheme: dark)').matches : false
+    });
+  }
+
+  // ---------- persistence ----------
+  tenant(){ return this.props.tenant || 'grocery'; }
+  storeKey(){ return 'sf:' + this.tenant() + ':v1'; }
+  defaults(){ return { cart:{}, wish:{}, co:{name:'',phone:'',region:null,village:null,addr:'',note:''},
+    points:12000, usePoints:false, cApplied:false, signedIn:false, siPhone:'', orders:[], ordSeq:0, notifSeen:false }; }
+  loadSaved(){ try{ const raw = localStorage.getItem(this.storeKey()); if(!raw) return {};
+    const d = JSON.parse(raw); if(!d || typeof d !== 'object') return {};
+    const out = {}, base = this.defaults();
+    Object.keys(base).forEach(k => { if(d[k] !== undefined) out[k] = d[k]; });
+    return out; }catch(e){ return {}; } }
+  save(){ try{ const s = this.state, keep = {};
+    Object.keys(this.defaults()).forEach(k => { keep[k] = s[k]; });
+    localStorage.setItem(this.storeKey(), JSON.stringify(keep)); }catch(e){} }
+  setP(u, cb){ this.setState(u, () => { this.save(); if(cb) cb(); }); }
+  fresh(){ return Object.assign({ booted:false, loading:true, query:'', cat:'all',
+    toast:null, dialog:null, sheet:null, carIdx:0, pQty:{},
+    cInput:'', cErr:null, otp:'', otpErr:false, otpT:0, route:{n:'home'} },
+    this.defaults(), this.loadSaved()); }
+
+  // ---------- lifecycle ----------
+  componentDidMount(){
+    this._hist = [this.path()];
+    this._onHash = () => { const p = this.path(), L = this._hist;
+      if(L.length >= 2 && L[L.length-2] === p) L.pop(); else if(L[L.length-1] !== p) L.push(p);
+      this.syncRoute(); };
+    window.addEventListener('hashchange', this._onHash);
+    this._mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    this._onMq = (e) => this.setState({ sysDark: e.matches });
+    if(this._mq){ if(this._mq.addEventListener) this._mq.addEventListener('change', this._onMq); else this._mq.addListener(this._onMq); }
+    this._onKey = (e) => { if(e.key !== 'Escape') return;
+      if(this.state.dialog) this.setState({ dialog:null });
+      else if(this.state.sheet) this.setState({ sheet:null }); };
+    document.addEventListener('keydown', this._onKey);
+    this.boot();
+  }
+  componentDidUpdate(pp){ if((pp.tenant||'grocery') !== this.tenant()){
+    this.stopOtp(); clearTimeout(this.tt); clearTimeout(this.t3);
+    this._hist = ['/'];
+    this.setState(Object.assign(this.fresh(), { sysDark:this.state.sysDark }), () => { if(this.path() !== '/') this.replaceGo('/'); });
+    this.boot(); } }
+  componentWillUnmount(){ clearTimeout(this.t1); clearTimeout(this.t2); clearTimeout(this.t3); clearTimeout(this.tt); this.stopOtp();
+    window.removeEventListener('hashchange', this._onHash);
+    document.removeEventListener('keydown', this._onKey);
+    if(this._mq){ if(this._mq.removeEventListener) this._mq.removeEventListener('change', this._onMq); else this._mq.removeListener(this._onMq); } }
+  boot(){ clearTimeout(this.t1); clearTimeout(this.t2);
+    try{ document.title = this.T.name; }catch(e){}
+    this.t1 = setTimeout(() => this.setState({ booted:true }), 600);
+    this.t2 = setTimeout(() => this.setState({ loading:false }), 1400);
+    this.syncRoute(); }
+
+  // ---------- tenant catalog ----------
+  get T(){ const D = {
+    grocery:{ name:'Баракат маркет', tag:'Озиқ-овқат дўкони', init:'Б', hue:155, pre:'BM',
+      cats:[['all','Барчаси'],['fruit','Мева-сабзавот'],['dairy','Сут маҳсулотлари'],['bread','Нон ва дон'],['meat','Гўшт'],['drink','Ичимликлар']],
+      sugg:['сут','нон','помидор'],
+      prods:[
+        {id:'g1',n:'Помидор, Ўзбекистон',c:'fruit',p:14000,u:'кг',s:0.5,d:'Ҳар куни янги партия. Салат ва овқат учун ширин, этли помидор.'},
+        {id:'g2',n:'Қўй гўшти, янги',c:'meat',p:95000,o:110000,pr:'Чегирма',u:'кг',s:0.25,d:'Янги сўйилган қўй гўшти. Паловбоп ва димламабоп қисмлар.'},
+        {id:'g3',n:'Оби нон',c:'bread',p:4000,u:'дона',s:1,d:'Тандирдан янги чиққан иссиқ нон. Ҳар куни эрталаб ёпилади.'},
+        {id:'g4',n:'Сут «Мусаффо», 1 л',c:'dairy',p:12500,u:'дона',s:1,d:'Табиий сигир сути, 3,2% ёғлилик. Совуткичда сақланг.'},
+        {id:'g5',n:'Олма «Голден», Фарғона',c:'fruit',p:18000,u:'кг',s:0.5,d:'Ширин ва сершира олма. Болалар учун жуда фойдали.'},
+        {id:'g6',n:'Гуруч «Лазер», сара',c:'bread',p:32000,u:'кг',s:0.5,st:0,d:'Паловбоп сара гуруч. Тез орада омборга келади.'},
+        {id:'g7',n:'Тухум, 10 дона',c:'dairy',p:16000,u:'дона',s:1,d:'Қишлоқ тухуми, С1 тоифа.'},
+        {id:'g8',n:'Кўк чой «Ахмад», 250 г',c:'drink',p:28000,o:32000,pr:'Акция',u:'дона',s:1,d:'Хушбўй кўк чой, катта тежамли ўрам.'},
+        {id:'g9',n:'Минерал сув, 1,5 л',c:'drink',p:5000,u:'дона',s:1,d:'Газланган табиий минерал сув.'},
+        {id:'g10',n:'Пишлоқ «Голланд», 300 г',c:'dairy',p:38000,u:'дона',s:1,d:'Қаттиқ пишлоқ, нонушта ва бутерброд учун.'}]},
+    electronics:{ name:'Техноплюс', tag:'Электроника дўкони', init:'Т', hue:245, pre:'TP',
+      cats:[['all','Барчаси'],['phone','Телефонлар'],['audio','Аудио'],['home','Уй техникаси'],['acc','Аксессуарлар']],
+      sugg:['қулоқчин','чойнак','телефон'],
+      prods:[
+        {id:'e1',n:'Симсиз қулоқчин «SoundGo Pro»',c:'audio',p:380000,o:450000,pr:'Чегирма',u:'дона',s:1,d:'Шовқинни камайтириш, 30 соат заряд, Bluetooth 5.3.'},
+        {id:'e2',n:'Смартфон «Nova X», 128 ГБ',c:'phone',p:3200000,u:'дона',s:1,d:'6,5" экран, 50 МП камера, 2 йил расмий кафолат.'},
+        {id:'e3',n:'Электр чойнак, 1,7 л',c:'home',p:240000,u:'дона',s:1,d:'Зангламас пўлат, тез қайнатади, ўзи ўчади.'},
+        {id:'e4',n:'Пауэрбанк 20 000 мАч',c:'acc',p:210000,u:'дона',s:1,d:'Иккита USB чиқиш, тез қувватлаш 22,5 Вт.'},
+        {id:'e5',n:'Телевизор LED 43" Smart',c:'home',p:3900000,u:'дона',s:1,st:0,d:'4K UHD, Android TV. Девор кронштейни билан.'},
+        {id:'e6',n:'Смарт-соат «FitPlus»',c:'acc',p:850000,o:990000,pr:'Акция',u:'дона',s:1,d:'Пульс, қадам ва уйқу назорати. Сувга чидамли.'},
+        {id:'e7',n:'Блендер 1000 Вт',c:'home',p:320000,u:'дона',s:1,d:'Шиша коса 1,5 л, 5 тезлик, майдалагич насадка.'},
+        {id:'e8',n:'Қувват адаптери 65 Вт',c:'acc',p:145000,u:'дона',s:1,d:'GaN технология — ноутбук ва телефонга мос.'}]},
+    clothing:{ name:'Либос', tag:'Кийим-кечак дўкони', init:'Л', hue:340, pre:'LB',
+      cats:[['all','Барчаси'],['men','Эркаклар'],['women','Аёллар'],['kids','Болалар'],['shoes','Пойабзал']],
+      sugg:['кўйлак','кроссовка','шим'],
+      prods:[
+        {id:'c1',n:'Эркаклар кўйлаги, пахта',c:'men',p:180000,u:'дона',s:1,d:'100% пахта, классик бичим. Ўлчамлар: S–3XL.'},
+        {id:'c2',n:'Аёллар кўйлаги «Наврўз»',c:'women',p:260000,o:320000,pr:'Чегирма',u:'дона',s:1,d:'Енгил мато, миллий нақшли безак.'},
+        {id:'c3',n:'Болалар куртаси, кузги',c:'kids',p:320000,u:'дона',s:1,d:'Иссиқ астар, сув ўтказмайдиган мато. 3–12 ёш.'},
+        {id:'c4',n:'Кроссовка «Runner»',c:'shoes',p:420000,u:'дона',s:1,d:'Енгил ва юмшоқ таг. 36–45 ўлчамлар.'},
+        {id:'c5',n:'Жинси шим, классик',c:'men',p:280000,u:'дона',s:1,d:'Қулай бичим, мустаҳкам тикув.'},
+        {id:'c6',n:'Шойи рўмол',c:'women',p:95000,o:120000,pr:'Акция',u:'дона',s:1,d:'Табиий шойи, қўлда ишлов берилган четлари.'},
+        {id:'c7',n:'Пайпоқ тўплами, 5 жуфт',c:'men',p:45000,u:'дона',s:1,d:'Пахта пайпоқлар, турли ранглар.'},
+        {id:'c8',n:'Спорт костюм',c:'men',p:380000,u:'дона',s:1,st:0,d:'Икки қисмли, юмшоқ флис. Тез орада келади.'}]}};
+    return D[this.props.tenant] || D.grocery; }
+
+  regions(){ return [
+    {id:'tk',n:'Тошкент шаҳри',fee:0,v:['Чилонзор','Юнусобод','Мирзо Улуғбек','Яккасарой','Сергели']},
+    {id:'tv',n:'Тошкент вилояти',fee:15000,v:['Зангиота','Қибрай','Чирчиқ','Янгийўл']},
+    {id:'sm',n:'Самарқанд вилояти',fee:20000,v:['Самарқанд шаҳри','Ургут','Каттақўрғон']}]; }
+
+  // ---------- formatting ----------
+  fmt(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' сўм'; }
+  fq(q,u){ if(u==='кг'){ let s=(Math.round(q*100)/100).toFixed(2).replace(/\.?0+$/,'').replace('.',','); return s+' кг'; } return q+' дона'; }
+  fp(d){ return [d.slice(0,2),d.slice(2,5),d.slice(5,7),d.slice(7,9)].filter(Boolean).join(' '); }
+  nowDate(){ const d=new Date(), M=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек']; return d.getDate()+' '+M[d.getMonth()]; }
+  nowTime(){ const d=new Date(); return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); }
+  prodMap(){ const m={}; this.T.prods.forEach(p=>m[p.id]=p); return m; }
+
+  // ---------- routing ----------
+  path(){ const h=(typeof location!=='undefined'&&location.hash?location.hash:'#/').replace(/^#/,''); return h||'/'; }
+  parse(){ const seg=this.path().split('/').filter(Boolean);
+    if(seg.length===0) return {n:'home'};
+    const one={qidiruv:'search',savat:'cart',profil:'account',rasmiylashtirish:'checkout',kirish:'phone',tasdiqlash:'otp',buyurtmalar:'orders',sevimlilar:'wish',kuponlar:'coupons',bildirishnomalar:'notifs'};
+    if(seg.length===1&&one[seg[0]]) return {n:one[seg[0]]};
+    if(seg.length===2&&seg[0]==='mahsulot') return {n:'product',id:decodeURIComponent(seg[1])};
+    if(seg.length===2&&seg[0]==='qabul') return {n:'success',no:decodeURIComponent(seg[1])};
+    if(seg.length===2&&seg[0]==='kuzatish') return {n:'tracking',no:decodeURIComponent(seg[1])};
+    return {n:'bad'}; }
+  go(p){ location.hash='#'+p; }
+  replaceGo(p){ try{ location.replace('#'+p); }catch(e){ location.hash='#'+p; } }
+  goBack(fb){ if(this._hist&&this._hist.length>=2) history.back(); else this.replaceGo(fb); }
+  syncRoute(){ const r=this.parse(), prev=this.state.route||{};
+    if(r.n==='bad'){ this.replaceGo('/'); return; }
+    if(r.n==='product'&&!this.prodMap()[r.id]){ this.replaceGo('/'); return; }
+    if(r.n==='checkout'&&Object.keys(this.state.cart).length===0){ this.replaceGo('/savat'); return; }
+    if((r.n==='phone'||r.n==='otp')&&this.state.signedIn){ this.replaceGo('/profil'); return; }
+    if(r.n==='otp'&&this.state.siPhone.length<9){ this.replaceGo('/kirish'); return; }
+    if(r.n==='success'&&!this.findOrder(r.no)){ this.replaceGo('/'); return; }
+    const patch={route:r};
+    if(r.n==='product'&&(prev.n!=='product'||prev.id!==r.id)){ patch.carIdx=0;
+      const pd=this.prodMap()[r.id];
+      if(pd&&!this.state.pQty[pd.id]) patch.pQty=Object.assign({},this.state.pQty,(function(o,k,v){o[k]=v;return o;})({},pd.id,pd.s||1)); }
+    if(r.n==='otp'&&prev.n!=='otp') this.startOtp();
+    if(prev.n==='otp'&&r.n!=='otp') this.stopOtp();
+    if(r.n==='notifs'){ clearTimeout(this.t3); this.t3=setTimeout(()=>this.setP({notifSeen:true}),900); }
+    this.setState(patch); }
+  screenId(){ return this.state.booted ? this.state.route.n : 'launch'; }
+
+  // ---------- feedback ----------
+  say(t){ clearTimeout(this.tt); this.setState({toast:t}); this.tt=setTimeout(()=>this.setState({toast:null}),2400); }
+
+  // ---------- cart / wishlist ----------
+  setCart(id,v){ this.setP(s=>{ const c=Object.assign({},s.cart); if(v<=0) delete c[id]; else c[id]=Math.round(v*100)/100; return {cart:c}; }); }
+  add(pd,q){ const st=q||pd.s||1; this.setCart(pd.id,(this.state.cart[pd.id]||0)+st); this.say('Саватга қўшилди'); }
+  chg(pd,dir){ const st=pd.s||1, cur=this.state.cart[pd.id]||0, next=Math.round((cur+dir*st)*100)/100;
+    if(dir<0 && next<st-0.001){ this.askRemove(pd); return; } this.setCart(pd.id,next); }
+  askRemove(pd){ this.setState({dialog:{t:'Маҳсулотни ўчирасизми?', m:'«'+pd.n+'» саватдан олиб ташланади.', ok:'Ўчириш', act:()=>{ this.setCart(pd.id,0); this.setState({dialog:null}); this.say('Саватдан ўчирилди'); }}}); }
+  tw(pd,ev){ if(ev&&ev.stopPropagation) ev.stopPropagation();
+    const on=!this.state.wish[pd.id]; this.setP(s=>{ const w=Object.assign({},s.wish); if(on) w[pd.id]=1; else delete w[pd.id]; return {wish:w}; });
+    this.say(on?'Севимлиларга қўшилди':'Севимлилардан олинди'); }
+
+  enrich(pd){ const q=this.state.cart[pd.id]||0, oos=pd.st===0, wished=!!this.state.wish[pd.id];
+    return { id:pd.id, name:pd.n, letter:pd.n[0], priceMain:this.fmt(pd.p), unitSuf:pd.u==='кг'?'/ кг':'',
+      oldText:pd.o?this.fmt(pd.o):null, saleBadge:pd.o?('−'+Math.round((1-pd.p/pd.o)*100)+'%'):null, promo:pd.pr||null,
+      oos:oos, showAdd:!oos&&q<=0, inCart:!oos&&q>0, qtyText:this.fq(q,pd.u),
+      stockLab:oos?'Тугаган':'Сотувда бор', stockC:oos?'var(--text3)':'var(--green)', stockIcon:oos?'var(--i-slash)':'var(--i-check)',
+      wished:wished, wishLab:wished?'Севимлилардан олиб ташлаш':'Севимлиларга қўшиш',
+      heartMask:wished?'var(--i-heartf)':'var(--i-heart)', heartC:wished?'var(--red)':'var(--text3)',
+      add:()=>this.add(pd), inc:()=>this.chg(pd,1), dec:()=>this.chg(pd,-1),
+      open:()=>this.go('/mahsulot/'+encodeURIComponent(pd.id)), toggleWish:(ev)=>this.tw(pd,ev) }; }
+
+  // ---------- totals / checkout ----------
+  totals(){ const P=this.prodMap(); let sub=0;
+    Object.keys(this.state.cart).forEach(id=>{ const pd=P[id]; if(pd) sub+=Math.round(pd.p*this.state.cart[id]); });
+    const disc=this.state.cApplied?Math.round(sub*0.1):0;
+    const pts=(this.state.usePoints&&this.state.signedIn)?Math.min(this.state.points,sub-disc):0;
+    const reg=this.state.co.region?this.regions().find(r=>r.id===this.state.co.region):null;
+    const fee=reg?reg.fee:0;
+    return {sub:sub,disc:disc,pts:pts,fee:fee,reg:reg,total:sub-disc-pts,grand:sub-disc-pts+fee}; }
+  missing(){ const c=this.state.co, m=[];
+    if(!c.name.trim()) m.push('Исм'); if(c.phone.length<9) m.push('Телефон');
+    if(!c.region) m.push('Ҳудуд'); if(!c.village) m.push('Туман'); if(!c.addr.trim()) m.push('Манзил'); return m; }
+  place(){ const v=this.missing(); if(v.length){ this.say('Аввал барча керакли майдонларни тўлдиринг'); return; }
+    const t=this.totals(), co=this.state.co, P=this.prodMap();
+    const key=this.T.pre+'-'+(2401+this.state.ordSeq);
+    const lines=Object.keys(this.state.cart).map(id=>({n:P[id].n,q:this.fq(this.state.cart[id],P[id].u),s:this.fmt(Math.round(P[id].p*this.state.cart[id]))}));
+    const order={key:key,no:'№ '+key,date:this.nowDate(),phone:'+998 '+this.fp(co.phone),lines:lines,total:t.grand,status:0,time:[this.nowTime(),'','',''],place:t.reg.n+', '+co.village};
+    this.setP(s=>({orders:[order].concat(s.orders),ordSeq:s.ordSeq+1,cart:{},cApplied:false,cInput:'',cErr:null,usePoints:false,points:s.points-t.pts}),
+      ()=>this.replaceGo('/qabul/'+encodeURIComponent(key))); }
+
+  // ---------- orders ----------
+  allOrders(){ const s=this.state; return s.orders.filter(o=>s.signedIn||!o.demo); }
+  findOrder(key){ return this.allOrders().find(o=>o.key===key); }
+  demoOrders(){ const T=this.T, pd=T.prods, ph='+998 '+this.fp(this.state.siPhone||'901234567');
+    return [
+      {key:T.pre+'-2394',no:'№ '+T.pre+'-2394',demo:true,date:'17 июл',phone:ph,lines:[{n:pd[0].n,q:this.fq(pd[0].s||1,pd[0].u),s:this.fmt(pd[0].p)},{n:pd[2].n,q:this.fq(pd[2].s||1,pd[2].u),s:this.fmt(pd[2].p)}],total:pd[0].p+pd[2].p+15000,status:2,time:['09:15','09:40','12:05',''],place:'Тошкент вилояти, Қибрай'},
+      {key:T.pre+'-2381',no:'№ '+T.pre+'-2381',demo:true,date:'12 июл',phone:ph,lines:[{n:pd[1].n,q:this.fq(pd[1].s||1,pd[1].u),s:this.fmt(pd[1].p)}],total:pd[1].p,status:3,time:['10:02','10:20','13:45','15:30'],place:'Тошкент шаҳри, Чилонзор'}]; }
+  advance(key){ let done=false;
+    this.setP(s=>({orders:s.orders.map(o=>{ if(o.key!==key||o.status>=3) return o; done=true; const st=o.status+1, tm=o.time.slice(); tm[st]=this.nowTime(); return Object.assign({},o,{status:st,time:tm}); })}),
+      ()=>this.say(done?'Ҳолат янгиланди':'Буюртма аллақачон етказилган')); }
+
+  // ---------- sign-in ----------
+  startOtp(){ this.stopOtp(); this.setState({otpT:30,otp:'',otpErr:false});
+    this.oi=setInterval(()=>this.setState(s=>{ if(s.otpT<=1){clearInterval(this.oi); return {otpT:0};} return {otpT:s.otpT-1}; }),1000); }
+  stopOtp(){ if(this.oi) clearInterval(this.oi); }
+  onOtp(e){ const v=e.target.value.replace(/\D/g,'').slice(0,6); this.setState({otp:v,otpErr:false});
+    if(v.length===6){ setTimeout(()=>{ if(v==='000000') this.setState({otp:'',otpErr:true});
+      else { this.stopOtp();
+        this.setP(s=>{ const have={}; s.orders.forEach(o=>{have[o.key]=1;});
+          const seeds=this.demoOrders().filter(o=>!have[o.key]);
+          return {signedIn:true,otp:'',orders:s.orders.concat(seeds)}; },
+          ()=>{ this.replaceGo('/profil'); this.say('Хуш келибсиз!'); }); } },350); } }
+
+  // ---------- render ----------
+  renderVals(){ const s=this.state, T=this.T;
+    const dark = this.props.appearance==='dark' || ((this.props.appearance||'auto')==='auto' && s.sysDark);
+    const ax = this.props.textSize==='accessibility-xl';
+    const hue=T.hue, br=dark?('oklch(70% 0.13 '+hue+')'):('oklch(52% 0.13 '+hue+')');
+    const themeVars={ '--brand':br, '--tint':dark?('oklch(70% 0.13 '+hue+' / .18)'):('oklch(52% 0.13 '+hue+' / .11)'),
+      '--page':dark?'#0B0B0D':'#E9E9EE',
+      '--bg':dark?'#000000':'#F2F2F7', '--surface':dark?'#1C1C1E':'#FFFFFF', '--fill':dark?'rgba(120,120,128,.26)':'rgba(118,118,128,.12)',
+      '--tile':dark?'#26262A':'#F0F0F3', '--bar':dark?'rgba(24,24,26,.92)':'rgba(250,250,252,.92)',
+      '--text':dark?'#F5F5F7':'#0B0B0F', '--text2':dark?'#B9B9C1':'#4C4C55', '--text3':dark?'#8E8E96':'#85858E',
+      '--sep':dark?'rgba(84,84,88,.6)':'rgba(60,60,67,.29)', '--red':dark?'#FF6B61':'#D70015', '--redt':dark?'rgba(255,107,97,.16)':'rgba(215,0,21,.1)',
+      '--green':dark?'#3DDC6A':'#177A3E', '--greent':dark?'rgba(48,209,88,.18)':'rgba(52,199,89,.15)', '--orange':dark?'#FFA33A':'#B25000', '--oranget':dark?'rgba(255,159,10,.2)':'rgba(255,159,10,.16)',
+      '--c2':ax?'14px':'11px','--c1':ax?'16px':'13px','--sub':ax?'19px':'15px','--body':ax?'21px':'17px','--t3':ax?'24px':'20px','--t2':ax?'26px':'22px','--t1':ax?'32px':'28px','--lt':ax?'37px':'34px','--card-min':ax?'220px':'148px' };
+    const sid=this.screenId(), P=this.prodMap(), route=s.route;
+    const catProds=T.prods.filter(p=> s.cat==='all'?true : (s.cat==='sale'? !!p.o : p.c===s.cat));
+    const q=s.query.trim().toLowerCase();
+    const res=q?T.prods.filter(p=>p.n.toLowerCase().indexOf(q)>=0):[];
+    const tt=this.totals();
+    const lines=Object.keys(s.cart).map(id=>P[id]).filter(Boolean).map(pd=>{ const e=this.enrich(pd);
+      e.unitPriceText=this.fmt(pd.p)+(pd.u==='кг'?' / кг':' / дона'); e.lineTotal=this.fmt(Math.round(pd.p*s.cart[pd.id]));
+      e.trash=()=>this.askRemove(pd); return e; });
+    const pd=route.n==='product'?P[route.id]:null; const pe=pd?this.enrich(pd):{};
+    const pq=pd?(s.pQty[pd.id]||pd.s||1):1; const pSum=pd?Math.round(pd.p*pq):0;
+    const ords=this.allOrders();
+    const trKey=(route.n==='tracking'||route.n==='success')?route.no:null;
+    const tro=trKey?this.findOrder(trKey):null;
+    const stepDefs=[['Янги','Буюртма қабул қилинди'],['Тасдиқланди','Оператор буюртмани тасдиқлади'],['Йўлда','Курьер йўлга чиқди'],['Етказилди','Буюртма топширилди']];
+    const stChip=[['var(--fill)','var(--text2)','var(--i-clock)'],['var(--tint)','var(--brand)','var(--i-check)'],['var(--oranget)','var(--orange)','var(--i-truck)'],['var(--greent)','var(--green)','var(--i-check)']];
+    const missing=this.missing(); const can=missing.length===0;
+    const regs=this.regions(); const curReg=s.co.region?regs.find(r=>r.id===s.co.region):null;
+    const parentOf={product:'/',checkout:'/savat',tracking:'/buyurtmalar',phone:'/profil',otp:'/kirish',orders:'/profil',wish:'/profil',coupons:'/profil',notifs:'/profil'};
+    const wishProds=T.prods.filter(p=>s.wish[p.id]);
+    return {
+      themeVars:themeVars,
+      isLaunch:!s.booted, lName:T.name, lTag:T.tag, lInit:T.init,
+      back:()=>this.goBack(parentOf[sid]||'/'),
+      showTabs:s.booted&&(sid==='home'||sid==='search'||sid==='cart'||sid==='account'),
+      cartBadge:lines.length?String(lines.length):null,
+      tHomeC:sid==='home'?'var(--brand)':'var(--text3)', tSearchC:sid==='search'?'var(--brand)':'var(--text3)',
+      tCartC:sid==='cart'?'var(--brand)':'var(--text3)', tAccC:sid==='account'?'var(--brand)':'var(--text3)',
+      tHomeCur:sid==='home'?'page':null, tSearchCur:sid==='search'?'page':null, tCartCur:sid==='cart'?'page':null, tAccCur:sid==='account'?'page':null,
+      goHome:()=>this.go('/'), goSearchTab:()=>this.go('/qidiruv'), goCartTab:()=>this.go('/savat'), goAccTab:()=>this.go('/profil'),
+      isHome:sid==='home', storeName:T.name, storeTag:T.tag, storeInit:T.init,
+      notifDot:!s.notifSeen, openNotifs:()=>this.go('/bildirishnomalar'), goSearchTap:()=>this.go('/qidiruv'),
+      hasSale:T.prods.some(p=>p.o)&&s.cat!=='sale', salePick:()=>this.setState({cat:'sale'}),
+      cats:[['all','Барчаси']].concat(T.cats.slice(1)).concat([['sale','Чегирмалар']]).map(c=>({label:c[1],cur:s.cat===c[0],bg:s.cat===c[0]?'var(--brand)':'var(--fill)',fg:s.cat===c[0]?'#fff':'var(--text)',pick:()=>this.setState({cat:c[0]})})),
+      skel:s.loading, ready:!s.loading, prods:catProds.map(p=>this.enrich(p)), prodCount:catProds.length+' та',
+      isSearch:sid==='search', query:s.query, setQuery:(e)=>this.setState({query:e.target.value}),
+      hasQuery:q.length>0, clearQ:()=>this.setState({query:''}), showSugg:q.length===0,
+      suggChips:T.sugg.map(w=>({label:w,pick:()=>this.setState({query:w})})),
+      results:res.map(p=>this.enrich(p)), resCount:res.length+' та топилди', hasResults:q.length>0&&res.length>0, noResults:q.length>0&&res.length===0,
+      noResText:'«'+s.query.trim()+'» топилмади',
+      isCart:sid==='cart', cartEmpty:lines.length===0, cartFull:lines.length>0,
+      cartCountText:lines.length?(lines.length+' хил маҳсулот'):'', lines:lines, goCatalog:()=>this.go('/'),
+      cInput:s.cInput, setCInput:(e)=>this.setState({cInput:e.target.value,cErr:null}),
+      applyC:()=>{ const code=s.cInput.trim().toUpperCase(); if(code==='SALOM10'){ if(tt.sub>=50000){ this.setP({cApplied:true,cErr:null}); this.say('Купон қўлланди'); } else this.setState({cErr:'Минимал харид — 50 000 сўм'}); } else this.setState({cErr:'Бундай купон топилмади'}); },
+      cAppliedOn:s.cApplied, cNotApplied:!s.cApplied, cErr:s.cErr, removeC:()=>this.setP({cApplied:false}),
+      showPtsRow:s.signedIn, showGuestPts:!s.signedIn, ptsBalText:this.fmt(s.points).replace(' сўм','')+' балл мавжуд (1 балл = 1 сўм)',
+      swBg:s.usePoints?'#34C759':'var(--fill)', swX:s.usePoints?'translateX(20px)':'none', usePointsOn:s.usePoints, togglePts:()=>this.setP({usePoints:!s.usePoints}),
+      goSignin:()=>this.go('/kirish'),
+      subT:this.fmt(tt.sub), hasDisc:tt.disc>0, discT:'−'+this.fmt(tt.disc), hasPts:tt.pts>0, ptsT:'−'+this.fmt(tt.pts),
+      totalT:this.fmt(tt.total),
+      goCheckout:()=>{ const c=Object.assign({},s.co); if(s.signedIn&&!c.phone) c.phone=s.siPhone; this.setP({co:c},()=>this.go('/rasmiylashtirish')); },
+      isCheckout:sid==='checkout',
+      coName:s.co.name, setCoName:(e)=>this.setP({co:Object.assign({},s.co,{name:e.target.value})}),
+      coPhone:this.fp(s.co.phone), setCoPhone:(e)=>this.setP({co:Object.assign({},s.co,{phone:e.target.value.replace(/\D/g,'').slice(0,9)})}),
+      regionText:curReg?curReg.n:'Танланг', regionC:curReg?'var(--text)':'var(--text3)', openRegion:()=>this.setState({sheet:'region'}),
+      villageText:s.co.village||(curReg?'Танланг':'Аввал ҳудудни танланг'), villageC:s.co.village?'var(--text)':'var(--text3)',
+      openVillage:()=>{ if(!curReg){ this.say('Аввал ҳудудни танланг'); return; } this.setState({sheet:'village'}); },
+      coAddr:s.co.addr, setCoAddr:(e)=>this.setP({co:Object.assign({},s.co,{addr:e.target.value})}),
+      coNote:s.co.note, setCoNote:(e)=>this.setP({co:Object.assign({},s.co,{note:e.target.value})}),
+      feeNote:curReg?(curReg.fee?('Етказиб бериш: '+this.fmt(curReg.fee)):'Етказиб бериш — бепул'):null,
+      feeNoteC:curReg&&curReg.fee?'var(--text2)':'var(--green)',
+      sumLines:lines.map(l=>({n:l.name,q:l.qtyText,s:l.lineTotal})),
+      feeT:curReg?(curReg.fee?this.fmt(curReg.fee):'Бепул'):'—', coTotalT:this.fmt(tt.grand),
+      placeBg:can?'var(--brand)':'var(--fill)', placeFg:can?'#fff':'var(--text3)',
+      placeSub:'Нақд тўлов · '+this.fmt(tt.grand), place:()=>this.place(),
+      missingText:can?null:('Тўлдириш керак: '+missing.join(', ')),
+      rSheetOn:s.sheet==='region', vSheetOn:s.sheet==='village', closeSheet:()=>this.setState({sheet:null}),
+      regionRows:regs.map(r=>({name:r.n,feeText:r.fee?('+'+this.fmt(r.fee)):'Бепул',feeC:r.fee?'var(--text3)':'var(--green)',on:s.co.region===r.id,pick:()=>this.setP({co:Object.assign({},s.co,{region:r.id,village:null}),sheet:'village'})})),
+      villageRows:(curReg?curReg.v:[]).map(v=>({name:v,on:s.co.village===v,pick:()=>this.setP({co:Object.assign({},s.co,{village:v}),sheet:null})})),
+      dlgOn:!!s.dialog, dlgT:s.dialog?s.dialog.t:'', dlgM:s.dialog?s.dialog.m:'', dlgOk:s.dialog?s.dialog.ok:'',
+      dlgAct:()=>{ if(s.dialog&&s.dialog.act) s.dialog.act(); }, closeDlg:()=>this.setState({dialog:null}),
+      isSuccess:sid==='success', okNo:tro?tro.no:'',
+      okMsg:'Тез орада оператор '+(tro?tro.phone:'сизга')+' рақамига қўнғироқ қилиб буюртмани тасдиқлайди. Тўлов — олганда, нақд пул билан.',
+      okTrack:()=>this.go('/kuzatish/'+encodeURIComponent(trKey||'')), okHome:()=>this.go('/'),
+      isTracking:sid==='tracking', trFound:sid==='tracking'&&!!tro, trNotFound:sid==='tracking'&&!tro,
+      trNo:tro?tro.no:'Буюртма', trMeta:tro?(tro.date+' · '+tro.lines.length+' хил маҳсулот · '+this.fmt(tro.total)):'',
+      trPlace:tro?tro.place:'', trTotal:tro?this.fmt(tro.total):'',
+      steps:stepDefs.map((d,i)=>{ const done=tro&&i<=tro.status, cur=tro&&i===tro.status;
+        return { lab:d[0], desc:d[1], time:tro&&done?tro.time[i]:'', labC:done?'var(--text)':'var(--text3)',
+          cBg:done?'var(--brand)':'var(--fill)', showCheck:!!done&&(!cur||i===3), showDot:!!cur&&i<3, line:i<3, lineC:(tro&&i<tro.status)?'var(--brand)':'var(--sep)',
+          anim:cur&&tro.status<3?'pulse 2s infinite':'none' }; }),
+      trRefresh:()=>{ if(tro) this.advance(tro.key); }, trItems:tro?tro.lines:[],
+      isPhone:sid==='phone', siPhone:this.fp(s.siPhone), setSiPhone:(e)=>this.setP({siPhone:e.target.value.replace(/\D/g,'').slice(0,9)}),
+      sendBg:s.siPhone.length===9?'var(--brand)':'var(--fill)', sendFg:s.siPhone.length===9?'#fff':'var(--text3)',
+      sendCode:()=>{ if(s.siPhone.length===9){ this.go('/tasdiqlash'); this.say('Код юборилди'); } else this.say('Телефон рақамини тўлиқ киритинг'); },
+      isOtp:sid==='otp', otpSub:'+998 '+this.fp(s.siPhone)+' рақамига юборилди. Кодни киритинг:',
+      otp:s.otp, onOtp:(e)=>this.onOtp(e),
+      otpBoxes:[0,1,2,3,4,5].map(i=>({ch:s.otp[i]||'',bc:s.otpErr?'var(--red)':(i===s.otp.length?'var(--brand)':'var(--sep)')})),
+      otpAnim:s.otpErr?'shake .4s':'none', otpErrOn:s.otpErr,
+      resendOn:s.otpT===0, resendWait:s.otpT>0, resendText:'Қайта юбориш — 0:'+String(s.otpT).padStart(2,'0'),
+      resend:()=>{ this.startOtp(); this.say('Янги код юборилди'); },
+      isAcc:sid==='account', signedIn:s.signedIn, isGuest:!s.signedIn,
+      accPhone:'+998 '+this.fp(s.siPhone||'901234567'), ptsBal:this.fmt(s.points).replace(' сўм',''),
+      signout:()=>this.setState({dialog:{t:'Тизимдан чиқасизми?', m:'Балл ва буюртмалар тарихи рақамингизда сақланиб қолади.', ok:'Чиқиш', act:()=>{ this.setP({signedIn:false,dialog:null}); this.say('Тизимдан чиқдингиз'); }}}),
+      ordersN:String(ords.length), wishN:String(wishProds.length),
+      goOrders:()=>this.go('/buyurtmalar'), goWish:()=>this.go('/sevimlilar'), goCoupons:()=>this.go('/kuponlar'), goNotifs:()=>this.go('/bildirishnomalar'),
+      accFoot:T.name+' · веб-дўкон · 1.0',
+      isOrders:sid==='orders', ordEmpty:ords.length===0,
+      ordRows:ords.map(o=>({no:o.no,meta:o.date+' · '+o.lines.length+' хил маҳсулот',statusLab:stepDefs[o.status][0],
+        chipBg:stChip[o.status][0],chipC:stChip[o.status][1],chipIcon:stChip[o.status][2],
+        totalText:this.fmt(o.total),open:()=>this.go('/kuzatish/'+encodeURIComponent(o.key))})),
+      isWish:sid==='wish', wishEmpty:wishProds.length===0, wishFull:wishProds.length>0,
+      wishRows:wishProds.map(p=>{ const e=this.enrich(p); e.unheart=()=>this.tw(p); return e; }),
+      isCoupons:sid==='coupons',
+      couponRows:[{code:'SALOM10',desc:'10% чегирма — 50 000 сўмдан ошган харидга',live:true,opa:1,copy:()=>{ try{navigator.clipboard.writeText('SALOM10');}catch(e){} this.say('SALOM10 нусхаланди'); }},
+        {code:'BEPUL15',desc:'Бепул етказиб бериш · Муддати ўтган (15 июл)',live:false,opa:.55,copy:()=>{}}],
+      isNotifs:sid==='notifs',
+      notifRows:[{t:'Буюртмангиз йўлда',s:'Курьер '+T.pre+'-2394 буюртмани олиб кетди — етиб боргач қўнғироқ қилади.',time:'14:05',unread:!s.notifSeen,iconMask:'var(--i-truck)'},
+        {t:'Янги чегирмалар',s:'Ҳафта акцияси бошланди — танланган маҳсулотлар арзонроқ.',time:'Кеча',unread:!s.notifSeen,iconMask:'var(--i-pct)'},
+        {t:'Хуш келибсиз!',s:'Биринчи буюртмага SALOM10 купонидан фойдаланинг.',time:'12 июл',unread:false,iconMask:'var(--i-star)'}],
+      isProduct:sid==='product',
+      pdName:pe.name||'', pdPromo:pe.promo, pdOld:pe.oldText, pdPrice:pd?this.fmt(pd.p)+(pd.u==='кг'?' / кг':''):'', pdBadge:pe.saleBadge,
+      pdUnitLine:pd?(pd.u==='кг'?'нарх 1 кг учун':'нарх 1 дона учун'):'', pdStockLab:pe.stockLab||'', pdStockC:pe.stockC||'var(--green)', pdStockIcon:pe.stockIcon||'var(--i-check)',
+      pdDesc:pd?pd.d:'', pdHeartMask:pe.heartMask||'var(--i-heart)', pdHeartC:pe.heartC||'var(--text3)',
+      pdWished:!!pe.wished, pdWishLab:pe.wishLab||'Севимлиларга қўшиш',
+      pdTgWish:()=>{ if(pd) this.tw(pd); }, pdQtyText:pd?this.fq(pq,pd.u):'',
+      pdInc:()=>{ if(pd) this.setState({pQty:Object.assign({},s.pQty,(function(o,k,v){o[k]=v;return o;})({},pd.id,Math.round((pq+(pd.s||1))*100)/100))}); },
+      pdDec:()=>{ if(pd){ const st=pd.s||1, nv=Math.round((pq-st)*100)/100; if(nv>=st-0.001) this.setState({pQty:Object.assign({},s.pQty,(function(o,k,v){o[k]=v;return o;})({},pd.id,nv))}); } },
+      pdStepHint:pd?('қадам: '+this.fq(pd.s||1,pd.u)):'', pdSubT:this.fmt(pSum),
+      pdAdd:()=>{ if(!pd) return; if(pe.oos){ this.say('Бу маҳсулот ҳозирча тугаган'); return; } this.add(pd,pq); },
+      pdAddBg:pe.oos?'var(--fill)':'var(--brand)', pdAddFg:pe.oos?'var(--text3)':'#fff',
+      pdAddLabel:pe.oos?'Тугаган':('Саватга қўшиш · '+this.fmt(pSum)),
+      slides:[1,2,3].map(i=>({letter:pe.letter||'',cap:'маҳсулот сурати · '+i+'/3'})),
+      dots:[0,1,2].map(i=>({bg:i===s.carIdx?'var(--brand)':'var(--sep)'})),
+      carLabel:'Маҳсулот суратлари, '+(s.carIdx+1)+' / 3',
+      onCarScroll:(e)=>{ const w=e.target.clientWidth||1, i=Math.round(e.target.scrollLeft/w); if(i!==s.carIdx) this.setState({carIdx:i}); },
+      toastOn:!!s.toast, toastText:s.toast||''
+    }; }
+}
+</script>
+</body>
+</html>
