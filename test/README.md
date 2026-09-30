@@ -62,6 +62,7 @@ node test/browser/exit-test.js       # quit-without-report -> resume banner -> r
 node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
 node test/browser/auth-ui-test.js    # Telegram login card -> waiting state -> form unlocks from polling alone; survives reload
 node test/browser/landing-claims-test.js  # landing copy matches the server's config (needs TWO apps: see below)
+node test/browser/landing-scroll-test.js  # the scroll device: sheet fills, strip + drawer, reduced-motion fallback
 ```
 
 `auth-ui-test.js` stands in for Telegram by posting the real webhook update
@@ -76,6 +77,13 @@ quoted up front, the Telegram step named in the flow, and the sample report
 showing what the prompt now actually assesses. Point it at both with
 `API_PAID=… API_FREE=… node test/browser/landing-claims-test.js`. Marketing copy
 is what nobody re-reads after shipping a feature, which is why it is pinned.
+
+`landing-scroll-test.js` covers the landing's scroll device — the sample
+report that writes itself as the reader descends. It proves the sheet fills,
+that it is **forward-only** (scrolling back must not undo the reader's
+progress), that the mobile strip and its drawer work, that reduced motion and
+low-end devices get a complete static sheet with no strip, and that none of it
+runs on other routes. Point it at the paid build with `API_PAID=…`.
 
 The other three suites mock the API with `page.route` and never reach a server,
 so they call `stubLogin(page)` from `browser/auth-stub.js` **before**

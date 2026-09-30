@@ -28,6 +28,9 @@ router.get('/', (req, res) => {
       // The bot is what a login goes through; the page uses this to decide
       // whether to explain the Telegram step at all.
       configured: !!config.delivery.telegram.botUsername,
+      // Whether the bot will ask for a phone number with a Share-contact
+      // button. The landing explains that step only when it happens.
+      asks_phone: !!config.auth.requirePhone,
     },
     payments: {
       enabled: !!config.payments.enabled,
