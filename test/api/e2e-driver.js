@@ -11,7 +11,12 @@ async function j(path, opts) {
   return { status: res.status, data, headers: res.headers };
 }
 
+const { installAuth } = require('./auth-helper');
 (async () => {
+  // Sessions are gated on Telegram authorization; log in first. The phone is
+  // the one the contact gate submits below: a Telegram-verified number is not
+  // overwritten by a typed one, so the two must agree for the lead assertions.
+  await installAuth(BASE, { chatId: 811000001, phone: '+998901234567' });
   // 0. Adult consent is enforced server-side, not only in the UI.
   let r0 = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nickname: 'NoConsent', grade: 2 }) });
   ok('POST /api/sessions without consent -> 400 consent_required', r0.status === 400 && r0.data && r0.data.code === 'consent_required', 'status=' + r0.status + ' ' + JSON.stringify(r0.data));

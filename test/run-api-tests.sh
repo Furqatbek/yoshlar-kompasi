@@ -18,6 +18,12 @@ export OPENROUTER_API_KEY=sk-or-test
 export OPENROUTER_BASE_URL="http://127.0.0.1:5602/api/v1"
 export OPENROUTER_MODEL="anthropic/claude-sonnet-4.6"
 export DELIVERY_PROVIDER=console
+# Authorization runs through the bot, so the suites need one configured. The
+# token is never used to reach Telegram: the drivers post webhook updates
+# directly and the bot's outbound replies are expected to fail and be swallowed.
+export TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-test-bot-token}"
+export TELEGRAM_BOT_USERNAME="${TELEGRAM_BOT_USERNAME:-kompas_test_bot}"
+export TELEGRAM_WEBHOOK_SECRET="${TELEGRAM_WEBHOOK_SECRET:-test-webhook-secret}"
 export RL_SESSIONS_PER_DAY=1000 RL_ADMIN_LOGIN_PER_MIN=1000 RL_MESSAGES_PER_MIN=1000
 export BASE_URL="http://127.0.0.1:${PORT}"
 
@@ -39,6 +45,9 @@ for i in $(seq 1 40); do
   sleep 0.5
   [ "$i" = 40 ] && { echo "app never became healthy"; exit 1; }
 done
+
+echo "==== api: Telegram authorization gate ===="
+node test/api/auth-test.js
 
 echo "==== api: full flow (37 assertions) ===="
 node test/api/e2e-driver.js

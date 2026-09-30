@@ -14,7 +14,10 @@ let pass = 0, fail = 0;
 function ok(name, cond, extra) { (cond ? pass++ : fail++); console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? '  ' + extra : '')); }
 async function j(path, opts) { const res = await fetch(BASE + path, opts); let d = null; try { d = await res.json(); } catch (e) {} return { status: res.status, data: d }; }
 
+const { installAuth } = require('./auth-helper');
 (async () => {
+  // Sessions are gated on Telegram authorization; log in first.
+  await installAuth(BASE, { chatId: 811000005 });
   // 1. Create a session under OpenRouter (stamps the valid slug).
   let r = await j('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ consent: true, nickname: 'Stale', grade: 2, age: 7 }) });
   ok('create session -> 201', r.status === 201, 'status=' + r.status);

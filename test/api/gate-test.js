@@ -8,7 +8,10 @@ function ok(name, cond, extra) { (cond ? pass++ : fail++); console.log((cond ? '
 async function j(path, opts) { const res = await fetch(BASE + path, opts); let d = null; try { d = await res.json(); } catch (e) {} return { status: res.status, data: d }; }
 const H = { 'content-type': 'application/json' };
 
+const { installAuth } = require('./auth-helper');
 (async () => {
+  // Sessions are gated on Telegram authorization; log in first.
+  await installAuth(BASE, { chatId: 811000003 });
   // 1. Create session. The DEFAULT stub emits [YAKUN] markers on the greeting,
   //    so all tracks read "done" while there are STILL zero real answers — the
   //    exact model-controlled bypass the gate must resist.

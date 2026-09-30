@@ -6,7 +6,10 @@ let pass = 0, fail = 0;
 const ok = (n, c, x) => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? '  ' + x : '')); };
 async function j(path, opts) { const r = await fetch(BASE + path, opts); let d = null; try { d = await r.json(); } catch (e) {} return { status: r.status, data: d }; }
 
+const { installAuth } = require('./auth-helper');
 (async () => {
+  // Sessions are gated on Telegram authorization; log in first.
+  await installAuth(BASE, { chatId: 811000002 });
   const H = (t) => ({ 'content-type': 'application/json', 'x-session-token': t });
 
   // Fresh session
