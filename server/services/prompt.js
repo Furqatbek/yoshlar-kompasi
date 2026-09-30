@@ -31,9 +31,9 @@ const FENCE = '```';
 const REPORT_JSON_RULE = `## Hisobot uchun tuzilmali ma'lumot (majburiy)
 To'liq hisobot so'ralganda, hisobot matnidan KEYIN, eng oxirida faqat bitta ${FENCE}json bloki yozing:
 ${FENCE}json
-{"levels": {"mantiq": "...", "psixologiya": "...", "harakat": "..."}, "sports": ["...", "..."], "riasec": ["...", "..."]}
+{"levels": {"mantiq": "...", "psixologiya": "...", "harakat": "..."}, "sports": ["...", "..."], "riasec": ["...", "..."], "clubs": ["...", "..."], "learningStyle": ["..."], "eq": "..."}
 ${FENCE}
-"levels" qiymatlari faqat shakllanmoqda / meyorda / kuchli bo'lsin (yo'nalish baholanmagan bo'lsa null). "sports" — tavsiya etilgan sport nomlari ro'yxati. "riasec" — aniqlangan 1–2 moyillik harfi (R/I/A/S/E/C); aniq moyillik bo'lmasa bo'sh ro'yxat. Bu blok kattalarga ko'rsatilmaydi va tizim tomonidan o'qiladi.`;
+"levels" qiymatlari faqat shakllanmoqda / meyorda / kuchli bo'lsin (yo'nalish baholanmagan bo'lsa null). "sports" — tavsiya etilgan sport nomlari ro'yxati. "riasec" — aniqlangan 1–2 moyillik harfi (R/I/A/S/E/C); aniq moyillik bo'lmasa bo'sh ro'yxat. "clubs" — tavsiya etilgan to'garak nomlari ro'yxati. "learningStyle" — shu mashg'ulotda kuzatilgan afzallik, faqat quyidagilardan: eshitish / vizual / amaliy / aralash (kuzatilmagan bo'lsa bo'sh ro'yxat); bu bolaning turi emas, faqat afzallik. "eq" — emotsional intellekt bo'yicha umumiy holat: shakllanmoqda / meyorda / kuchli (baholanmagan bo'lsa null). Bu blok kattalarga ko'rsatilmaydi va tizim tomonidan o'qiladi.`;
 
 let _prompt = null;
 let _version = null;
@@ -88,8 +88,10 @@ function buildReportRequest(name, partial) {
     '## Iqtidorlar xaritasi\nGardner modeli bo‘yicha FAQAT shu suhbatda kuzatilgan iqtidorlar (til-nutq, mantiqiy-matematik, fazoviy-vizual, musiqiy-ritmik, tana-harakat, shaxslararo, ichki-shaxsiy, tabiat): har biri "- **Iqtidor** — yaqqol namoyon bo‘ldi / belgilari bor / kam kuzatildi; qisqa dalil (bola nima qildi yoki dedi)". Kuzatilmagan iqtidorni umuman yozmang.\n\n' +
     '## Qiziqishlar kompasi\nRIASEC bo‘yicha eng kuchli 1–2 moyillik (Quruvchi / Tadqiqotchi / Ijodkor / Yordamchi / Tashkilotchi / Tartib ustasi), har biri bolaning aniq javobiga tayangan 1–2 jumla izoh bilan; buni "hozirgi moyillik" sifatida taqdim eting. Aniq moyillik ko‘rinmasa, buni ochiq yozing.\n\n' +
     '## O‘sish tafakkuri va o‘z-o‘zini boshqarish\n2–4 ta kuzatuv: xatoga munosabat, qat‘iyat, diqqat, sabr — har biri suhbatdagi aniq holatga bog‘langan, yorliqsiz, bittadan rivojlantirish taklifi bilan.\n\n' +
+    '## Emotsional intellekt\n2–3 ta kuzatuv: his-tuyg‘usini tanish va nomlash, uni boshqarish, hamdardlik, tengdoshlar bilan munosabat — har biri bolaning o‘z javobi yoki mashg‘ulotdagi aniq holatga bog‘langan, yorliqsiz. Oxirida bittadan amaliy taklif bering. Bu yoshda his-tuyg‘uni boshqarish endi shakllanayotganini kamchilik emas, o‘sish nuqtasi sifatida yozing. Bu qism bo‘yicha javob bo‘lmasa, "— yetarli ma‘lumot yo‘q" deb belgilang.\n\n' +
     '## Maqsad va yo‘l xaritasi\nBirinchi xatboshi — maqsad. So‘ng kelgusi 3–6 oy uchun 3–4 bosqich raqamlangan ro‘yxat: "1. ...".\n\n' +
-    '## Nimani o‘rganish va mashq qilish\nHar bir soha "- **Soha** — haftalik hajmdagi aniq taklif" ko‘rinishida.\n\n' +
+    '## O‘rganish usuli\nBir xatboshi: bola shu mashg‘ulotda qaysi yo‘l bilan tezroq o‘zlashtirgani (eshitish / vizual-fazoviy / amaliy-harakatli yoki aralash) va bu qaysi topshiriqdan ko‘ringani. So‘ng uyda darsni shunga moslab tushuntirish bo‘yicha 1–2 ta aniq maslahat. Bolani bitta turga bo‘lmang ("vizual bola" demang) — bu faqat afzallik; maslahatda usullarni birga taklif qiling. Aniq afzallik ko‘rinmasa, "aralash" deb yozing.\n\n' +
+    '## Nimani o‘rganish va mashq qilish\nHar bir soha "- **Soha** — haftalik hajmdagi aniq taklif" ko‘rinishida. Oxirida qiziqishlar kompasiga mos 1–3 ta to‘garak yoki mashg‘ulot: "- **To‘garak** — nega aynan shu (bolaning javobiga bog‘lab)". To‘garakni kelajakdagi kasb sifatida emas, hozirgi qiziqishni sinab ko‘rish yo‘li sifatida taqdim eting.\n\n' +
     '## Tavsiya etilgan sport va mashg‘ulotlar\nBolaning javoblaridan mos sabab topilsa, 1–3 ta variant: "- **Sport nomi** — bolaning o‘z javobiga bog‘langan bir qatorlik sabab". Agar javoblarda yetarli asos bo‘lmasa, sport to‘qib chiqarmang — "— yetarli ma‘lumot yo‘q" deb yozing. Har birini bir necha hafta sinab ko‘rishni va yangi sport oldidan oddiy tibbiy ko‘rikni eslating (Kattalar uchun bo‘limida).\n\n' +
     '## ' + name + ' uchun xat\nBolaga o‘qib beriladigan 2–3 ta sodda, ruhlantiruvchi jumla.\n\n' +
     '## Kattalar uchun\n"- " ro‘yxat: nimani qo‘llab-quvvatlash, kuzatish yoki maktabdan so‘rash.'

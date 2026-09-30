@@ -1,6 +1,6 @@
 # Savollar banki — 1–4-sinflar (chuqurlashtirilgan to'plam)
 
-**Metodik asos.** Bank beshta yondashuvga tayanadi: (1) Gardnerning ko'p qirrali iqtidorlar modeli (MI — 8 iqtidor), (2) RIASEC qiziqishlar modeli (bolalarga moslangan), (3) o'sish tafakkuri (Dweck), (4) o'z-o'zini boshqarish (diqqat, sabr, impuls nazorati) va (5) yosh psixologiyasi.
+**Metodik asos.** Bank yettita yondashuvga tayanadi: (1) Gardnerning ko'p qirrali iqtidorlar modeli (MI — 8 iqtidor), (2) RIASEC qiziqishlar modeli (bolalarga moslangan), (3) o'sish tafakkuri (Dweck), (4) o'z-o'zini boshqarish (diqqat, sabr, impuls nazorati), (5) emotsional intellekt (his-tuyg'ularni tanish, boshqarish va hamdardlik), (6) o'rganish usuli afzalligi (eshitish / vizual / amaliy-harakatli) va (7) yosh psixologiyasi.
 
 **Qanday foydalaniladi:** **[A]** belgili topshiriqlar 1–2-sinflarga (~6–8 yosh), **[B]** belgililari 3–4-sinflarga (~8–11 yosh), belgisizlari ikkala guruhga mos. Kattalar savollarni bolaga ovoz chiqarib o'qib beradi va javoblarni yozib boradi. To'g'ri javob bor bo'lsa, (qavs ichida) ko'rsatilgan. Har javobdan keyin nafaqat NIMA deganini, balki QANDAY javob berganini ham yozib boring (tez/sekin, ishonch bilan/ikkilanib, tushuntira oldimi) — iqtidor belgilari ko'pincha ana shunda ko'rinadi.
 
@@ -77,14 +77,42 @@ Mini-o'yinlar — o'yin ohangida o'tkazing, 2–3 daqiqadan oshirmang:
 3. *(Kattalardan)* Bola boshlagan ishini odatda oxiriga yetkazadimi? Bir mashg'ulotda diqqati taxminan qancha turadi? Jahli chiqqanda qanday tinchlanadi?
 4. *(Kuzatuv)* Mashg'ulot davomida: savol tugashini kutdimi yoki gapni bo'lib javob berdimi? Charchaganda o'zini qanday tutdi — aytdimi, jim bo'lib qoldimi, qiziqishi so'ndimi?
 
-### 2.4 His-tuyg'ular va ijtimoiy dunyo (ichki-shaxsiy, shaxslararo iqtidorlar)
-1. Seni nima juda xursand qiladi? Nima xafa qiladi? (his-tuyg'ularini so'z bilan nomlay olishi — ichki-shaxsiy belgi)
-2. Do'sting xafa bo'lib yig'lab tursa, nima qilasan? (shaxslararo belgi)
-3. O'zingning qaysi qilig'ing yoki qobiliyating bilan faxrlanasan? (o'z-o'zini bilish)
-4. Katta davrada, bitta do'sting bilan yoki yolg'iz o'ynashni yoqtirasanmi? Nega?
-5. Jamoaviy o'yinda kim bo'lishni yoqtirasan: sardor, yordamchi yoki zukko g'oyalar beruvchi?
+### 2.4 Emotsional intellekt — his-tuyg'ular va ijtimoiy dunyo (ichki-shaxsiy, shaxslararo iqtidorlar)
+To'rt qismdan iborat: o'zini bilish, o'z his-tuyg'usini boshqarish, boshqalarni tushunish (hamdardlik) va munosabat ko'nikmalari. Har mashg'ulotda har qismdan kamida bittasini oling — hammasini emas.
 
-### 2.5 Qiziquvchanlik, ishtiyoq va orzular
+**O'zini bilish**
+1. Seni nima juda xursand qiladi? Nima xafa qiladi? (his-tuyg'ularini so'z bilan nomlay olishi — ichki-shaxsiy belgi)
+2. O'zingning qaysi qilig'ing yoki qobiliyating bilan faxrlanasan? (o'z-o'zini bilish)
+3. [B] Xafa bo'lganingni tanangda sezasanmi — masalan, qorning og'riydimi, yuzing qiziydimi? (his-tuyg'uni tanish belgisi)
+
+**O'z his-tuyg'usini boshqarish**
+4. Jahling chiqqanda odatda nima qilasan? Qanday tinchlanasan? (tinchlanish usuli bormi — yozib oling)
+5. Juda xursand bo'lganingda buni qanday bildirasan?
+6. [B] Biror narsadan qo'rqsang yoki hayajonlansang (masalan, sahnada chiqish), o'zingni qanday tutasan?
+
+**Boshqalarni tushunish (hamdardlik)**
+7. Do'sting xafa bo'lib yig'lab tursa, nima qilasan? (shaxslararo belgi)
+8. Onangning yoki do'stingning kayfiyati yo'qligini qanday bilib olasan? (boshqaning holatini o'qiy olishi)
+
+**Munosabat ko'nikmalari**
+9. Do'sting bilan urishib qolsang, keyin nima bo'ladi: birinchi bo'lib yarashishga borasanmi? Kechira olasanmi?
+10. Bitta o'yinchoqni ikkovingiz ham xohlab qolsangiz, nima qilasiz? (gaplashib hal qilish belgisi)
+11. Katta davrada, bitta do'sting bilan yoki yolg'iz o'ynashni yoqtirasanmi? Nega?
+12. Jamoaviy o'yinda kim bo'lishni yoqtirasan: sardor, yordamchi yoki zukko g'oyalar beruvchi?
+13. *(Kuzatuv)* Mashg'ulot davomida bola his-tuyg'ularini qanday bildirdi: topshiriq uddalanmaganda xafa bo'ldimi, aytdimi, o'zini tutdimi; maqtaganingizda qanday munosabatda bo'ldi?
+
+### 2.5 O'rganish usuli (qaysi yo'l bilan tezroq o'zlashtiradi)
+**Muhim:** bu bolani "vizual bola", "eshituvchi bola" deb bitta turga bo'lish EMAS. Ilmiy jihatdan bola faqat bitta usul bilan o'rgana oladi degani noto'g'ri — biz faqat **afzallikni** va qaysi yo'l bilan tezroq tushunganini qayd etamiz. Tavsiyada har doim bir nechta usulni birga taklif qiling.
+
+1. Yangi o'yinning qoidasini qanday tezroq tushunasan: kimdir tushuntirib bersa, rasm yoki chizmasini ko'rsang, yoki o'zing bir marta sinab ko'rsang?
+2. Ertakni eshitganing ko'proq esingda qoladimi yoki rasmli kitobdan ko'rganingmi?
+3. [B] Yangi so'zni yodda saqlash uchun nima qilasan: yozasanmi, ovoz chiqarib takrorlaysanmi, yoki biror rasm bilan bog'laysanmi?
+4. Bir o'zing o'rganishni yoqtirasanmi yoki kimdir bilan birga?
+5. [B] Do'stingga tushuntirib berganingda, o'zing ham yaxshiroq tushunasanmi?
+6. *(Kuzatuv — MAJBURIY)* Mashg'ulotning o'zida qaysi turdagi topshiriqda bola tez va ishonch bilan ishladi: faqat og'zaki aytilganda (eshitish), narsani ko'z oldiga keltirish kerak bo'lganda (vizual-fazoviy), yoki qo'li bilan bajarganda (amaliy-harakatli)? Xotira topshirig'ida so'zlarni qanday eslab qoldi — takrorlab aytdimi, ko'z oldiga keltirdimi?
+7. *(Kattalardan)* Uyda dars tayyorlaganda bolaga nima ko'proq yordam beradi: tushuntirish, rasm-chizma, yoki o'zi bajarib ko'rishi?
+
+### 2.6 Qiziquvchanlik, ishtiyoq va orzular
 1. Qaysi mashg'ulot bilan band bo'lganingda vaqt qanday o'tganini sezmay qolasan?
 2. Shu yili bitta ajoyib narsani o'rganish imkoni bo'lsa, nimani o'rganarding?
 3. Hozirgacha xayolingga kelgan eng qiziq savol nima edi?
@@ -126,6 +154,10 @@ Mini-o'yinlar — o'yin ohangida o'tkazing, 2–3 daqiqadan oshirmang:
 **Qiziqishlar kompasi (RIASEC):** eng ko'p takrorlangan 1–2 yo'nalishni bolacha nomi bilan ayting — Quruvchi (R), Tadqiqotchi (I), Ijodkor (A), Yordamchi (S), Tashkilotchi (E), Tartib ustasi (C) — va qaysi javoblar asos bo'lganini keltiring. Aniq moyillik ko'rinmasa, buni ochiq ayting; bu yoshda qiziqishlar tez o'zgarishini eslatib o'ting.
 
 **O'sish tafakkuri va o'z-o'zini boshqarish:** ball qo'yilmaydi — kuzatuv va iqtibos. Bolaga yorliq yopishtirmang ("qotib qolgan tafakkurli bola" demang): xulq belgisini tasvirlab, uni qanday rivojlantirish mumkinligini yozing (masalan, natijani emas, urinish va usulni maqtash).
+
+**Emotsional intellekt:** to'rt qism bo'yicha kuzatilgan dalilni yozing — o'zini bilish, o'z his-tuyg'usini boshqarish, hamdardlik, munosabat ko'nikmalari. Har qism uchun bolaning o'z javobi yoki mashg'ulotdagi aniq holat asos bo'lsin. Bu yoshda his-tuyg'uni boshqarish endi shakllanayotgan bo'ladi — buni kamchilik sifatida emas, o'sish nuqtasi sifatida yozing va bittadan amaliy taklif bering (masalan, jahl chiqqanda uch marta chuqur nafas olish, his-tuyg'uga nom berish). Tashxis qo'ymang; bola bir necha savolga javob bermagan bo'lsa, shu qismni baholamang.
+
+**O'rganish usuli:** bolani bitta turga bo'lmang. Faqat shu mashg'ulotda qaysi yo'l bilan tezroq va ishonchliroq ishlaganini yozing (eshitish / vizual-fazoviy / amaliy-harakatli), dalil bilan: qaysi topshiriqda shunday bo'ldi. Bitta afzallik aniq ko'rinmasa, "aralash" deb yozing — bu normal va bu yoshda eng ko'p uchraydigan holat. Tavsiyani doim ikki-uch usulni birlashtirgan holda bering.
 
 **Psixologiya / Tana va harakat (daraja uchun):** kuzatilgan xohish va xususiyatlarni umumlashtiring; o'rinli joylarda bolaning o'z so'zlaridan iqtibos keltiring.
 
