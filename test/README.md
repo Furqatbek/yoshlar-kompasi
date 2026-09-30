@@ -21,6 +21,7 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 |---|---|
 | `unit/openrouter-adapter.test.js` | Provider dispatch, request/response wire shapes, retryable-error classification, cross-provider `modelFor` resolution (self-contained — spins its own stub on `:5698`) |
 | `unit/funnel.test.js` | Drop-off arithmetic: loss per step, biggest leak vs steepest step, a later stage out-counting an earlier one, empty windows, tiny samples (no DB, no app) |
+| `unit/compose-env.test.js` | Every setting documented in `.env.example` is actually passed through to the container that reads it, the feature switches default to off, and no passthrough is wired to a differently-named variable. Exists because this failed silently once: new settings reached `config.js` and `.env.example` but not `docker-compose.yml`, so Docker deployments quietly ran on defaults |
 | `unit/paywall.test.js` | What stays free (the portrait and the child's letter) vs what is sold, findings withheld from the JSON, and the reminder rules — quiet hours across midnight, message content |
 | `api/auth-test.js` | Telegram login gate: nonce → `/start` → Share-contact → parent token; unauthorized start refused, nonce single-use, returning adult skips the phone, logout revokes |
 | `api/e2e-driver.js` | Full product flow: session → messages → contact → report → public report → admin (leads, detail, patch, stats, CSV) → parent dedupe |

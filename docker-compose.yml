@@ -61,6 +61,20 @@ services:
       REPORT_TIMEOUT_MS: ${REPORT_TIMEOUT_MS:-180000}
       PRICE_INPUT_PER_MTOK: ${PRICE_INPUT_PER_MTOK:-3}
       PRICE_OUTPUT_PER_MTOK: ${PRICE_OUTPUT_PER_MTOK:-15}
+      MIN_ANSWERS_FOR_REPORT: ${MIN_ANSWERS_FOR_REPORT:-1}
+      # Telegram authorization in front of every assessment.
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-true}
+      AUTH_REQUIRE_PHONE: ${AUTH_REQUIRE_PHONE:-true}
+      AUTH_NONCE_TTL_MINUTES: ${AUTH_NONCE_TTL_MINUTES:-15}
+      AUTH_TOKEN_TTL_DAYS: ${AUTH_TOKEN_TTL_DAYS:-90}
+      # Paid reports (Payme). Defaults keep the paywall OFF, so a deployment
+      # that has not configured a merchant gives reports away rather than
+      # locking them behind a payment nobody can make.
+      PAYMENTS_ENABLED: ${PAYMENTS_ENABLED:-false}
+      REPORT_PRICE_UZS: ${REPORT_PRICE_UZS:-49000}
+      PAYME_MERCHANT_ID: ${PAYME_MERCHANT_ID:-}
+      PAYME_MERCHANT_KEY: ${PAYME_MERCHANT_KEY:-}
+      PAYME_CHECKOUT_URL: ${PAYME_CHECKOUT_URL:-https://checkout.paycom.uz}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 30s
@@ -86,10 +100,27 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-yik}:${POSTGRES_PASSWORD:-yik}@db:5432/${POSTGRES_DB:-yik}
       RETENTION_MONTHS: ${RETENTION_MONTHS:-24}
+      ANALYTICS_RETENTION_DAYS: ${ANALYTICS_RETENTION_DAYS:-180}
       BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
       LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       BILLING_ALERT_MIN_USD: ${BILLING_ALERT_MIN_USD:-5}
+      # Reminders run here, not in the app. The bot token is what sends them
+      # and PUBLIC_BASE_URL is what the links in them are built from — without
+      # either, the hourly job finds people to remind and then does nothing.
+      REMINDERS_ENABLED: ${REMINDERS_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      REMIND_ABANDONED_HOURS: ${REMIND_ABANDONED_HOURS:-24}
+      REMIND_UNPAID_HOURS: ${REMIND_UNPAID_HOURS:-24}
+      REMIND_NEVER_STARTED_HOURS: ${REMIND_NEVER_STARTED_HOURS:-24}
+      REMIND_GIVE_UP_DAYS: ${REMIND_GIVE_UP_DAYS:-14}
+      REMIND_MAX_PER_WEEK: ${REMIND_MAX_PER_WEEK:-2}
+      REMIND_QUIET_FROM: ${REMIND_QUIET_FROM:-21}
+      REMIND_QUIET_TO: ${REMIND_QUIET_TO:-9}
+      REMIND_TZ_OFFSET: ${REMIND_TZ_OFFSET:-5}
+      REMIND_MAX_PER_RUN: ${REMIND_MAX_PER_RUN:-200}
     volumes:
       - ./deploy/cron/root:/etc/crontabs/root:ro
       - ./backups:/backups

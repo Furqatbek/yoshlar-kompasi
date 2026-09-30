@@ -43,6 +43,9 @@ node test/unit/funnel.test.js
 echo "==== unit: paywall split + reminder rules ===="
 node test/unit/paywall.test.js
 
+echo "==== unit: compose passes every setting through ===="
+node test/unit/compose-env.test.js
+
 echo "==== migrate + seed ===="
 (cd server && npm run migrate && npm run seed)
 
