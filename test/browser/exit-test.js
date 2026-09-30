@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { stubLogin } = require('./auth-stub');
 
 const ROOT = path.join(__dirname, '..', '..', 'server', 'public');
 const CSP = ["default-src 'self'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
@@ -39,6 +40,7 @@ const SESSION_PAYLOAD = {
   await new Promise((r) => srv.listen(8099, r));
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process'] });
   const page = await b.newPage();
+  await stubLogin(page); // the form only renders for an authorized adult
 
   await page.route('**/api/sessions', (route) => route.fulfill({
     status: 201, contentType: 'application/json',

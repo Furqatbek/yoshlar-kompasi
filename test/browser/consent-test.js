@@ -5,6 +5,7 @@
 //  3. Re-check -> start -> the API request actually carries consent: true.
 const http = require('http'); const fs = require('fs'); const path = require('path');
 const { chromium } = require('playwright');
+const { stubLogin } = require('./auth-stub');
 const ROOT = path.join(__dirname, '..', '..', 'server', 'public');
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 const srv = http.createServer((req, res) => {
@@ -21,6 +22,7 @@ const ok = (n, c, x) => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL 
   await new Promise((r) => srv.listen(8099, r));
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process'] });
   const page = await b.newPage();
+  await stubLogin(page); // the form only renders for an authorized adult
   let lastBody = null;
   await page.route('**/api/sessions', (r) => {
     lastBody = JSON.parse(r.request().postData() || '{}');

@@ -7,9 +7,10 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { stubLogin } = require('./auth-stub');
 
 const ROOT = path.join(__dirname, '..', '..', 'server', 'public');
-const CSP = ["default-src 'self'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+const CSP =["default-src 'self'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data:", "connect-src 'self'"].join('; ');
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css' };
@@ -30,6 +31,7 @@ function ok(name, cond, extra) { (cond ? pass++ : fail++); console.log((cond ? '
   await new Promise((r) => srv.listen(8099, r));
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process'] });
   const page = await b.newPage();
+  await stubLogin(page); // the form only renders for an authorized adult
 
   let apiCalls = 0;
   page.on('console', (m) => { const t = m.text(); if (t.startsWith('[trace]')) console.log('  ' + t.replace(/\n/g, '\n    ')); });

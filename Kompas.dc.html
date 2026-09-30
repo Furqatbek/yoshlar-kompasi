@@ -350,6 +350,36 @@ input, textarea, button, select { font-family: var(--font-body); }
 <sc-if value="{{ isSetup }}" hint-placeholder-val="{{ false }}">
 <main data-screen-label="Tayyorgarlik" style="flex: 1;">
   <div style="max-width: 680px; margin: 0 auto; padding: var(--space-8) var(--space-4);">
+    <sc-if value="{{ needsAuth }}" hint-placeholder-val="{{ false }}">
+      <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">Kirish</h6>
+      <h1 style="font-size: clamp(30px, 4vw, 44px); margin-bottom: var(--space-2);">Telegram orqali kiring</h1>
+      <p class="text-muted" style="max-width: 52ch; margin-bottom: var(--space-6);">Mashg'ulotni boshlash uchun Telegram botimiz orqali ro'yxatdan o'ting. Hisobot tayyor bo'lganda o'sha yerga yuboriladi — havolani yo'qotib qo'ymaysiz.</p>
+
+      <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <label style="display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; font-size: 14px; max-width: 60ch;">
+            <input type="checkbox" checked="{{ authMarketingVal }}" onChange="{{ onAuthMarketing }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
+            <span>Yangi imkoniyatlar va takliflar haqida Telegram orqali xabar yuborishingizga roziman (ixtiyoriy).</span>
+          </label>
+          <div><button type="button" class="btn btn-primary" onClick="{{ beginAuth }}" style="font-size: 16px; padding: 12px 20px;">Telegram orqali kirish</button></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ authWaiting }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <div><a class="btn btn-primary" href="{{ authLink }}" target="_blank" rel="noopener" style="text-decoration: none; font-size: 16px; padding: 12px 20px;">Telegramni ochish</a></div>
+          <p style="margin: 0; font-size: 15px; font-weight: 600; color: var(--color-accent-700);">{{ authHint }}</p>
+          <p class="text-muted" style="margin: 0; font-size: 13px;">Bu oyna ochiq tursin — tasdiqlangach avtomatik davom etadi.</p>
+          <div><button type="button" class="btn btn-ghost" onClick="{{ cancelAuth }}" style="font-size: 14px;">Bekor qilish</button></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
+        <div style="color: var(--color-accent-700); font-weight: 600; font-size: 14px; margin-top: var(--space-4);">{{ authError }}</div>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{ authed }}" hint-placeholder-val="{{ true }}">
     <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">1-qadam / 2</h6>
     <h1 style="font-size: clamp(30px, 4vw, 44px); margin-bottom: var(--space-2);">Mashg'ulotga tayyorgarlik</h1>
     <p class="text-muted" style="max-width: 52ch; margin-bottom: var(--space-6);">Bola haqida bir necha ma'lumot — savollar sinfiga moslashadi.</p>
@@ -410,6 +440,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <p style="margin: var(--space-3) 0 0; font-size: 14px; color: var(--color-accent-700); font-weight: 600;">Sun'iy intellekt birinchi savollarni tayyorlamoqda — odatda 10–20 soniya. Sahifani yopmang.</p>
         </sc-if>
       </div>
+    </sc-if>
     </sc-if>
   </div>
 </main>
@@ -1080,7 +1111,10 @@ class Component extends DCLogic {
     fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
     // server-fetched, route-scoped data
     report: null, reportLoading: false, reportNotFound: false, deliveryLink: '', sessLoading: false,
-    leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null
+    leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null,
+    // Telegram authorization (required before any assessment can start).
+    authed: false, authChecked: false, authParent: null, authMarketing: false,
+    authNonce: '', authLink: '', authStatus: '', authError: ''
   };
 
   brand() { return this.props.brandName ?? "Yosh Iste'dodlar Kompasi"; }
@@ -1090,6 +1124,9 @@ class Component extends DCLogic {
   api(path, opts) {
     const o = Object.assign({ method: 'GET' }, opts || {});
     o.headers = Object.assign({ 'Content-Type': 'application/json' }, (opts && opts.headers) || {});
+    // The parent login travels as a header on every call; the server only
+    // enforces it where it matters (starting a session, /api/auth/me).
+    if (this._ptok) o.headers['x-parent-token'] = this._ptok;
     o.credentials = 'same-origin';
     if (o.body != null && typeof o.body !== 'string') o.body = JSON.stringify(o.body);
     return fetch(path, o).then(async (res) => {
@@ -1109,6 +1146,78 @@ class Component extends DCLogic {
   // resume on the same device; the URL itself resumes on any device.
   saveHandle() { try { localStorage.setItem('yik_sess_v1', JSON.stringify({ tok: this._stok })); } catch (e) {} }
   clearHandle() { try { localStorage.removeItem('yik_sess_v1'); } catch (e) {} }
+
+  // --- Telegram authorization -------------------------------------------
+  // The adult logs in through the bot before any assessment, which is what
+  // gives the centre a channel for the report, reminders and offers. The
+  // browser holds a long-lived parent token; the bot side is a deep link the
+  // adult opens, so this page just polls until the handshake completes.
+  saveParentTok(t) { this._ptok = t; try { localStorage.setItem('yik_parent_v1', JSON.stringify({ tok: t })); } catch (e) {} }
+  clearParentTok() { this._ptok = null; try { localStorage.removeItem('yik_parent_v1'); } catch (e) {} }
+
+  async loadParent() {
+    let saved = null; try { saved = JSON.parse(localStorage.getItem('yik_parent_v1') || 'null'); } catch (e) {}
+    this._ptok = (saved && saved.tok) || null;
+    if (!this._ptok) { this.setState({ authed: false, authChecked: true }); return; }
+    try {
+      const d = await this.api('/api/auth/me');
+      this.setState({ authed: true, authChecked: true, authParent: d.parent || null });
+    } catch (e) {
+      // Expired or revoked: drop it and show the login again.
+      this.clearParentTok();
+      this.setState({ authed: false, authChecked: true, authParent: null });
+    }
+  }
+
+  async beginAuth() {
+    if (this._authBusy) return; this._authBusy = true;
+    this.setState({ authError: '' });
+    try {
+      const d = await this.api('/api/auth/telegram/start', {
+        method: 'POST', body: { marketing_consent: !!this.state.authMarketing }
+      });
+      this.setState({ authNonce: d.nonce, authLink: d.link, authStatus: 'pending' });
+      // Open Telegram straight away; the visible button is the fallback for
+      // browsers that block a programmatic open.
+      try { window.open(d.link, '_blank', 'noopener'); } catch (e) {}
+      this.pollAuth();
+    } catch (e) {
+      this.setState({ authError: this._errMsg(e) });
+    }
+    this._authBusy = false;
+  }
+
+  pollAuth() {
+    this.stopAuthPoll();
+    const tick = async () => {
+      const nonce = this.state.authNonce;
+      if (!nonce) return;
+      try {
+        const d = await this.api('/api/auth/telegram/status?nonce=' + encodeURIComponent(nonce));
+        if (d.status === 'authorized' && d.parent_token) {
+          this.stopAuthPoll();
+          this.saveParentTok(d.parent_token);
+          this.setState({ authed: true, authParent: d.parent || null, authNonce: '', authLink: '', authStatus: '', authError: '' });
+          return;
+        }
+        if (d.status === 'expired') {
+          this.stopAuthPoll();
+          this.setState({ authNonce: '', authLink: '', authStatus: '', authError: 'Havola muddati tugadi. Qaytadan urinib ko‘ring.' });
+          return;
+        }
+        this.setState({ authStatus: d.status });
+      } catch (e) { /* transient: the next tick retries */ }
+      this._authTimer = setTimeout(tick, 2000);
+    };
+    this._authTimer = setTimeout(tick, 1500);
+  }
+
+  stopAuthPoll() { if (this._authTimer) { clearTimeout(this._authTimer); this._authTimer = null; } }
+
+  cancelAuth() {
+    this.stopAuthPoll();
+    this.setState({ authNonce: '', authLink: '', authStatus: '', authError: '' });
+  }
 
   async loadSession(token) {
     if (!token || this._loadingSession === token) return;
@@ -1154,6 +1263,10 @@ class Component extends DCLogic {
     let handle = null; try { handle = JSON.parse(localStorage.getItem('yik_sess_v1') || 'null'); } catch (e) {}
     if (handle && handle.tok) { this._stok = handle.tok; this.loadSession(handle.tok); }
 
+    // Restore (and validate) the Telegram login before the setup screen decides
+    // whether to show the form or the login card.
+    this.loadParent();
+
     // Is there an admin session? (httpOnly cookie — we can't read it directly.)
     this.api('/admin/me').then(() => this.setState({ admAuthed: true }, () => this.syncRoute())).catch(() => {});
 
@@ -1161,6 +1274,7 @@ class Component extends DCLogic {
     this.syncRoute();
   }
   componentWillUnmount() {
+    this.stopAuthPoll();
     window.removeEventListener('hashchange', this._hash);
     if (this._mq) { if (this._mq.removeEventListener) this._mq.removeEventListener('change', this._onMq); else this._mq.removeListener(this._onMq); }
   }
@@ -1601,6 +1715,19 @@ class Component extends DCLogic {
     return {
       brand: this.brand(), ctaPhone: this.props.ctaPhone ?? '+998 71 200-70-07',
       isLanding: route === '/' || route === '', isSetup: route === '/boshlash', isSession,
+      // Telegram authorization gate on the setup screen. While authChecked is
+      // false neither branch renders, so a stored login never flashes the
+      // login card on reload.
+      authed: S.authChecked && S.authed,
+      needsAuth: S.authChecked && !S.authed,
+      authIdle: !S.authNonce, authWaiting: !!S.authNonce,
+      authLink: S.authLink, authError: S.authError,
+      authHint: S.authStatus === 'awaiting_phone'
+        ? 'Telegramda «Telefon raqamni ulashish» tugmasini bosing.'
+        : 'Telegramda «Start» tugmasini bosing — so‘ng shu sahifaga qayting.',
+      authMarketingVal: S.authMarketing,
+      onAuthMarketing: (e) => this.setState({ authMarketing: !!(e && e.target && e.target.checked) }),
+      beginAuth: () => this.beginAuth(), cancelAuth: () => this.cancelAuth(),
       isReport, isPrivacy: route === '/maxfiylik', isAbout: route === '/haqida',
       isAdminLogin, isAdminArea: admin, isLeads, isLeadDetail, isStats,
       leadsNavW: isLeads ? '800' : '400', statsNavW: isStats ? '800' : '400',

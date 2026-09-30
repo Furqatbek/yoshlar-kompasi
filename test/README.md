@@ -20,11 +20,18 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 | Suite | Covers |
 |---|---|
 | `unit/openrouter-adapter.test.js` | Provider dispatch, request/response wire shapes, retryable-error classification, cross-provider `modelFor` resolution (self-contained — spins its own stub on `:5698`) |
+| `api/auth-test.js` | Telegram login gate: nonce → `/start` → Share-contact → parent token; unauthorized start refused, nonce single-use, returning adult skips the phone, logout revokes |
 | `api/e2e-driver.js` | Full product flow: session → messages → contact → report → public report → admin (leads, detail, patch, stats, CSV) → parent dedupe |
 | `api/e2e-extra.js` | Retry idempotency, concurrent double-report, contact idempotency, cross-device resume |
 | `api/delete-test.js` | Right-to-erasure: admin lead delete cascades to children/sessions/reports |
 | `api/gate-test.js` | Report engagement gate: zero-answer report refused (even with model-emitted completion markers), allowed after a real answer |
 | `api/stale-model-test.js` | Sessions stamped under one LLM provider keep working after switching providers |
+
+The suites run with authorization ON, as production does. Those written before
+it exists call `installAuth()` from `api/auth-helper.js`, which performs the
+handshake once and attaches the parent token to `POST /api/sessions` only —
+each driver passing its **own** `chatId`, since one Telegram account is one
+parent row and a shared id would merge their leads.
 
 ## Live smoke test (real model, costs money)
 
@@ -47,7 +54,18 @@ node test/browser/render-check.js    # app mounts, zero console errors under pro
 node test/browser/start-btn-test.js  # start-button pending state; same-tick double-click fires ONE request
 node test/browser/exit-test.js       # quit-without-report -> resume banner -> resume works
 node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
+node test/browser/auth-ui-test.js    # Telegram login card -> waiting state -> form unlocks from polling alone; survives reload
 ```
+
+`auth-ui-test.js` stands in for Telegram by posting the real webhook update
+shapes against a running app, so it exercises the browser half of the login
+without a bot token — including the part no API test can reach: that the page
+flips from "waiting" to "unlocked" on its own, with no reload.
+
+The other three suites mock the API with `page.route` and never reach a server,
+so they call `stubLogin(page)` from `browser/auth-stub.js` **before**
+`page.goto` — it seeds the parent token and stubs `/api/auth/me`, leaving the
+page in the state an adult who logged in yesterday would see.
 
 ## Stubs
 

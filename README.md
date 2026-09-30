@@ -29,14 +29,16 @@ Browser (Kompas.dc.html + support.js + _ds)
    │  fetch /api/* (session token)   fetch /admin/* (httpOnly cookie)
    ▼
 Express (server/)
+   ├─ routes/auth      Telegram login: nonce · poll · me · logout
    ├─ routes/sessions  create · messages · resume · contact · report
    ├─ routes/reports   public report by share_token
    ├─ routes/admin     login · leads · lead · stats · CSV
-   ├─ routes/telegram  delivery webhook
+   ├─ routes/telegram  bot webhook: login deep-link · contact · delivery
    ├─ services/claude  → Anthropic OR OpenRouter (LLM_PROVIDER; key server-side,
    │                     system prompt sent as a cached breakpoint)
    ├─ services/prompt  system prompt = uploads/*.md + protocol + json rule
-   └─ db (pg)          parents · children · sessions · messages · reports · admins
+   └─ db (pg)          parents · children · sessions · messages · reports ·
+                       admins · auth_requests · parent_tokens
    ▼
 PostgreSQL
 ```
@@ -198,9 +200,12 @@ runtime.
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | yes | Seeded admin account (bcrypt-hashed) |
 | `PUBLIC_BASE_URL` | prod | Origin used to build report links for delivery |
 | `COOKIE_SECURE` | no | `true` in prod; `false` for local http |
-| `DELIVERY_PROVIDER` | no | `console` (default) or `telegram` — note: a Telegram deep-link only reaches parents who have ALREADY started your bot; for everyone else it silently does nothing. The report is therefore shown and saved in-app at finish; use the admin panel's report link to send SMS manually (an Eskiz.uz SMS provider can be added later) |
-| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_USERNAME` | if telegram | Bot credentials |
+| `DELIVERY_PROVIDER` | no | `console` (default) or `telegram`. With Telegram login on (below) every parent has already started the bot, so the deep-link limitation no longer applies |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_USERNAME` | if telegram or auth | Bot credentials |
 | `TELEGRAM_WEBHOOK_SECRET` | no | Verifies webhook calls |
+| `AUTH_REQUIRED` | no | `true` (default) — an assessment cannot start until the adult logs in through the bot. `false` reverts to the old anonymous flow |
+| `AUTH_REQUIRE_PHONE` | no | `true` (default) — the bot asks for the phone with a Share-contact button; the number arrives Telegram-verified |
+| `AUTH_NONCE_TTL_MINUTES` / `AUTH_TOKEN_TTL_DAYS` | no | Login-link and browser-login lifetimes (15 / 90) |
 | `CONSENT_TEXT_VERSION` | no | Stamped on each recorded consent |
 | `MAX_TURNS` / `MAX_MESSAGE_CHARS` | no | Abuse caps (60 / 2000) |
 | `MIN_ANSWERS_FOR_REPORT` | no | Real answers required before a report (default 1, floored at 1) |
@@ -217,13 +222,22 @@ runtime.
 
 ## API
 
+Login (Telegram; see [Parent authorization](#parent-authorization)):
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/auth/telegram/start` | Issue a single-use nonce + `t.me/…?start=auth_<nonce>` deep link |
+| GET | `/api/auth/telegram/status?nonce=` | Poll: `pending` → `awaiting_phone` → `authorized` (+ `parent_token`) / `expired` |
+| GET | `/api/auth/me` | Resolve an `x-parent-token` to the parent |
+| POST | `/api/auth/logout` | Revoke that browser token (the Telegram link stays) |
+
 Parent-facing — the unguessable 256-bit session token IS the credential and the
 `:token` path segment (no header; the session URL `/mashgulot/:token` resumes
 from any device):
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/api/sessions` | Create child + session (requires `consent: true`), greeting + first questions |
+| POST | `/api/sessions` | Create child + session (needs `x-parent-token` when `AUTH_REQUIRED`, and `consent: true`), greeting + first questions |
 | POST | `/api/sessions/:token/messages` | Adult's turn (`{content}` or `{retry:true}`) |
 | GET | `/api/sessions/:token` | Resume: full state |
 | POST | `/api/sessions/:token/contact` | Contact gate (parent name, optional phone + consents) |
@@ -243,32 +257,72 @@ Clean links `/(hisobot|mashgulot)/:token` 302-redirect into the hash-routed SPA.
 
 ---
 
+## Parent authorization
+
+With `AUTH_REQUIRED=true` (the default) an assessment cannot begin until the
+adult has logged in through the Telegram bot. This is deliberate: a phone number
+typed into a form is a number you may call, but a **started bot chat is standing
+permission to message** — which is what makes the report, reminders and the
+centre's announcements deliverable at all.
+
+```
+Browser                       Server                      Telegram
+  │ POST /api/auth/telegram/start
+  │──────────────────────────▶│ nonce + t.me/bot?start=auth_<nonce>
+  │◀──────────────────────────│
+  │ shows "Telegramni ochish", polls status every 2s
+  │                            │      /start auth_<nonce>
+  │                            │◀───────────────────────────│  adult presses Start
+  │                            │ upsert parent by chat id,
+  │                            │ bind nonce → awaiting_phone
+  │                            │ ─ asks for the phone with a
+  │                            │   [Share contact] keyboard ▶│
+  │                            │◀───────────────────────────│  adult taps it
+  │ status: authorized + parent_token   (phone arrives VERIFIED by Telegram)
+  │◀──────────────────────────│
+  │ stores the token in localStorage; the child form unlocks
+```
+
+The nonce is single-use and expires after `AUTH_NONCE_TTL_MINUTES`; the browser
+token lives for `AUTH_TOKEN_TTL_DAYS` and can be revoked with
+`POST /api/auth/logout`. One Telegram account is one `parents` row
+(`telegram_chat_id` is uniquely indexed), so a returning adult skips the phone
+step entirely and their existing marketing consent is preserved. Set
+`AUTH_REQUIRE_PHONE=false` to finish the login on `/start` alone.
+
+Setup: create a bot with @BotFather, set `TELEGRAM_BOT_TOKEN` and
+`TELEGRAM_BOT_USERNAME`, and register the webhook once:
+
+```bash
+curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
+  -d "url=$PUBLIC_BASE_URL/api/telegram/webhook" \
+  -d "secret_token=$TELEGRAM_WEBHOOK_SECRET"
+```
+
+In production the app refuses to boot if authorization is on and the bot is not
+configured — better a loud failure at startup than a login screen nobody can get
+past. For local work without a bot, `AUTH_REQUIRED=false` restores the anonymous
+flow.
+
+---
+
 ## Report delivery
 
 **The primary delivery IS the app**: when the assessment finishes, the report
 opens on screen, is stored server-side, and the parent can save it as PDF or
-copy the share link. Phone numbers collected at the gate let the centre follow
-up and send the link manually (admin panel → lead → report link).
+copy the share link.
 
-Optional Telegram automation exists but has a hard limitation: a bot deep-link
-only reaches parents who have ALREADY started the bot — for everyone else it
-silently does nothing. If you still want it:
-
-1. Create a bot with @BotFather; set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`,
-   `DELIVERY_PROVIDER=telegram`.
-2. Register the webhook (once):
-   ```bash
-   curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
-     -d "url=$PUBLIC_BASE_URL/api/telegram/webhook" \
-     -d "secret_token=$TELEGRAM_WEBHOOK_SECRET"
-   ```
-3. On the report screen the parent taps **Telegram orqali olish** → the bot's
-   `/start <token>` handler sends the report link and becomes a re-engagement
-   channel for the centre.
+With Telegram login on, delivery is also reliable: every parent reached the
+assessment through the bot, so `DELIVERY_PROVIDER=telegram` pushes the report
+straight to their chat by `telegram_chat_id` — no deep-link dance, no
+prior-subscription problem. (That problem is why login exists: before it, a
+bot deep-link silently did nothing for anyone who had not already started the
+bot.) The report screen still offers **Telegram orqali olish** for parents from
+the older anonymous flow, and the admin panel keeps a report link per lead for
+manual follow-up.
 
 SMS (Eskiz.uz) can be added later behind the same `services/delivery`
-interface — that would make phone delivery reliable without the
-prior-subscription problem.
+interface.
 
 ---
 
@@ -352,7 +406,7 @@ server/
   index.js              Express app, static serving, redirects
   config.js             env config (provider switch, budgets, prices, gates)
   db/                   pool, migrations, migrate + seed + purge, repo (all SQL)
-  routes/               sessions, reports, admin, telegram
+  routes/               auth, sessions, reports, admin, telegram
   services/             claude (Anthropic/OpenRouter dispatcher), prompt,
                         reportParse, delivery/{telegram,console}
   middleware/           auth, rateLimit, security, errorHandler
