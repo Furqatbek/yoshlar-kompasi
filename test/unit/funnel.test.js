@@ -17,7 +17,8 @@ const rowOf = (built, key) => built.rows.find((r) => r.key === key);
 // A typical shape: losses everywhere, biggest at the top.
 const normal = funnel.build(at({
   landing: 500, setup: 300, login_start: 260, login_done: 120, form_done: 110,
-  session_start: 100, first_answer: 80, finished: 60, report_view: 55, enrolled: 12,
+  session_start: 100, first_answer: 80, finished: 60, report_view: 55,
+  paid: 20, enrolled: 12,
 }));
 
 test('every stage appears, in funnel order', () => {
@@ -48,20 +49,27 @@ test('the steepest drop is reported separately, and is a different step', () => 
   assert.strictEqual(normal.steepest.lost_pct, 54);
 });
 
-// 55 report views -> 12 enrolments is 78%, steeper than anything before it,
-// and would be the answer in almost every real data set. Reporting it as "the
-// problem step" would bury every finding the centre can act on.
-test('the sale is not eligible to be the steepest step', () => {
+// 55 report views -> 20 sales is 64%, steeper than anything before it, and
+// would be the answer in almost every real data set. Reporting either sale
+// step as "the problem step" would bury every finding the centre can act on.
+test('neither sale step is eligible to be the steepest', () => {
+  assert.notStrictEqual(normal.steepest.to_key, 'paid');
   assert.notStrictEqual(normal.steepest.to_key, 'enrolled');
-  // It is not hidden — the row and its loss are still there to read.
-  assert.strictEqual(rowOf(normal, 'enrolled').lost, 43);
-  assert.strictEqual(rowOf(normal, 'enrolled').lost_pct, 78);
+  // They are not hidden — the rows and their losses are still there to read.
+  assert.strictEqual(rowOf(normal, 'paid').lost, 35);
+  assert.strictEqual(rowOf(normal, 'paid').lost_pct, 64);
+  assert.strictEqual(rowOf(normal, 'enrolled').lost, 8);
 });
 
-test('end-to-end conversion is enrolled over visitors', () => {
+// Payment is the conversion the funnel is built around; course enrolment is
+// reported beside it, and both are measured against arrivals so neither
+// flatters the other.
+test('end-to-end conversion is paid over visitors', () => {
   assert.strictEqual(normal.visitors, 500);
+  assert.strictEqual(normal.paid, 20);
+  assert.strictEqual(normal.conversion_pct, 4);
   assert.strictEqual(normal.enrolled, 12);
-  assert.strictEqual(normal.conversion_pct, 2.4);
+  assert.strictEqual(normal.enrolled_pct, 2.4);
 });
 
 // A visitor can open a shared report link without ever seeing the landing

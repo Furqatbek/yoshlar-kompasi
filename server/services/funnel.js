@@ -12,6 +12,12 @@
 // happened, so a client cannot report progress it never made — the numbers the
 // centre will make decisions on are not a visitor's word for it.
 
+// The last two stages are `sale: true` — commercial outcomes rather than steps
+// through the product. Neither is an event: `paid` is derived from
+// orders.state, which the Payme callback sets, and `enrolled` from
+// parents.lead_status, which an admin sets when someone signs up for a course.
+// They are separate outcomes now: buying the report is not the same as
+// enrolling, and a parent may do either without the other.
 const STAGES = [
   { key: 'landing', label: 'Saytni ochdi', client: true },
   { key: 'setup', label: 'Boshlash sahifasiga o‘tdi', client: true },
@@ -22,15 +28,18 @@ const STAGES = [
   { key: 'first_answer', label: 'Bola birinchi javobini berdi' },
   { key: 'finished', label: 'Hisobot tayyor bo‘ldi' },
   { key: 'report_view', label: 'Hisobotni ochdi', client: true },
-  { key: 'enrolled', label: 'Kursga yozildi' },
+  { key: 'paid', label: 'Hisobotni sotib oldi', sale: true },
+  { key: 'enrolled', label: 'Kursga yozildi', sale: true },
 ];
 
 const KEYS = STAGES.map((s) => s.key);
 // Everything the browser is allowed to POST to /api/track.
 const CLIENT_KEYS = STAGES.filter((s) => s.client).map((s) => s.key);
-// Derived from parents.lead_status rather than recorded as an event, so the
-// admin marking a lead as enrolled is enough — nothing else has to fire.
-const CONVERSION_STAGE = 'enrolled';
+const SALE_KEYS = STAGES.filter((s) => s.sale).map((s) => s.key);
+// The money question the funnel exists to answer: of everyone who arrived, how
+// many bought? Course enrolment is tracked after it, but a report sale is the
+// conversion this funnel is built around.
+const CONVERSION_STAGE = 'paid';
 
 const isStage = (k) => KEYS.includes(k);
 const isClientStage = (k) => CLIENT_KEYS.includes(k);
@@ -67,11 +76,12 @@ function build(counts) {
     // people are, whereas a step that loses most of what reaches it is a step
     // with something wrong in it.
     //
-    // The sale itself is excluded. Far fewer people enrol than read a report,
-    // so that step is the steepest in essentially every data set and would
-    // crowd out every finding the centre could actually fix. It is not hidden:
-    // it keeps its own row and the enrolment rate is a headline number.
-    const isSale = row.key === CONVERSION_STAGE;
+    // The sale steps are excluded. Far fewer people buy than read, and fewer
+    // still enrol, so those steps are the steepest in essentially every data
+    // set and would crowd out every finding the centre could actually fix.
+    // They are not hidden: each keeps its own row, and both rates are headline
+    // numbers.
+    const isSale = SALE_KEYS.includes(row.key);
     if (!isSale && row.lost > 0 && prev >= MIN_BASE_FOR_RATE && (!steepest || row.lost_pct > steepest.lost_pct)) steepest = at;
   });
   const top = rows[0].n;
@@ -79,17 +89,24 @@ function build(counts) {
   // always the first one.
   const max = rows.reduce((m, r) => Math.max(m, r.n), 0);
   rows.forEach((r) => { r.width_pct = max > 0 ? Math.round((r.n / max) * 100) : 0; });
-  const enrolled = rows[rows.length - 1].n;
+  const countOf = (key) => (rows.find((r) => r.key === key) || { n: 0 }).n;
+  const paid = countOf(CONVERSION_STAGE);
+  const enrolled = countOf('enrolled');
+  const pct = (n) => (top > 0 ? Math.round((n / top) * 1000) / 10 : null);
   return {
     rows,
     worst,
     // Only worth showing when it is not the same step as `worst`.
     steepest: steepest && worst && steepest.to_key === worst.to_key ? null : steepest,
     visitors: top,
+    paid,
     enrolled,
-    // End-to-end conversion: of everyone who opened the site, who enrolled.
-    conversion_pct: top > 0 ? Math.round((enrolled / top) * 1000) / 10 : null,
+    // End-to-end: of everyone who opened the site, who bought, and who went on
+    // to sign up for a course. Both are measured against arrivals, not against
+    // each other, so neither flatters the other.
+    conversion_pct: pct(paid),
+    enrolled_pct: pct(enrolled),
   };
 }
 
-module.exports = { STAGES, KEYS, CLIENT_KEYS, CONVERSION_STAGE, isStage, isClientStage, labelOf, build };
+module.exports = { STAGES, KEYS, CLIENT_KEYS, SALE_KEYS, CONVERSION_STAGE, isStage, isClientStage, labelOf, build };

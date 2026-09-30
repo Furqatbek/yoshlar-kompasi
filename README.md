@@ -423,7 +423,8 @@ stages close that gap:
 | 7 | Child gave a first answer | server |
 | 8 | Report produced | server |
 | 9 | Opened the report | browser |
-| 10 | Enrolled | `parents.lead_status` |
+| 10 | Bought the report | `orders.state` (Payme) |
+| 11 | Enrolled in a course | `parents.lead_status` |
 
 **The split matters.** A browser can only POST the stages it alone can witness
 (`/api/track`, rate-limited, nothing else accepted). Every stage that proves
@@ -431,14 +432,27 @@ real progress is written by the server from the request that did it, so the
 numbers the centre plans around cannot be inflated by a client claiming to have
 finished a report.
 
+**The last two stages are outcomes, not events.** Neither can be a beacon: a
+payment is confirmed by Payme calling us with no browser present, and an
+enrolment is an admin pressing a button weeks later. Both are joined through
+`parent_id` and windowed on **when the visitor came**, not when the money or the
+admin arrived, so the rows line up with the stages above them instead of
+drifting out of the window. A refund removes the visitor from the paid stage
+again — the funnel does not keep counting revenue that was returned.
+
+They are kept separate because they are separate: buying a report is not signing
+up for a course, and a parent may do either without the other. Both rates are
+reported against arrivals rather than against each other, so neither flatters
+the other.
+
 **Counting.** The funnel counts *distinct visitors* per stage, not events, so
 reloads and double-fired beacons cannot skew it. Two figures are called out: the
 step that loses the **most people** (nearly always near the top, because that is
 where the people are) and the step that loses the **largest share** of those who
-reach it — the second is usually the one with something fixable in it. The sale
-itself is excluded from that second figure, since far fewer people enrol than
-read a report and it would otherwise win every time; it keeps its own row and
-the enrolment rate is a headline number.
+reach it — the second is usually the one with something fixable in it. The two
+sale steps are excluded from that second figure, since far fewer people buy than
+read and fewer still enrol, so they would otherwise win every time; each keeps
+its own row and both rates are headline numbers.
 
 **Privacy.** A visitor id is a random UUID the browser generates for itself and
 keeps in `localStorage`. It is not derived from an IP, a fingerprint or anything

@@ -496,19 +496,28 @@ async function funnelCounts(days) {
   const out = {};
   for (const r of rows) out[r.stage] = Number(r.n);
 
-  // The last stage is not an event: a lead becomes "enrolled" when an admin
-  // says so in the panel, possibly weeks later. Count the visitors whose
-  // parent has that status, windowed on when they visited (not on when the
-  // admin got round to updating them) so the row lines up with the rest.
-  const { rows: conv } = await query(
-    `SELECT count(DISTINCT e.visitor_id)::int AS n
-       FROM analytics_events e
-       JOIN parents p ON p.id = e.parent_id
-      WHERE p.lead_status = 'enrolled'
-        AND e.created_at >= now() - ($1 || ' days')::interval`,
-    [days]
-  );
-  out.enrolled = Number((conv[0] || {}).n || 0);
+  // The last two stages are not events. A payment is confirmed by Payme
+  // calling us, with no browser present to send a beacon; an enrolment is an
+  // admin pressing a button in the panel, possibly weeks later. Both are
+  // therefore joined through parent_id, and both are windowed on when the
+  // VISITOR came (not on when the money or the admin arrived) so the rows line
+  // up with the stages above them instead of drifting out of the window.
+  const outcome = async (key, where) => {
+    const { rows } = await query(
+      `SELECT count(DISTINCT e.visitor_id)::int AS n
+         FROM analytics_events e
+         JOIN parents p ON p.id = e.parent_id
+        WHERE ${where}
+          AND e.created_at >= now() - ($1 || ' days')::interval`,
+      [days]
+    );
+    out[key] = Number((rows[0] || {}).n || 0);
+  };
+  // Paid: the parent bought at least one report. Matched at parent level, the
+  // same way enrolment is, so a parent who paid on a second device still
+  // counts — the funnel is asking "did this person convert", not "which tab".
+  await outcome('paid', `EXISTS (SELECT 1 FROM orders o WHERE o.parent_id = p.id AND o.state = 'paid')`);
+  await outcome('enrolled', `p.lead_status = 'enrolled'`);
   return out;
 }
 

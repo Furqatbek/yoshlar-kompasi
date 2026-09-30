@@ -1064,7 +1064,7 @@ input, textarea, button, select { font-family: var(--font-body); }
   <main data-screen-label="Admin statistika" style="flex: 1;">
     <div style="max-width: 1140px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);">
       <h2 style="margin-bottom: 2px;">Statistika</h2>
-      <p class="text-muted" style="margin: 0 0 var(--space-4); font-size: 13px;">Tashrifchilar qayerda to‘xtayapti va nechtasi kursga yozilyapti</p>
+      <p class="text-muted" style="margin: 0 0 var(--space-4); font-size: 13px;">Tashrifchilar qayerda to‘xtayapti, nechtasi hisobotni sotib olyapti va nechtasi kursga yozilyapti</p>
 
       <!-- Drop-off funnel: the whole path, from opening the site to enrolling. -->
       <div style="border: 2px solid var(--color-divider); padding: var(--space-4); margin-bottom: var(--space-6);">
@@ -1096,8 +1096,10 @@ input, textarea, button, select { font-family: var(--font-body); }
 
         <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-4);">
           <div><div class="text-muted" style="font-size: 12px;">Tashrifchi</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropVisitors }}</div></div>
+          <div><div class="text-muted" style="font-size: 12px;">Hisobot sotib olgan</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropPaid }}</div></div>
+          <div><div class="text-muted" style="font-size: 12px;">To‘lov konversiyasi</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropConv }}</div></div>
           <div><div class="text-muted" style="font-size: 12px;">Kursga yozilgan</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropEnrolled }}</div></div>
-          <div><div class="text-muted" style="font-size: 12px;">Umumiy konversiya</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropConv }}</div></div>
+          <div><div class="text-muted" style="font-size: 12px;">Kurs konversiyasi</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropEnrolledPct }}</div></div>
         </div>
 
         <sc-if value="{{ hasDrop }}" hint-placeholder-val="{{ true }}">
@@ -2109,8 +2111,10 @@ class Component extends DCLogic {
       hasDropWorst: !!(dp && dp.worst),
       hasDropSteep: !!(dp && dp.steepest),
       dropVisitors: dp ? String(dp.visitors) : '—',
+      dropPaid: dp ? String(dp.paid) : '—',
       dropEnrolled: dp ? String(dp.enrolled) : '—',
       dropConv: dp && dp.conversion_pct != null ? dp.conversion_pct + '%' : '—',
+      dropEnrolledPct: dp && dp.enrolled_pct != null ? dp.enrolled_pct + '%' : '—',
       dropDayBtns: [dayBtn(7), dayBtn(30), dayBtn(90)],
       srcRows, hasSrc: srcRows.length > 0
     };

@@ -60,7 +60,7 @@ const { authorize } = require('./auth-helper');
 
   await sleep(300); // the collector answers before it writes
   let f = await read();
-  ok('the funnel returns every stage in order', Array.isArray(f.rows) && f.rows.length === 10);
+  ok('the funnel returns every stage in order', Array.isArray(f.rows) && f.rows.length === 11, 'rows=' + (f.rows || []).length);
   ok('  a landed visitor is counted', countOf(f, 'landing') >= 1, 'landing=' + countOf(f, 'landing'));
 
   const before = countOf(f, 'finished');
@@ -125,7 +125,46 @@ const { authorize } = require('./auth-helper');
   ok('a finished report is recorded — by the server, not the client',
     countOf(f, 'finished') === 1, 'finished=' + countOf(f, 'finished'));
 
-  // ---- conversion ---------------------------------------------------------
+  // ---- conversion: paying ------------------------------------------------
+  // The sale stage is not an event — Payme confirms it with no browser
+  // present — so this proves the join works by actually paying, through the
+  // same Merchant API calls Payme makes.
+  ok('nobody has paid yet', countOf(f, 'paid') === 0, 'paid=' + countOf(f, 'paid'));
+
+  const share = (await j('GET', '/api/sessions/' + stok, undefined, { 'x-session-token': stok }))
+    .data.report.share_token;
+  const order = (await j('POST', '/api/reports/' + share + '/checkout', {})).data;
+  const basic = 'Basic ' + Buffer.from('Paycom:' + (process.env.PAYME_MERCHANT_KEY || 'test-payme-key')).toString('base64');
+  const payme = (method, params) =>
+    j('POST', '/api/payments/payme', { jsonrpc: '2.0', id: 1, method, params }, { authorization: basic });
+  const TXN = 'funnel_txn_' + Date.now();
+  await payme('CreateTransaction', {
+    id: TXN, time: Date.now(), amount: order.amount_uzs * 100, account: { order_id: order.order_id },
+  });
+  f = await read();
+  ok('a reserved-but-unperformed payment does not count', countOf(f, 'paid') === 0,
+    'paid=' + countOf(f, 'paid'));
+
+  await payme('PerformTransaction', { id: TXN });
+  f = await read();
+  ok('A COMPLETED PAYMENT CLOSES THE FUNNEL', countOf(f, 'paid') === 1, 'paid=' + countOf(f, 'paid'));
+  ok('  and the conversion rate is the paid rate', f.conversion_pct > 0 && f.paid === 1,
+    JSON.stringify({ paid: f.paid, conversion_pct: f.conversion_pct }));
+
+  // A refund takes them back out — the funnel must not keep counting revenue
+  // that was returned.
+  await payme('CancelTransaction', { id: TXN, reason: 5 });
+  f = await read();
+  ok('a refund removes them from the paid stage', countOf(f, 'paid') === 0, 'paid=' + countOf(f, 'paid'));
+  await payme('CreateTransaction', {
+    id: TXN + '_b', time: Date.now(), amount: order.amount_uzs * 100, account: { order_id: order.order_id },
+  });
+  await payme('PerformTransaction', { id: TXN + '_b' });
+  f = await read();
+  ok('  and paying again puts them back', countOf(f, 'paid') === 1, 'paid=' + countOf(f, 'paid'));
+
+  // ---- conversion: enrolling ----------------------------------------------
+  // Still tracked separately: buying a report is not signing up for a course.
   ok('nobody has enrolled yet', countOf(f, 'enrolled') === 0, 'enrolled=' + countOf(f, 'enrolled'));
 
   const leads = await j('GET', '/admin/leads', undefined, asAdmin);
@@ -135,8 +174,10 @@ const { authorize } = require('./auth-helper');
   await j('PATCH', '/admin/leads/' + lead.id, { lead_status: 'enrolled' },
     Object.assign({ 'content-type': 'application/json' }, asAdmin));
   f = await read();
-  ok('marking the lead enrolled closes the funnel', countOf(f, 'enrolled') === 1, 'enrolled=' + countOf(f, 'enrolled'));
-  ok('  and end-to-end conversion is reported', typeof f.conversion_pct === 'number', String(f.conversion_pct));
+  ok('marking the lead enrolled fills the last stage', countOf(f, 'enrolled') === 1, 'enrolled=' + countOf(f, 'enrolled'));
+  ok('  reported separately from the payment rate',
+    typeof f.enrolled_pct === 'number' && f.paid === 1 && f.enrolled === 1,
+    JSON.stringify({ paid: f.paid, enrolled: f.enrolled, enrolled_pct: f.enrolled_pct }));
 
   // ---- the drop-off answer ------------------------------------------------
   ok('the biggest leak is named', !!f.worst && !!f.worst.from && !!f.worst.to,
