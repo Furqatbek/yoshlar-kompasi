@@ -798,6 +798,32 @@ input, textarea, button, select { font-family: var(--font-body); }
           </div>
         </sc-for>
 
+        <!-- Paywall. The locked sections are named, not hidden: a parent
+             should see exactly what they would be buying. -->
+        <sc-if value="{{ repLocked }}" hint-placeholder-val="{{ false }}">
+          <div class="no-print" style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <div class="no-print" style="border: 2px solid var(--color-text); padding: clamp(18px, 4vw, 32px); background: var(--color-neutral-200);">
+            <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">Hisobotning qolgan qismi</h6>
+            <h3 style="margin-bottom: var(--space-2);">{{ repName }} uchun to‘liq tahlil tayyor</h3>
+            <p class="text-muted" style="max-width: 60ch; margin-bottom: var(--space-4);">Yuqoridagi qism — bepul. Quyidagilar to‘lovdan keyin ochiladi va havola doimiy ishlaydi: istalgan vaqtda qayta ochasiz, PDF qilib saqlaysiz.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-5);">
+              <sc-for list="{{ repLockedList }}" as="s" hint-placeholder-count="6">
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex: 0 0 14px; margin-top: 4px;"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                  <span style="font-weight: 600; font-size: 14px;">{{ s.t }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary" onClick="{{ beginCheckout }}" style="font-size: 16px; padding: 12px 22px;">{{ repPriceLabel }} — to‘lash</button>
+              <span class="text-muted" style="font-size: 13px;">Payme orqali, karta bilan</span>
+            </div>
+            <sc-if value="{{ payError }}" hint-placeholder-val="{{ false }}">
+              <div style="color: var(--color-accent-700); font-weight: 600; font-size: 14px; margin-top: var(--space-3);">{{ payError }}</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
         <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
         <div class="rep-item" style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -839,6 +865,14 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
       <h4 style="margin-bottom: var(--space-2);">Telefon raqamdan qanday foydalanamiz</h4>
       <p style="margin: 0; max-width: 60ch;">Raqamga faqat hisobot havolasi yuboriladi. Markaz dasturlari haqidagi xabarlar — faqat alohida, ixtiyoriy rozilik bergan bo'lsangiz; istalgan payt voz kechishingiz mumkin.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Telegram orqali eslatmalar</h4>
+      <p style="margin: 0; max-width: 60ch;">Agar mashg'ulotni yarim yo'lda qoldirsangiz yoki hisobot ochilmay qolsa, botimiz bir marta eslatma yuborishi mumkin. Har bir holat bo'yicha faqat bir marta, kuniga emas; kechasi hech qachon yuborilmaydi. To'xtatish uchun botga <strong>/stop</strong> deb yozing — shundan keyin hech qanday avtomatik xabar kelmaydi. To'lagan hisobotingiz esa avvalgidek yetkaziladi.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">To'lov</h4>
+      <p style="margin: 0; max-width: 60ch;">Mashg'ulotning o'zi bepul. Hisobotning birinchi qismi — bolaning kuchli tomonlari va unga atalgan xat — ham bepul ochiq turadi. To'liq tahlil to'lovdan keyin ochiladi. To'lov Payme orqali amalga oshiriladi: karta ma'lumotlaringiz bizning serverimizga umuman tushmaydi, ularni faqat Payme ko'radi. To'lagandan keyin havola doimiy ishlaydi.</p>
     </div>
     <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
       <h4 style="margin-bottom: var(--space-2);">Sayt statistikasi</h4>
@@ -1190,7 +1224,9 @@ class Component extends DCLogic {
     authed: false, authChecked: false, authParent: null, authMarketing: false,
     authNonce: '', authLink: '', authStatus: '', authError: '',
     // Admin drop-off funnel (`funnel` alone is the existing weekly bar block).
-    dropoff: null, dropDays: 30, dropLoading: false
+    dropoff: null, dropDays: 30, dropLoading: false,
+    // Paid reports: the free part renders as usual, the rest is behind this.
+    repLocked: false, repLockedSections: [], repPrice: 0, payError: ''
   };
 
   brand() { return this.props.brandName ?? "Yosh Iste'dodlar Kompasi"; }
@@ -1608,7 +1644,16 @@ class Component extends DCLogic {
     try {
       const d = await this.api('/api/reports/' + encodeURIComponent(token));
       this._loadedReportToken = token;
-      this.setState({ report: { md: d.content_md, name: d.nickname, grade: d.grade, date: this.fmtDate(d.date), partial: !!d.partial }, reportLoading: false, reportNotFound: false });
+      this.setState({
+        report: { md: d.content_md, name: d.nickname, grade: d.grade, date: this.fmtDate(d.date), partial: !!d.partial },
+        reportLoading: false, reportNotFound: false,
+        // When locked the server sends only the free sections, so the rest of
+        // the screen renders empty on its own; this drives the paywall card.
+        repLocked: !!d.locked,
+        repLockedSections: d.locked_sections || [],
+        repPrice: d.price_uzs || 0,
+        payUrl: '', payError: '',
+      });
     } catch (e) {
       // Only a 404 is a genuine "not found"; a transient error stays retryable.
       const missing = !!(e && e.status === 404);
@@ -1616,6 +1661,24 @@ class Component extends DCLogic {
       this.setState({ report: null, reportLoading: false, reportNotFound: missing });
     }
     this._reportLoading = false;
+  }
+
+  // Ask the server where to pay, then hand the parent over to Payme. The URL
+  // is built server-side because it carries the merchant id and the amount,
+  // neither of which the browser should be trusted to state.
+  async beginCheckout() {
+    if (this._payBusy) return; this._payBusy = true;
+    this.setState({ payError: '' });
+    try {
+      const tok = (this.state.route.split('/')[2] || '');
+      const d = await this.api('/api/reports/' + encodeURIComponent(tok) + '/checkout', { method: 'POST' });
+      if (d.paid) { this._payBusy = false; return this.fetchReport(tok); } // already bought elsewhere
+      if (d.checkout_url) window.location.href = d.checkout_url;
+      else this.setState({ payError: 'To‘lov havolasini olishda xatolik. Birozdan so‘ng urinib ko‘ring.' });
+    } catch (e) {
+      this.setState({ payError: this._errMsg(e) });
+    }
+    this._payBusy = false;
   }
 
   // --- admin ------------------------------------------------------------
@@ -2000,6 +2063,12 @@ class Component extends DCLogic {
       sports: rep.sports, sportsHas: rep.sports.length > 0,
       letter: rep.letter, letterHas: rep.letter.length > 0,
       adults: rep.adults, adultsHas: rep.adults.length > 0,
+      // Paywall.
+      repLocked: !!S.repLocked,
+      repLockedList: (S.repLockedSections || []).map((t) => ({ t })),
+      repPriceLabel: S.repPrice ? Number(S.repPrice).toLocaleString('en-US').replace(/,/g, ' ') + ' so‘m' : 'To‘lov',
+      beginCheckout: () => this.beginCheckout(),
+      payError: S.payError,
       extra: rep.extra,
       printNow: () => window.print(),
       ctaClick: () => { location.hash = '#/'; },

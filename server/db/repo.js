@@ -540,6 +540,240 @@ async function funnelBySource(days) {
   return rows.map((r) => ({ source: r.source, visitors: Number(r.visitors), started: Number(r.started) }));
 }
 
+// ---- orders & payments --------------------------------------------------
+
+// Created alongside the report, before anyone tries to pay, so a provider
+// callback always has an order to attach to. Idempotent: regenerating or
+// re-requesting a report must not open a second order for it.
+async function createOrder({ reportId, parentId, amount, currency = 'UZS' }) {
+  const { rows } = await query(
+    `INSERT INTO orders (report_id, parent_id, amount, currency)
+     VALUES ($1,$2,$3,$4)
+     ON CONFLICT (report_id) DO NOTHING
+     RETURNING *`,
+    [reportId, parentId, amount, currency]
+  );
+  if (rows[0]) return rows[0];
+  return (await query('SELECT * FROM orders WHERE report_id = $1', [reportId])).rows[0] || null;
+}
+
+async function getOrder(id) {
+  const { rows } = await query('SELECT * FROM orders WHERE id = $1', [id]);
+  return rows[0] || null;
+}
+
+async function getOrderByReport(reportId) {
+  const { rows } = await query('SELECT * FROM orders WHERE report_id = $1', [reportId]);
+  return rows[0] || null;
+}
+
+// The paywall's only question, asked on every report read.
+async function isReportPaid(reportId) {
+  const { rows } = await query(
+    `SELECT 1 FROM orders WHERE report_id = $1 AND state = 'paid' LIMIT 1`,
+    [reportId]
+  );
+  return rows.length > 0;
+}
+
+async function markOrderPaid(orderId) {
+  const { rows } = await query(
+    `UPDATE orders SET state = 'paid', paid_at = now()
+      WHERE id = $1 AND state <> 'paid' RETURNING *`,
+    [orderId]
+  );
+  // Already paid: return the row rather than null, since a provider retrying
+  // PerformTransaction is a success, not a conflict.
+  if (rows[0]) return rows[0];
+  return getOrder(orderId);
+}
+
+async function markOrderCancelled(orderId) {
+  const { rows } = await query(
+    `UPDATE orders SET state = 'cancelled' WHERE id = $1 RETURNING *`,
+    [orderId]
+  );
+  return rows[0] || null;
+}
+
+// ---- provider transactions (Payme's shapes) -----------------------------
+
+async function getPaymentByTxn(provider, txnId) {
+  const { rows } = await query(
+    'SELECT * FROM payments WHERE provider = $1 AND provider_txn_id = $2',
+    [provider, txnId]
+  );
+  return rows[0] || null;
+}
+
+// Idempotent by (provider, provider_txn_id): Payme retries CreateTransaction
+// and must get the same transaction back, not a second one.
+async function createPayment({ orderId, provider = 'payme', txnId, providerTime, amount, createTime }) {
+  const { rows } = await query(
+    `INSERT INTO payments (order_id, provider, provider_txn_id, provider_time, amount, state, create_time)
+     VALUES ($1,$2,$3,$4,$5,1,$6)
+     ON CONFLICT (provider, provider_txn_id) DO NOTHING
+     RETURNING *`,
+    [orderId, provider, txnId, providerTime || null, amount, createTime]
+  );
+  if (rows[0]) return rows[0];
+  return getPaymentByTxn(provider, txnId);
+}
+
+async function performPayment(paymentId, performTime) {
+  const { rows } = await query(
+    `UPDATE payments SET state = 2, perform_time = $2 WHERE id = $1 RETURNING *`,
+    [paymentId, performTime]
+  );
+  return rows[0] || null;
+}
+
+async function cancelPayment(paymentId, { state, reason, cancelTime }) {
+  const { rows } = await query(
+    `UPDATE payments SET state = $2, reason = $3, cancel_time = $4 WHERE id = $1 RETURNING *`,
+    [paymentId, state, reason, cancelTime]
+  );
+  return rows[0] || null;
+}
+
+// An order may only ever hold one live (created or performed) transaction.
+// Without this a second provider transaction could be opened against an order
+// that is already being paid.
+async function activePaymentForOrder(orderId) {
+  const { rows } = await query(
+    'SELECT * FROM payments WHERE order_id = $1 AND state IN (1, 2) LIMIT 1',
+    [orderId]
+  );
+  return rows[0] || null;
+}
+
+// Payme's GetStatement: every transaction whose create_time falls in the range.
+async function paymentsBetween(fromMs, toMs) {
+  const { rows } = await query(
+    'SELECT * FROM payments WHERE create_time >= $1 AND create_time <= $2 ORDER BY create_time',
+    [fromMs, toMs]
+  );
+  return rows;
+}
+
+// ---- reminders -----------------------------------------------------------
+//
+// Three queries, one per situation, each returning only parents who can and
+// should be messaged. The shared conditions are deliberately repeated in every
+// query rather than layered on afterwards: this is a job that sends real
+// messages to real people, and "who is eligible" should be readable in one
+// place per case rather than assembled from three.
+//
+// Common to all of them:
+//   - the parent has a Telegram chat (nothing else can be messaged)
+//   - they have not opted out
+//   - the moment is recent enough to still be worth mentioning (giveUpDays)
+//   - we have not already sent this exact reminder
+//   - they are under the weekly cap
+
+const REMINDER_ELIGIBLE = `
+      p.telegram_chat_id IS NOT NULL
+  AND p.reminders_opted_out = FALSE
+  AND (SELECT count(*) FROM reminders_sent rs
+        WHERE rs.parent_id = p.id AND rs.sent_at >= now() - interval '7 days') < $3`;
+
+// Started an assessment and stopped partway: no report, quiet for a while.
+async function remindersAbandoned({ afterHours, giveUpDays, weeklyCap, limit }) {
+  const { rows } = await query(
+    `SELECT p.id AS parent_id, p.telegram_chat_id, p.name,
+            s.id AS session_id, s.session_token, c.nickname
+       FROM sessions s
+       JOIN children c ON c.id = s.child_id
+       JOIN parents  p ON p.id = c.parent_id
+      WHERE s.status <> 'finished'
+        AND NOT EXISTS (SELECT 1 FROM reports r WHERE r.session_id = s.id)
+        AND s.started_at <= now() - ($1 || ' hours')::interval
+        AND s.started_at >= now() - ($2 || ' days')::interval
+        AND NOT EXISTS (
+              SELECT 1 FROM reminders_sent rs
+               WHERE rs.parent_id = p.id AND rs.kind = 'abandoned' AND rs.session_id = s.id)
+        AND ${REMINDER_ELIGIBLE}
+      ORDER BY s.started_at
+      LIMIT $4`,
+    [afterHours, giveUpDays, weeklyCap, limit]
+  );
+  return rows;
+}
+
+// Finished the assessment, has a report, never paid for it.
+async function remindersUnpaid({ afterHours, giveUpDays, weeklyCap, limit }) {
+  const { rows } = await query(
+    `SELECT p.id AS parent_id, p.telegram_chat_id, p.name,
+            s.id AS session_id, c.nickname, r.share_token, o.amount
+       FROM orders o
+       JOIN reports  r ON r.id = o.report_id
+       JOIN sessions s ON s.id = r.session_id
+       JOIN children c ON c.id = r.child_id
+       JOIN parents  p ON p.id = c.parent_id
+      WHERE o.state = 'pending'
+        AND r.created_at <= now() - ($1 || ' hours')::interval
+        AND r.created_at >= now() - ($2 || ' days')::interval
+        AND NOT EXISTS (
+              SELECT 1 FROM reminders_sent rs
+               WHERE rs.parent_id = p.id AND rs.kind = 'unpaid' AND rs.session_id = s.id)
+        AND ${REMINDER_ELIGIBLE}
+      ORDER BY r.created_at
+      LIMIT $4`,
+    [afterHours, giveUpDays, weeklyCap, limit]
+  );
+  return rows;
+}
+
+// Logged in through the bot and then never ran an assessment at all.
+async function remindersNeverStarted({ afterHours, giveUpDays, weeklyCap, limit }) {
+  const { rows } = await query(
+    `SELECT p.id AS parent_id, p.telegram_chat_id, p.name
+       FROM parents p
+      WHERE p.telegram_linked_at <= now() - ($1 || ' hours')::interval
+        AND p.telegram_linked_at >= now() - ($2 || ' days')::interval
+        AND NOT EXISTS (
+              SELECT 1 FROM children ch
+               JOIN sessions s ON s.child_id = ch.id
+              WHERE ch.parent_id = p.id)
+        AND NOT EXISTS (
+              SELECT 1 FROM reminders_sent rs
+               WHERE rs.parent_id = p.id AND rs.kind = 'never_started')
+        AND ${REMINDER_ELIGIBLE}
+      ORDER BY p.telegram_linked_at
+      LIMIT $4`,
+    [afterHours, giveUpDays, weeklyCap, limit]
+  );
+  return rows;
+}
+
+// Claim a reminder BEFORE sending it. The unique index means a concurrent or
+// repeated run loses the race and gets null back, so the message is not sent
+// twice — a reminder that was recorded but failed to send is a far better
+// outcome than one delivered twice.
+async function claimReminder({ parentId, kind, sessionId = null }) {
+  const { rows } = await query(
+    `INSERT INTO reminders_sent (parent_id, kind, session_id)
+     VALUES ($1,$2,$3)
+     ON CONFLICT DO NOTHING
+     RETURNING *`,
+    [parentId, kind, sessionId]
+  );
+  return rows[0] || null;
+}
+
+// Undo a claim when the send itself failed, so the next run may try again.
+async function releaseReminder(id) {
+  await query('DELETE FROM reminders_sent WHERE id = $1', [id]);
+}
+
+async function optOutReminders(chatId) {
+  const { rows } = await query(
+    'UPDATE parents SET reminders_opted_out = TRUE WHERE telegram_chat_id = $1 RETURNING id',
+    [chatId]
+  );
+  return rows.length > 0;
+}
+
 module.exports = {
   createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
@@ -551,4 +785,8 @@ module.exports = {
   getParentByChatId, getPendingAuthRequestForParent,
   getParentByToken, revokeParentToken,
   recordEvent, funnelCounts, funnelBySource,
+  createOrder, getOrder, getOrderByReport, isReportPaid, markOrderPaid, markOrderCancelled,
+  getPaymentByTxn, createPayment, performPayment, cancelPayment, activePaymentForOrder, paymentsBetween,
+  remindersAbandoned, remindersUnpaid, remindersNeverStarted,
+  claimReminder, releaseReminder, optOutReminders,
 };

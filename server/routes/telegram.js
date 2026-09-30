@@ -80,6 +80,10 @@ router.post('/webhook', webhookLimiter, (req, res) => {
         const done = await repo.completeAuthRequest(pending.nonce, randomToken(32), config.auth.tokenTtlDays);
         return { ok: !!done };
       },
+
+      // /stop — silence everything automated for this chat. Reports they asked
+      // for still arrive; nothing the centre initiates does.
+      onStop: async ({ chatId }) => repo.optOutReminders(chatId),
     })
     .catch((e) => {
       // eslint-disable-next-line no-console

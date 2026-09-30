@@ -21,12 +21,15 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 |---|---|
 | `unit/openrouter-adapter.test.js` | Provider dispatch, request/response wire shapes, retryable-error classification, cross-provider `modelFor` resolution (self-contained — spins its own stub on `:5698`) |
 | `unit/funnel.test.js` | Drop-off arithmetic: loss per step, biggest leak vs steepest step, a later stage out-counting an earlier one, empty windows, tiny samples (no DB, no app) |
+| `unit/paywall.test.js` | What stays free (the portrait and the child's letter) vs what is sold, findings withheld from the JSON, and the reminder rules — quiet hours across midnight, message content |
 | `api/auth-test.js` | Telegram login gate: nonce → `/start` → Share-contact → parent token; unauthorized start refused, nonce single-use, returning adult skips the phone, logout revokes |
 | `api/e2e-driver.js` | Full product flow: session → messages → contact → report → public report → admin (leads, detail, patch, stats, CSV) → parent dedupe |
 | `api/e2e-extra.js` | Retry idempotency, concurrent double-report, contact idempotency, cross-device resume |
 | `api/delete-test.js` | Right-to-erasure: admin lead delete cascades to children/sessions/reports |
 | `api/gate-test.js` | Report engagement gate: zero-answer report refused (even with model-emitted completion markers), allowed after a real answer |
 | `api/stale-model-test.js` | Sessions stamped under one LLM provider keep working after switching providers |
+| `api/payments-test.js` | Paid reports end to end. Payme's integration is inbound, so the driver **plays Payme** — the same JSON-RPC calls in the same order — and checks both the protocol answers (auth, error codes, idempotent retries, one live transaction per order) and their effect: the report unlocks on `PerformTransaction` and re-locks on a refund |
+| `api/reminders-test.js` | Who gets chased and who does not: timing thresholds, the give-up window, paid reports excluded, opt-out and `/stop`, quiet hours, claim-once, and that a failed send releases the claim so it can be retried. Ages rows in the DB rather than waiting |
 | `api/funnel-test.js` | Funnel tracking end to end: the collector accepts only client-observable stages (a forged `finished` is dropped), server-recorded stages fire on the real requests, reloads do not inflate counts, and marking a lead enrolled closes the funnel. Runs **last** — it asserts absolute counts |
 
 The suites run with authorization ON, as production does. Those written before

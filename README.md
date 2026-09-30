@@ -33,13 +33,15 @@ Express (server/)
    ├─ routes/sessions  create · messages · resume · contact · report
    ├─ routes/reports   public report by share_token
    ├─ routes/track     anonymous funnel beacons (landing, setup, …)
+   ├─ routes/payme     Payme Merchant API (JSON-RPC; Payme calls US)
    ├─ routes/admin     login · leads · lead · stats · funnel · CSV
    ├─ routes/telegram  bot webhook: login deep-link · contact · delivery
    ├─ services/claude  → Anthropic OR OpenRouter (LLM_PROVIDER; key server-side,
    │                     system prompt sent as a cached breakpoint)
    ├─ services/prompt  system prompt = uploads/*.md + protocol + json rule
    └─ db (pg)          parents · children · sessions · messages · reports ·
-                       admins · auth_requests · parent_tokens · analytics_events
+                       admins · auth_requests · parent_tokens ·
+                       analytics_events · orders · payments · reminders_sent
    ▼
 PostgreSQL
 ```
@@ -207,6 +209,11 @@ runtime.
 | `AUTH_REQUIRED` | no | `true` (default) — an assessment cannot start until the adult logs in through the bot. `false` reverts to the old anonymous flow |
 | `AUTH_REQUIRE_PHONE` | no | `true` (default) — the bot asks for the phone with a Share-contact button; the number arrives Telegram-verified |
 | `AUTH_NONCE_TTL_MINUTES` / `AUTH_TOKEN_TTL_DAYS` | no | Login-link and browser-login lifetimes (15 / 90) |
+| `PAYMENTS_ENABLED` | no | `false` (default) gives every report away; `true` locks all but the free summary |
+| `REPORT_PRICE_UZS` | no | Price of one report (49000). Frozen onto each order at creation |
+| `PAYME_MERCHANT_ID` / `PAYME_MERCHANT_KEY` | if payments | Merchant-cabinet credentials; the app refuses to boot without them when payments are on |
+| `REMINDERS_ENABLED` | no | `true` lets the hourly cron chase abandoned, unpaid and never-started parents |
+| `REMIND_*` | no | Reminder timing, weekly cap, quiet hours and per-run ceiling (see `.env.example`) |
 | `CONSENT_TEXT_VERSION` | no | Stamped on each recorded consent |
 | `MAX_TURNS` / `MAX_MESSAGE_CHARS` | no | Abuse caps (60 / 2000) |
 | `MIN_ANSWERS_FOR_REPORT` | no | Real answers required before a report (default 1, floored at 1) |
@@ -244,7 +251,8 @@ from any device):
 | GET | `/api/sessions/:token` | Resume: full state |
 | POST | `/api/sessions/:token/contact` | Contact gate (parent name, optional phone + consents) |
 | POST | `/api/sessions/:token/report` | Generate, parse, store (refused with `insufficient_engagement` until the child has actually answered) |
-| GET | `/api/reports/:share_token` | Public report data (no login) |
+| GET | `/api/reports/:share_token` | Public report data (no login); locked to a free summary until paid |
+| POST | `/api/reports/:share_token/checkout` | Where to pay: order id, amount and a Payme checkout link |
 | POST | `/api/track` | Anonymous funnel beacon (`{visitor_id, stage}`); always 204, client-observable stages only |
 
 Admin (httpOnly JWT cookie):
@@ -310,6 +318,90 @@ flow.
 
 ---
 
+## Paid reports
+
+With `PAYMENTS_ENABLED=true` the assessment stays free to run and the report is
+generated in full, but only part of it is shown until it is paid for.
+
+**What stays free, and why.** The child does a twenty-minute assessment, so two
+sections are never withheld: `Surat` (the portrait — what this child is good at)
+and the letter written to be read aloud to them. The letter is addressed to the
+child; charging their parent to read it to them is not something this product
+should do. The free part is also what makes the rest worth buying: it is real,
+specific and obviously about *them*.
+
+**What is sold.** Everything a parent would act on — where the child stands, the
+talents map, the interests compass, emotional intelligence, learning style, the
+roadmap, clubs and sports, and the notes for adults. The structured findings
+(levels, recommended sports) are withheld from the JSON too, so the headline
+result cannot be read out of the network tab while the prose is hidden.
+
+**Payme integration.** Payme's Merchant API is inbound: Payme calls us. The
+endpoint at `POST /api/payments/payme` implements the JSON-RPC methods it drives
+a transaction through, authenticated with HTTP Basic `Paycom:<merchant key>`:
+
+```
+CheckPerformTransaction   may this order be paid?
+CreateTransaction         money reserved   -> state  1
+PerformTransaction        money taken      -> state  2  (report unlocks)
+CancelTransaction         reversed         -> state -1 or -2 (refund re-locks it)
+CheckTransaction · GetStatement            reconciliation
+```
+
+Every method is idempotent, because Payme retries on any timeout: a repeated
+`CreateTransaction` returns the transaction it already made rather than opening
+a second one, and an order may only ever hold one live transaction. Errors are
+JSON-RPC errors with Payme's codes inside an HTTP 200 — a 404 or 500 is not a
+protocol answer and gets read as a broken merchant.
+
+Setup: in the [merchant cabinet](https://business.payme.uz) register
+`$PUBLIC_BASE_URL/api/payments/payme` as the Merchant API endpoint and set the
+account field name to exactly `order_id`, then fill in `PAYME_MERCHANT_ID` and
+`PAYME_MERCHANT_KEY`. The app refuses to boot if payments are on and either is
+missing. Amounts are held in **tiyin** (1 UZS = 100 tiyin) as integers, which is
+both what Payme speaks and the only kind of money worth trusting in a database.
+
+> **Not yet verified against live Payme.** The test suite plays Payme's side of
+> the protocol faithfully, but it is not a substitute for Payme's own sandbox
+> checks against a registered merchant. Run those — and one real card payment —
+> before this takes money from anyone.
+
+---
+
+## Reminders
+
+With `REMINDERS_ENABLED=true` the bot chases people who stopped partway. Run
+hourly from the cron service (`deploy/cron/root`), so "24 hours later" lands at
+roughly the same time of day rather than whenever a nightly job fires.
+
+| Reminder | Sent when |
+|---|---|
+| `abandoned` | An assessment was started, never finished, and has been quiet for `REMIND_ABANDONED_HOURS` |
+| `unpaid` | A report exists, was never paid for, and is older than `REMIND_UNPAID_HOURS` |
+| `never_started` | The adult logged in through the bot and never ran an assessment |
+
+This bot is a channel each parent granted deliberately, by starting it, and it
+is the same channel their report arrives on. Burning it costs more than the sale
+a reminder might recover, so the limits are enforced in code rather than left to
+good intentions:
+
+- **Once per person per situation, ever** — a unique index, not a flag. The
+  reminder is *claimed before it is sent*; a claim that fails to send is
+  released, so a Telegram outage does not silently consume someone's one chance.
+- **At most `REMIND_MAX_PER_WEEK` messages** to any parent, across all kinds.
+- **Nothing during quiet hours** (21:00–09:00 local by default).
+- **Nothing about something older than `REMIND_GIVE_UP_DAYS`** — past that the
+  moment has gone and a message is just noise.
+- **A working opt-out**: `/stop` in the bot, first try, no follow-up question.
+  It silences everything automated. Reports a parent asked for still arrive —
+  that is not marketing.
+- **`REMIND_MAX_PER_RUN`** as a ceiling on any single run.
+
+`node scripts/send-reminders.js --dry-run` reports what would be sent without
+sending anything.
+
+---
+
 ## Funnel analytics
 
 Admin panel → **Statistika** → "Qayerda yo'qotyapmiz?" answers one question: of
@@ -365,7 +457,9 @@ privacy page (`/#/maxfiylik`) discloses this in Uzbek.
 
 **The primary delivery IS the app**: when the assessment finishes, the report
 opens on screen, is stored server-side, and the parent can save it as PDF or
-copy the share link.
+copy the share link. With `PAYMENTS_ENABLED=true` what opens is the free
+summary plus the paywall (see [Paid reports](#paid-reports)); the link is the
+same one before and after payment, so nothing has to be re-sent once they buy.
 
 With Telegram login on, delivery is also reliable: every parent reached the
 assessment through the bot, so `DELIVERY_PROVIDER=telegram` pushes the report
@@ -466,13 +560,14 @@ server/
   index.js              Express app, static serving, redirects
   config.js             env config (provider switch, budgets, prices, gates)
   db/                   pool, migrations, migrate + seed + purge, repo (all SQL)
-  routes/               auth, sessions, reports, track, admin, telegram
+  routes/               auth, sessions, reports, track, payme, admin, telegram
   services/             claude (Anthropic/OpenRouter dispatcher), prompt,
-                        reportParse, funnel, delivery/{telegram,console}
+                        reportParse, funnel, paywall, reminders,
+                        payments/payme, delivery/{telegram,console}
   middleware/           auth, rateLimit, security, errorHandler
   utils/                phone, tokens, validate, leadStatus, reportUrl, http,
                         visitor
-  scripts/              build-web, backup.sh, billing-check
+  scripts/              build-web, backup.sh, billing-check, send-reminders
   vendor/               React + ReactDOM UMD (pinned)
 deploy/
   nginx/                TLS reverse-proxy template (${DOMAIN}-parameterized)

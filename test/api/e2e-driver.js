@@ -69,11 +69,14 @@ const { installAuth } = require('./auth-helper');
   r = await j('/api/sessions/' + stok + '/report', { method: 'POST', headers: auth, body: JSON.stringify({}) });
   ok('POST /report again -> same share_token', r.status === 200 && r.data.share_token === share, r.data.share_token === share ? '' : 'GOT ' + r.data.share_token);
 
-  // 10. Public report (no auth)
+  // 10. Public report (no auth). With payments on it arrives locked: the free
+  // portrait is readable, the findings are not. What the parser actually
+  // extracted is asserted in payments-test.js, after the report is unlocked.
   r = await j('/api/reports/' + share);
   ok('GET /api/reports/:token -> 200 (public)', r.status === 200);
-  ok('  structured levels parsed', r.data.levels && r.data.levels.logic === 'kuchli' && r.data.levels.activity === 'shakllanmoqda', JSON.stringify(r.data.levels));
-  ok('  sports parsed', Array.isArray(r.data.sports) && r.data.sports.length === 2, JSON.stringify(r.data.sports));
+  ok('  locked until paid', r.data.locked === true, JSON.stringify({ locked: r.data.locked }));
+  ok('  free portrait still served', /##\s*Surat/.test(r.data.content_md || ''), (r.data.content_md || '').slice(0, 40));
+  ok('  findings withheld', r.data.levels && r.data.levels.logic === null && (r.data.sports || []).length === 0, JSON.stringify(r.data.levels));
   ok('  json block stripped from content_md', !/```json/.test(r.data.content_md || ''));
   ok('  markers stripped from content_md', !/YAKUN/.test(r.data.content_md || ''));
   ok('  nickname on report', r.data.nickname === 'Ali');

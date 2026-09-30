@@ -120,6 +120,21 @@ async function handleUpdate(update, deps) {
   }
 
   if (!msg.text) return;
+
+  // 2. /stop — the opt-out. It must work on the first try, with no argument
+  // and no follow-up question, because a person who types it has already
+  // decided. Report delivery is unaffected: that is something they asked for.
+  if (/^\/stop\b/i.test(msg.text.trim())) {
+    const ok = deps.onStop ? await deps.onStop({ chatId }) : false;
+    await sendMessage(
+      chatId,
+      ok
+        ? 'Eslatmalar to‘xtatildi. Hisobotlaringiz avvalgidek yetkaziladi.'
+        : 'Eslatmalar allaqachon o‘chirilgan.'
+    ).catch(() => {});
+    return;
+  }
+
   const m = /^\/start(?:\s+(\S+))?/.exec(msg.text.trim());
   const payload = m && m[1];
   if (!payload) {

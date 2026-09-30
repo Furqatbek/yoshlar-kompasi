@@ -38,6 +38,7 @@ app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/telegram', require('./routes/telegram'));
 app.use('/api/track', require('./routes/track'));
+app.use('/api/payments', require('./routes/payme'));
 app.use('/admin', require('./routes/admin'));
 
 // Clean shareable links -> the hash-routed SPA.

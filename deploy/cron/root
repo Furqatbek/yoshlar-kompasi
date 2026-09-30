@@ -14,3 +14,9 @@
 # Daily LLM credit check (08:00 UTC) — prints [billing] ALERT when the
 # remaining OpenRouter balance is below BILLING_ALERT_MIN_USD.
 0 8 * * * cd /app/server && node scripts/billing-check.js >> /proc/1/fd/1 2>&1
+
+# Telegram reminders (hourly at :20). Runs often so "24 hours after they
+# stopped" lands near the same time of day; the job itself enforces quiet
+# hours, the per-parent cap and one-reminder-ever, and does nothing at all
+# unless REMINDERS_ENABLED=true.
+20 * * * * cd /app/server && node scripts/send-reminders.js >> /proc/1/fd/1 2>&1

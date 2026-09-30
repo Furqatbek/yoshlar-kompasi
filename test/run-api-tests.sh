@@ -24,6 +24,13 @@ export DELIVERY_PROVIDER=console
 export TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-test-bot-token}"
 export TELEGRAM_BOT_USERNAME="${TELEGRAM_BOT_USERNAME:-kompas_test_bot}"
 export TELEGRAM_WEBHOOK_SECRET="${TELEGRAM_WEBHOOK_SECRET:-test-webhook-secret}"
+# Paid reports. The Payme integration is inbound (Payme calls us), so the
+# suite plays Payme itself and no sandbox credentials are needed — the key
+# below is simply the shared secret both sides check.
+export PAYMENTS_ENABLED=true
+export REPORT_PRICE_UZS="${REPORT_PRICE_UZS:-49000}"
+export PAYME_MERCHANT_ID="${PAYME_MERCHANT_ID:-test-merchant}"
+export PAYME_MERCHANT_KEY="${PAYME_MERCHANT_KEY:-test-payme-key}"
 export RL_SESSIONS_PER_DAY=1000 RL_ADMIN_LOGIN_PER_MIN=1000 RL_MESSAGES_PER_MIN=1000
 export BASE_URL="http://127.0.0.1:${PORT}"
 
@@ -32,6 +39,9 @@ node test/unit/openrouter-adapter.test.js
 
 echo "==== unit: funnel drop-off arithmetic ===="
 node test/unit/funnel.test.js
+
+echo "==== unit: paywall split + reminder rules ===="
+node test/unit/paywall.test.js
 
 echo "==== migrate + seed ===="
 (cd server && npm run migrate && npm run seed)
@@ -62,6 +72,12 @@ echo "==== api: report engagement gate ===="
 node test/api/gate-test.js
 echo "==== api: stale cross-provider model resolution ===="
 node test/api/stale-model-test.js
+echo "==== api: paid reports + Payme Merchant API ===="
+node test/api/payments-test.js
+# Ages rows to force reminder timings, so it runs after the suites whose data
+# it would otherwise disturb.
+echo "==== api: Telegram reminders ===="
+node test/api/reminders-test.js
 # Last: it asserts on absolute funnel counts, so it wants the other suites'
 # traffic already in the table rather than arriving underneath it.
 echo "==== api: funnel tracking + drop-off ===="

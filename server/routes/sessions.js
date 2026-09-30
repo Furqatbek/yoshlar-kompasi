@@ -322,6 +322,17 @@ router.post(
 
     await repo.setSessionStatus(session.id, 'finished', true);
 
+    // The report is the thing sold, so its order exists from the moment it
+    // does — before anyone has tried to pay. The price is frozen here: a later
+    // change to REPORT_PRICE_UZS must not alter what an existing order costs.
+    if (config.payments.enabled) {
+      await repo.createOrder({
+        reportId: created.id,
+        parentId: child.parent_id || null,
+        amount: config.payments.priceTiyin,
+      });
+    }
+
     // Funnel: the assessment produced a report. Only reached once per session,
     // since a second call returns the existing report above.
     await repo.recordEvent({

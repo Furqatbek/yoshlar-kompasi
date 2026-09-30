@@ -135,6 +135,48 @@ const config = {
     requirePhone: process.env.AUTH_REQUIRE_PHONE !== 'false',
   },
 
+  // Paid reports. The assessment is free to run; the detailed part of the
+  // report unlocks on payment. Amounts are held in tiyin (1 UZS = 100 tiyin)
+  // because that is what Payme speaks and because integer money is the only
+  // kind worth trusting.
+  payments: {
+    // PAYMENTS_ENABLED=false gives every report away, which is also the
+    // behaviour every report created before this feature keeps.
+    enabled: process.env.PAYMENTS_ENABLED === 'true',
+    priceUzs: Number(process.env.REPORT_PRICE_UZS || 49000),
+    get priceTiyin() { return Math.round(this.priceUzs * 100); },
+    payme: {
+      merchantId: process.env.PAYME_MERCHANT_ID || '',
+      // The Merchant API key. Payme authenticates to US with it (Basic
+      // "Paycom:<key>"), so it is a shared secret, not a client credential.
+      merchantKey: process.env.PAYME_MERCHANT_KEY || '',
+      checkoutUrl: process.env.PAYME_CHECKOUT_URL || 'https://checkout.paycom.uz',
+    },
+  },
+
+  // Telegram reminders for people who stopped partway. Bounded on purpose:
+  // this bot is a channel parents granted, and burning it costs more than the
+  // sale it might recover.
+  reminders: {
+    enabled: process.env.REMINDERS_ENABLED === 'true',
+    // Hours of silence before each nudge. One per person per situation, ever.
+    abandonedAfterHours: Number(process.env.REMIND_ABANDONED_HOURS || 24),
+    unpaidAfterHours: Number(process.env.REMIND_UNPAID_HOURS || 24),
+    neverStartedAfterHours: Number(process.env.REMIND_NEVER_STARTED_HOURS || 24),
+    // Stop chasing eventually: past this, the moment has passed.
+    giveUpAfterDays: Number(process.env.REMIND_GIVE_UP_DAYS || 14),
+    // Never more than this many messages to one parent in a rolling week.
+    maxPerParentPerWeek: Number(process.env.REMIND_MAX_PER_WEEK || 2),
+    // Local hours (see tzOffsetHours) outside which nothing is sent. Nobody
+    // wants a marketing message at 4am, and it is the fastest way to be blocked.
+    quietFromHour: Number(process.env.REMIND_QUIET_FROM || 21),
+    quietToHour: Number(process.env.REMIND_QUIET_TO || 9),
+    // Uzbekistan is UTC+5 and does not observe daylight saving.
+    tzOffsetHours: Number(process.env.REMIND_TZ_OFFSET || 5),
+    // Safety valve on a job that sends real messages.
+    maxPerRun: Number(process.env.REMIND_MAX_PER_RUN || 200),
+  },
+
   // Prompt version override; otherwise derived from the assembled prompt hash.
   promptVersionOverride: process.env.PROMPT_VERSION || '',
 
@@ -169,6 +211,21 @@ function assertProdConfig() {
     if (config.isProd && !process.env.TELEGRAM_WEBHOOK_SECRET) {
       missing.push('TELEGRAM_WEBHOOK_SECRET (required while AUTH_REQUIRED is on)');
     }
+  }
+
+  // Payments handle money, so a half-configured setup must not boot: the
+  // failure mode is a parent who pays and never gets their report, or a
+  // Merchant API endpoint that accepts unauthenticated calls.
+  if (config.payments.enabled) {
+    if (!config.payments.payme.merchantId) missing.push('PAYME_MERCHANT_ID (required while PAYMENTS_ENABLED=true)');
+    if (!config.payments.payme.merchantKey) missing.push('PAYME_MERCHANT_KEY (required while PAYMENTS_ENABLED=true)');
+    if (!(config.payments.priceUzs > 0)) missing.push('REPORT_PRICE_UZS must be a positive number');
+    if (config.isProd && !config.publicBaseUrl) missing.push('PUBLIC_BASE_URL (required while PAYMENTS_ENABLED=true)');
+  }
+  // Reminders send real messages to real people; without a bot they silently
+  // do nothing, which is the kind of failure nobody notices for a month.
+  if (config.reminders.enabled && !config.delivery.telegram.botToken) {
+    missing.push('TELEGRAM_BOT_TOKEN (required while REMINDERS_ENABLED=true)');
   }
 
   // Model-id shape check. The most common — and hardest to diagnose —
