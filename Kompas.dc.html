@@ -841,6 +841,10 @@ input, textarea, button, select { font-family: var(--font-body); }
       <p style="margin: 0; max-width: 60ch;">Raqamga faqat hisobot havolasi yuboriladi. Markaz dasturlari haqidagi xabarlar — faqat alohida, ixtiyoriy rozilik bergan bo'lsangiz; istalgan payt voz kechishingiz mumkin.</p>
     </div>
     <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
+      <h4 style="margin-bottom: var(--space-2);">Sayt statistikasi</h4>
+      <p style="margin: 0; max-width: 60ch;">Saytning qaysi bosqichida odamlar to'xtab qolayotganini bilish uchun anonim statistika yuritamiz: brauzeringizga tasodifiy raqam beriladi va shu raqam bilan «sahifa ochildi», «mashg'ulot boshlandi» kabi qadamlar belgilanadi. IP manzil, qurilma «barmoq izi» yoki bola haqidagi hech qanday ma'lumot bu yerda saqlanmaydi va uchinchi tomon kuzatuv xizmatlaridan foydalanmaymiz. Brauzeringizda «Do Not Track» yoqilgan bo'lsa, statistika butunlay o'chiriladi.</p>
+    </div>
+    <div style="border-top: 2px solid var(--color-text); padding: var(--space-4) 0;">
       <h4 style="margin-bottom: var(--space-2);">Hech qachon so'ralmaydi</h4>
       <div style="display: flex; flex-direction: column; gap: var(--space-2); max-width: 60ch;">
         <div style="display: flex; gap: 10px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span>Bolaning familiyasi, manzili yoki maktab raqami</span></div>
@@ -1026,7 +1030,77 @@ input, textarea, button, select { font-family: var(--font-body); }
   <main data-screen-label="Admin statistika" style="flex: 1;">
     <div style="max-width: 1140px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);">
       <h2 style="margin-bottom: 2px;">Statistika</h2>
-      <p class="text-muted" style="margin: 0 0 var(--space-4); font-size: 13px;">Haftalik voronka: boshlangan → yakunlangan → kontakt qoldirgan → hisobot yetkazilgan</p>
+      <p class="text-muted" style="margin: 0 0 var(--space-4); font-size: 13px;">Tashrifchilar qayerda to‘xtayapti va nechtasi kursga yozilyapti</p>
+
+      <!-- Drop-off funnel: the whole path, from opening the site to enrolling. -->
+      <div style="border: 2px solid var(--color-divider); padding: var(--space-4); margin-bottom: var(--space-6);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-3);">
+          <h6 style="margin: 0;">Qayerda yo‘qotyapmiz?</h6>
+          <div style="display: flex; gap: 6px;">
+            <sc-for list="{{ dropDayBtns }}" as="d" hint-placeholder-count="3">
+              <button type="button" class="{{ d.cls }}" onClick="{{ d.pick }}" style="font-size: 12px; padding: 5px 10px;">{{ d.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4);">
+          <sc-if value="{{ hasDropWorst }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 1 1 260px; border-left: 4px solid var(--color-accent); padding: var(--space-2) var(--space-3); background: var(--color-neutral-100);">
+              <div class="text-muted" style="font-size: 12px;">Eng ko‘p odam yo‘qolgan joy</div>
+              <div style="font-weight: 700; font-size: 15px;">{{ dropWorst }}</div>
+              <div class="text-muted" style="font-size: 13px;">{{ dropWorstN }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasDropSteep }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 1 1 260px; border-left: 4px solid var(--color-divider); padding: var(--space-2) var(--space-3); background: var(--color-neutral-100);">
+              <div class="text-muted" style="font-size: 12px;">Eng muammoli bosqich</div>
+              <div style="font-weight: 700; font-size: 15px;">{{ dropSteep }}</div>
+              <div class="text-muted" style="font-size: 13px;">{{ dropSteepN }}</div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-4);">
+          <div><div class="text-muted" style="font-size: 12px;">Tashrifchi</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropVisitors }}</div></div>
+          <div><div class="text-muted" style="font-size: 12px;">Kursga yozilgan</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropEnrolled }}</div></div>
+          <div><div class="text-muted" style="font-size: 12px;">Umumiy konversiya</div><div style="font-family: var(--font-heading); font-weight: 800;">{{ dropConv }}</div></div>
+        </div>
+
+        <sc-if value="{{ hasDrop }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+            <sc-for list="{{ dropRows }}" as="d" hint-placeholder-count="10">
+              <div>
+                <div style="display: flex; justify-content: space-between; gap: var(--space-2); font-size: 13px; margin-bottom: 4px; align-items: baseline;">
+                  <span style="font-weight: 600;">{{ d.label }}</span>
+                  <span style="display: flex; gap: var(--space-2); align-items: baseline;">
+                    <span class="text-muted" style="font-size: 12px;">{{ d.lost }}</span>
+                    <span style="font-family: var(--font-heading); font-weight: 800;">{{ d.n }}</span>
+                  </span>
+                </div>
+                <div style="height: 18px; background: var(--color-neutral-200); position: relative;">
+                  <div style="position: absolute; inset: 0 auto 0 0; width: {{ d.w }}; background: var(--color-accent);"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <p class="text-muted" style="font-size: 12px; margin: var(--space-3) 0 0;">Har bosqichda — shu yerga yetib kelgan tashrifchilar soni. Yonidagi raqam oldingi bosqichdan nechtasi yo‘qolganini bildiradi. Ma’lumot anonim: brauzerga berilgan tasodifiy raqam, IP yoki shaxsiy ma’lumot saqlanmaydi.</p>
+      </div>
+
+      <sc-if value="{{ hasSrc }}" hint-placeholder-val="{{ true }}">
+        <h6 style="margin-bottom: var(--space-2);">Qayerdan kelishgan</h6>
+        <div style="overflow-x: auto; margin-bottom: var(--space-6);">
+          <table class="table" style="width: 100%;">
+            <thead><tr><th>Manba</th><th>Tashrifchi</th><th>Mashg‘ulot boshlagan</th><th>Konversiya</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ srcRows }}" as="s" hint-placeholder-count="3">
+                <tr><td style="font-weight: 600;">{{ s.source }}</td><td>{{ s.visitors }}</td><td>{{ s.started }}</td><td>{{ s.conv }}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </sc-if>
+
       <div style="border: 2px solid var(--color-divider); padding: var(--space-4); margin-bottom: var(--space-6);">
         <h6 style="margin-bottom: var(--space-3);">Shu hafta</h6>
         <div style="display: flex; flex-direction: column; gap: var(--space-3);">
@@ -1114,7 +1188,9 @@ class Component extends DCLogic {
     leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null,
     // Telegram authorization (required before any assessment can start).
     authed: false, authChecked: false, authParent: null, authMarketing: false,
-    authNonce: '', authLink: '', authStatus: '', authError: ''
+    authNonce: '', authLink: '', authStatus: '', authError: '',
+    // Admin drop-off funnel (`funnel` alone is the existing weekly bar block).
+    dropoff: null, dropDays: 30, dropLoading: false
   };
 
   brand() { return this.props.brandName ?? "Yosh Iste'dodlar Kompasi"; }
@@ -1127,6 +1203,10 @@ class Component extends DCLogic {
     // The parent login travels as a header on every call; the server only
     // enforces it where it matters (starting a session, /api/auth/me).
     if (this._ptok) o.headers['x-parent-token'] = this._ptok;
+    // Anonymous funnel id, so the steps the server records itself (session
+    // started, report finished) join up with the ones only the page can see.
+    const vid = this.visitorId();
+    if (vid) o.headers['x-visitor-id'] = vid;
     o.credentials = 'same-origin';
     if (o.body != null && typeof o.body !== 'string') o.body = JSON.stringify(o.body);
     return fetch(path, o).then(async (res) => {
@@ -1146,6 +1226,76 @@ class Component extends DCLogic {
   // resume on the same device; the URL itself resumes on any device.
   saveHandle() { try { localStorage.setItem('yik_sess_v1', JSON.stringify({ tok: this._stok })); } catch (e) {} }
   clearHandle() { try { localStorage.removeItem('yik_sess_v1'); } catch (e) {} }
+
+  // --- Funnel analytics --------------------------------------------------
+  // Answers one question the server cannot answer on its own: of everyone who
+  // opened the site, where did they stop? Sessions only exist for people who
+  // got most of the way through, so the steps before that — reading the
+  // landing page, opening the form, starting the Telegram login — leave no
+  // trace unless the page reports them.
+  //
+  // Deliberately thin: a random id kept in this browser, a stage name, and
+  // where the visit came from. No IP, no fingerprint, nothing the adult or the
+  // child typed. `Do Not Track` switches the whole thing off, id included.
+  dnt() {
+    try {
+      return navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.msDoNotTrack === '1';
+    } catch (e) { return false; }
+  }
+
+  // The id is created on first need and reused forever, so a visitor who
+  // returns next week continues the same funnel row instead of looking new.
+  visitorId() {
+    if (this._vid !== undefined) return this._vid;
+    if (this.dnt()) { this._vid = null; return null; }
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('yik_visitor_v1') || 'null'); } catch (e) {}
+    if (saved && saved.id) { this._vid = saved.id; this._vsrc = saved.src || null; return this._vid; }
+    let id = null;
+    try { id = crypto.randomUUID(); } catch (e) {}
+    if (!id) { this._vid = null; return null; } // no uuid support: stay anonymous
+    // First-touch attribution: whatever brought them here the first time is
+    // what the centre paid for, so later direct visits must not overwrite it.
+    let src = null;
+    try {
+      src = new URLSearchParams(location.search).get('utm_source');
+      if (!src && document.referrer) {
+        const h = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (h && h !== location.hostname) src = h;
+      }
+    } catch (e) {}
+    src = (src || 'direct').toLowerCase().slice(0, 60);
+    if (!/^[a-z0-9][a-z0-9._-]*$/.test(src)) src = 'direct';
+    this._vid = id; this._vsrc = src;
+    try { localStorage.setItem('yik_visitor_v1', JSON.stringify({ id, src })); } catch (e) {}
+    return id;
+  }
+
+  track(stage) {
+    const id = this.visitorId();
+    if (!id) return;
+    // One report per stage per page load. This is only to save requests — the
+    // server counts distinct visitors, so a duplicate would not skew anything.
+    if (!this._tracked) this._tracked = {};
+    if (this._tracked[stage]) return;
+    this._tracked[stage] = true;
+    const body = JSON.stringify({ visitor_id: id, stage, source: this._vsrc || null });
+    try {
+      // sendBeacon survives the page being closed, which matters precisely for
+      // the visitors this is meant to count: the ones who leave.
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))) return;
+    } catch (e) {}
+    try { fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {}); } catch (e) {}
+  }
+
+  // Route-level stages. Called on every navigation; the per-stage latch keeps
+  // it to one beacon each.
+  trackRoute(route) {
+    const seg = (route || '').split('/').filter(Boolean);
+    if (!seg.length) return this.track('landing');
+    if (seg[0] === 'boshlash') return this.track('setup');
+    if (seg[0] === 'hisobot') return this.track('report_view');
+  }
 
   // --- Telegram authorization -------------------------------------------
   // The adult logs in through the bot before any assessment, which is what
@@ -1171,6 +1321,7 @@ class Component extends DCLogic {
 
   async beginAuth() {
     if (this._authBusy) return; this._authBusy = true;
+    this.track('login_start');
     this.setState({ authError: '' });
     try {
       const d = await this.api('/api/auth/telegram/start', {
@@ -1252,6 +1403,7 @@ class Component extends DCLogic {
       if (r === '/admin' && this.state.admAuthed) { location.hash = '#/admin/leads'; return; }
       if (r === '/mashgulot' && this._stok) { location.hash = '#/mashgulot/' + this._stok; return; }
       this.setState({ route: r, copied: false, lowEngage: false }, () => this.syncRoute());
+      this.trackRoute(r);
       if (!r.startsWith('/mashgulot')) window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', this._hash);
@@ -1272,6 +1424,7 @@ class Component extends DCLogic {
 
     document.title = this.brand();
     this.syncRoute();
+    this.trackRoute(this.state.route);
   }
   componentWillUnmount() {
     this.stopAuthPoll();
@@ -1312,6 +1465,7 @@ class Component extends DCLogic {
     if (!S.name.trim()) return this.setState({ formError: "Bolaning ismini yozing — faqat ism kifoya." });
     if (!S.grade) return this.setState({ formError: 'Sinfni tanlang.' });
     if (!S.consent) return this.setState({ formError: 'Davom etish uchun rozilik belgisini qo‘ying.' });
+    this.track('form_done');
     this.setState({ formError: '', prepared: true });
   }
 
@@ -1507,6 +1661,14 @@ class Component extends DCLogic {
   async fetchStats() {
     try { const d = await this.api('/admin/stats'); this.setState({ stats: d.buckets || null, statsCost: d.cost || null }); }
     catch (e) { this._adminUnauth(e); }
+    this.fetchDropoff(this.state.dropDays);
+  }
+
+  // The drop-off funnel: every step from "opened the site" to "enrolled".
+  async fetchDropoff(days) {
+    this.setState({ dropDays: days, dropLoading: true });
+    try { this.setState({ dropoff: await this.api('/admin/funnel?days=' + days), dropLoading: false }); }
+    catch (e) { this.setState({ dropLoading: false }); this._adminUnauth(e); }
   }
   _setLeadLocal(patch) {
     const lead = this.state.lead;
@@ -1712,6 +1874,46 @@ class Component extends DCLogic {
       conv: b.started ? Math.round(100 * b.contact / b.started) + '%' : '—'
     }));
 
+    // Drop-off funnel. The server does the arithmetic (services/funnel.js);
+    // this only formats it, so the panel and any future export agree.
+    const dp = S.dropoff;
+    const dropRows = (dp && dp.rows ? dp.rows : []).map((r, i) => ({
+      label: r.label,
+      n: String(r.n),
+      w: (r.width_pct || 0) + '%',
+      first: i === 0,
+      // Blank rather than "0" on the first row: there is no previous stage to
+      // have lost anyone from.
+      lost: i === 0 ? '' : '−' + r.lost + (r.lost_pct == null ? '' : ' (' + r.lost_pct + '%)'),
+      kept: i === 0 || r.kept_pct == null ? '' : r.kept_pct + '% qoldi',
+      // The single biggest leak is the one thing to act on, so it is marked.
+      worst: !!(dp.worst && dp.worst.to_key === r.key),
+      cls: (dp.worst && dp.worst.to_key === r.key) ? 'tag tag-accent' : 'tag tag-outline'
+    }));
+    const dropWorst = dp && dp.worst
+      ? dp.worst.from + ' → ' + dp.worst.to
+      : '';
+    const dropWorstN = dp && dp.worst
+      ? dp.worst.lost + ' kishi (' + dp.worst.lost_pct + '%) shu yerda to‘xtagan'
+      : '';
+    // The steepest step is usually the more fixable one: the top of the funnel
+    // loses the most people simply because that is where everyone starts.
+    const dropSteep = dp && dp.steepest ? dp.steepest.from + ' → ' + dp.steepest.to : '';
+    const dropSteepN = dp && dp.steepest
+      ? 'Bu bosqichga yetganlarning ' + dp.steepest.lost_pct + '% i (' + dp.steepest.lost + ' kishi) yo‘qolgan'
+      : '';
+    const dayBtn = (n) => ({
+      label: n + ' kun',
+      cls: S.dropDays === n ? 'btn btn-primary' : 'btn btn-secondary',
+      pick: () => this.fetchDropoff(n)
+    });
+    const srcRows = (dp && dp.sources ? dp.sources : []).map((s) => ({
+      source: s.source,
+      visitors: String(s.visitors),
+      started: String(s.started),
+      conv: s.visitors ? Math.round(100 * s.started / s.visitors) + '%' : '—'
+    }));
+
     return {
       brand: this.brand(), ctaPhone: this.props.ctaPhone ?? '+998 71 200-70-07',
       isLanding: route === '/' || route === '', isSetup: route === '/boshlash', isSession,
@@ -1832,7 +2034,16 @@ class Component extends DCLogic {
       onLdNotes: e => { const v = e.target.value; this._setLeadLocal({ admin_notes: v }); clearTimeout(this._noteTimer); this._noteTimer = setTimeout(() => this.patchLead({ admin_notes: v }), 600); },
       ldDelete: () => this.deleteLead(),
       ldChildren,
-      funnel, weekRows, costTokens, costTotal, costPer
+      funnel, weekRows, costTokens, costTotal, costPer,
+      dropRows, dropWorst, dropWorstN, dropSteep, dropSteepN,
+      hasDrop: !!(dp && dp.rows && dp.rows.length),
+      hasDropWorst: !!(dp && dp.worst),
+      hasDropSteep: !!(dp && dp.steepest),
+      dropVisitors: dp ? String(dp.visitors) : '—',
+      dropEnrolled: dp ? String(dp.enrolled) : '—',
+      dropConv: dp && dp.conversion_pct != null ? dp.conversion_pct + '%' : '—',
+      dropDayBtns: [dayBtn(7), dayBtn(30), dayBtn(90)],
+      srcRows, hasSrc: srcRows.length > 0
     };
   }
 }

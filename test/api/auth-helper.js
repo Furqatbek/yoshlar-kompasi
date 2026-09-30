@@ -21,10 +21,14 @@ async function jsonOf(res) {
 // Runs the full deep-link handshake, standing in for Telegram.
 // Each driver must pass its OWN chatId: one Telegram account is one parent
 // row, so sharing an id across suites would merge their leads.
-async function authorize(BASE, { chatId, firstName = 'Test', lastName = 'Ota', phone } = {}) {
+//
+// `headers` are added to the browser-side calls (start and the status polls),
+// which is how the funnel suite attaches an x-visitor-id so the login it
+// completes is attributed to the visitor that began it.
+async function authorize(BASE, { chatId, firstName = 'Test', lastName = 'Ota', phone, headers = {} } = {}) {
   const start = await fetch(BASE + '/api/auth/telegram/start', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify({ marketing_consent: true }),
   });
   const { nonce } = await jsonOf(start);
@@ -42,7 +46,8 @@ async function authorize(BASE, { chatId, firstName = 'Test', lastName = 'Ota', p
   await sleep(350); // the webhook acknowledges first and processes after
 
   // Share-contact step (skipped when the parent already has a verified phone).
-  let status = await jsonOf(await fetch(BASE + '/api/auth/telegram/status?nonce=' + nonce));
+  const poll = async () => jsonOf(await fetch(BASE + '/api/auth/telegram/status?nonce=' + nonce, { headers }));
+  let status = await poll();
   if (status.status === 'awaiting_phone') {
     await post({
       message_id: 2,
@@ -51,7 +56,7 @@ async function authorize(BASE, { chatId, firstName = 'Test', lastName = 'Ota', p
       contact: { phone_number: phone || '+99890' + String(chatId).slice(-7), first_name: firstName, user_id: chatId },
     });
     await sleep(350);
-    status = await jsonOf(await fetch(BASE + '/api/auth/telegram/status?nonce=' + nonce));
+    status = await poll();
   }
   if (status.status !== 'authorized' || !status.parent_token) {
     throw new Error('auth-helper: handshake did not authorize (status=' + status.status + ')');

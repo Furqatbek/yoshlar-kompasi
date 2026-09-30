@@ -32,13 +32,14 @@ Express (server/)
    ├─ routes/auth      Telegram login: nonce · poll · me · logout
    ├─ routes/sessions  create · messages · resume · contact · report
    ├─ routes/reports   public report by share_token
-   ├─ routes/admin     login · leads · lead · stats · CSV
+   ├─ routes/track     anonymous funnel beacons (landing, setup, …)
+   ├─ routes/admin     login · leads · lead · stats · funnel · CSV
    ├─ routes/telegram  bot webhook: login deep-link · contact · delivery
    ├─ services/claude  → Anthropic OR OpenRouter (LLM_PROVIDER; key server-side,
    │                     system prompt sent as a cached breakpoint)
    ├─ services/prompt  system prompt = uploads/*.md + protocol + json rule
    └─ db (pg)          parents · children · sessions · messages · reports ·
-                       admins · auth_requests · parent_tokens
+                       admins · auth_requests · parent_tokens · analytics_events
    ▼
 PostgreSQL
 ```
@@ -215,6 +216,7 @@ runtime.
 | `PRICE_INPUT_PER_MTOK` / `PRICE_OUTPUT_PER_MTOK` | no | $/1M tokens for the admin cost estimate (3 / 15) |
 | `BILLING_ALERT_MIN_USD` | no | Daily credit-check alert threshold (5) |
 | `RETENTION_MONTHS` | no | Data retention window for the monthly purge (24) |
+| `ANALYTICS_RETENTION_DAYS` | no | Funnel-event retention, pruned by the same purge job (180) |
 | `DOMAIN` / `LETSENCRYPT_DIR` | prod profile | nginx TLS domain + certificate dir (`./letsencrypt`) |
 | `BACKUP_KEEP_DAYS` | no | Local backup retention (14) |
 
@@ -243,13 +245,15 @@ from any device):
 | POST | `/api/sessions/:token/contact` | Contact gate (parent name, optional phone + consents) |
 | POST | `/api/sessions/:token/report` | Generate, parse, store (refused with `insufficient_engagement` until the child has actually answered) |
 | GET | `/api/reports/:share_token` | Public report data (no login) |
+| POST | `/api/track` | Anonymous funnel beacon (`{visitor_id, stage}`); always 204, client-observable stages only |
 
 Admin (httpOnly JWT cookie):
 
 `POST /admin/login` · `POST /admin/logout` · `GET /admin/me` ·
 `GET /admin/leads` · `GET /admin/leads/:id` · `PATCH /admin/leads/:id` ·
 `DELETE /admin/leads/:id` (right-to-erasure, cascades) ·
-`GET /admin/stats` · `GET /admin/export/leads.csv`
+`GET /admin/stats` · `GET /admin/funnel?days=7|30|90` ·
+`GET /admin/export/leads.csv`
 
 Health: `GET /healthz`, `GET /readyz` (checks the DB).
 
@@ -306,6 +310,57 @@ flow.
 
 ---
 
+## Funnel analytics
+
+Admin panel → **Statistika** → "Qayerda yo'qotyapmiz?" answers one question: of
+everyone who opened the site, where do they stop before enrolling?
+
+The other tables can only see people who got far enough to create a session, so
+the largest losses — someone reading the landing page and closing the tab, or
+starting the Telegram login and never finishing it — were invisible. These ten
+stages close that gap:
+
+| # | Stage | Recorded by |
+|---|---|---|
+| 1 | Opened the site | browser |
+| 2 | Opened the setup screen | browser |
+| 3 | Pressed the Telegram login button | browser |
+| 4 | Finished the Telegram login | server |
+| 5 | Filled in the child's details | browser |
+| 6 | Started the assessment | server |
+| 7 | Child gave a first answer | server |
+| 8 | Report produced | server |
+| 9 | Opened the report | browser |
+| 10 | Enrolled | `parents.lead_status` |
+
+**The split matters.** A browser can only POST the stages it alone can witness
+(`/api/track`, rate-limited, nothing else accepted). Every stage that proves
+real progress is written by the server from the request that did it, so the
+numbers the centre plans around cannot be inflated by a client claiming to have
+finished a report.
+
+**Counting.** The funnel counts *distinct visitors* per stage, not events, so
+reloads and double-fired beacons cannot skew it. Two figures are called out: the
+step that loses the **most people** (nearly always near the top, because that is
+where the people are) and the step that loses the **largest share** of those who
+reach it — the second is usually the one with something fixable in it. The sale
+itself is excluded from that second figure, since far fewer people enrol than
+read a report and it would otherwise win every time; it keeps its own row and
+the enrolment rate is a headline number.
+
+**Privacy.** A visitor id is a random UUID the browser generates for itself and
+keeps in `localStorage`. It is not derived from an IP, a fingerprint or anything
+anyone typed, it never leaves this origin, and no third-party analytics service
+is involved. No IP address, user agent or child data is stored. `Do Not Track`
+disables the whole thing, id included. Deleting a lead cascades to their events,
+and the retention job prunes the rest after `ANALYTICS_RETENTION_DAYS`. The
+privacy page (`/#/maxfiylik`) discloses this in Uzbek.
+
+`utm_source` (or the referring host) is kept as a first-touch label so the
+"Qayerdan kelishgan" table can show which channels convert.
+
+---
+
 ## Report delivery
 
 **The primary delivery IS the app**: when the assessment finishes, the report
@@ -346,12 +401,17 @@ interface.
 - **Uzbekistan data localization** — host Postgres with an in-country provider
   (Docker Compose makes this portable), and have a local specialist review the
   consent texts and the fact that AI processing runs on foreign servers.
+- **Analytics without tracking** — the funnel stores a random per-browser id,
+  a stage name and a first-touch source. No IP, no user agent, no fingerprint,
+  no third-party analytics service, and nothing a child or parent typed.
+  `Do Not Track` switches it off entirely.
 - Honor deletion requests now: `DELETE /admin/leads/:id` (a button on the lead
   detail page) removes the parent and cascades to their children, sessions,
-  messages and reports.
+  messages, reports and funnel events.
 - Retention runs automatically (in-stack cron, monthly): `RETENTION_MONTHS`
   (default 24) deletes children/sessions/reports whose last session activity is
-  older than the window, plus any orphaned parent. `make purge` runs it
+  older than the window, plus any orphaned parent; the same job prunes funnel
+  events past `ANALYTICS_RETENTION_DAYS` (default 180). `make purge` runs it
   manually.
 
 ---
@@ -406,11 +466,12 @@ server/
   index.js              Express app, static serving, redirects
   config.js             env config (provider switch, budgets, prices, gates)
   db/                   pool, migrations, migrate + seed + purge, repo (all SQL)
-  routes/               auth, sessions, reports, admin, telegram
+  routes/               auth, sessions, reports, track, admin, telegram
   services/             claude (Anthropic/OpenRouter dispatcher), prompt,
-                        reportParse, delivery/{telegram,console}
+                        reportParse, funnel, delivery/{telegram,console}
   middleware/           auth, rateLimit, security, errorHandler
-  utils/                phone, tokens, validate, leadStatus, reportUrl, http
+  utils/                phone, tokens, validate, leadStatus, reportUrl, http,
+                        visitor
   scripts/              build-web, backup.sh, billing-check
   vendor/               React + ReactDOM UMD (pinned)
 deploy/

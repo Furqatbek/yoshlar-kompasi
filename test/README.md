@@ -20,12 +20,14 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 | Suite | Covers |
 |---|---|
 | `unit/openrouter-adapter.test.js` | Provider dispatch, request/response wire shapes, retryable-error classification, cross-provider `modelFor` resolution (self-contained — spins its own stub on `:5698`) |
+| `unit/funnel.test.js` | Drop-off arithmetic: loss per step, biggest leak vs steepest step, a later stage out-counting an earlier one, empty windows, tiny samples (no DB, no app) |
 | `api/auth-test.js` | Telegram login gate: nonce → `/start` → Share-contact → parent token; unauthorized start refused, nonce single-use, returning adult skips the phone, logout revokes |
 | `api/e2e-driver.js` | Full product flow: session → messages → contact → report → public report → admin (leads, detail, patch, stats, CSV) → parent dedupe |
 | `api/e2e-extra.js` | Retry idempotency, concurrent double-report, contact idempotency, cross-device resume |
 | `api/delete-test.js` | Right-to-erasure: admin lead delete cascades to children/sessions/reports |
 | `api/gate-test.js` | Report engagement gate: zero-answer report refused (even with model-emitted completion markers), allowed after a real answer |
 | `api/stale-model-test.js` | Sessions stamped under one LLM provider keep working after switching providers |
+| `api/funnel-test.js` | Funnel tracking end to end: the collector accepts only client-observable stages (a forged `finished` is dropped), server-recorded stages fire on the real requests, reloads do not inflate counts, and marking a lead enrolled closes the funnel. Runs **last** — it asserts absolute counts |
 
 The suites run with authorization ON, as production does. Those written before
 it exists call `installAuth()` from `api/auth-helper.js`, which performs the

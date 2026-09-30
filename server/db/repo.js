@@ -462,6 +462,84 @@ async function revokeParentToken(token) {
   await query('DELETE FROM parent_tokens WHERE token = $1', [token]);
 }
 
+// ---- funnel analytics ---------------------------------------------------
+
+// Fire-and-forget by contract: analytics must never be the reason a parent
+// cannot start an assessment, so a failure here is logged and swallowed. The
+// caller may await it (cheap single INSERT) without having to guard it.
+async function recordEvent({ visitorId, stage, parentId = null, sessionId = null, source = null }) {
+  if (!visitorId || !stage) return false;
+  try {
+    await query(
+      `INSERT INTO analytics_events (visitor_id, stage, parent_id, session_id, source)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [visitorId, stage, parentId, sessionId, source ? String(source).slice(0, 120) : null]
+    );
+    return true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[analytics] dropped event', stage, err.message);
+    return false;
+  }
+}
+
+// Distinct visitors per stage over the window. Counting visitors rather than
+// events is what makes reloads and double-fired beacons harmless.
+async function funnelCounts(days) {
+  const { rows } = await query(
+    `SELECT stage, count(DISTINCT visitor_id)::int AS n
+       FROM analytics_events
+      WHERE created_at >= now() - ($1 || ' days')::interval
+      GROUP BY stage`,
+    [days]
+  );
+  const out = {};
+  for (const r of rows) out[r.stage] = Number(r.n);
+
+  // The last stage is not an event: a lead becomes "enrolled" when an admin
+  // says so in the panel, possibly weeks later. Count the visitors whose
+  // parent has that status, windowed on when they visited (not on when the
+  // admin got round to updating them) so the row lines up with the rest.
+  const { rows: conv } = await query(
+    `SELECT count(DISTINCT e.visitor_id)::int AS n
+       FROM analytics_events e
+       JOIN parents p ON p.id = e.parent_id
+      WHERE p.lead_status = 'enrolled'
+        AND e.created_at >= now() - ($1 || ' days')::interval`,
+    [days]
+  );
+  out.enrolled = Number((conv[0] || {}).n || 0);
+  return out;
+}
+
+// Where the traffic came from, for the visitors who arrived in the window.
+// One row per source with how many of those visitors ever reached a session.
+async function funnelBySource(days) {
+  const { rows } = await query(
+    `WITH first_touch AS (
+       SELECT DISTINCT ON (visitor_id) visitor_id, COALESCE(source, 'direct') AS source
+         FROM analytics_events
+        WHERE created_at >= now() - ($1 || ' days')::interval
+        ORDER BY visitor_id, created_at
+     ),
+     reached AS (
+       SELECT DISTINCT visitor_id FROM analytics_events
+        WHERE stage = 'session_start'
+          AND created_at >= now() - ($1 || ' days')::interval
+     )
+     SELECT f.source,
+            count(*)::int AS visitors,
+            count(r.visitor_id)::int AS started
+       FROM first_touch f
+       LEFT JOIN reached r ON r.visitor_id = f.visitor_id
+      GROUP BY f.source
+      ORDER BY visitors DESC
+      LIMIT 10`,
+    [days]
+  );
+  return rows.map((r) => ({ source: r.source, visitors: Number(r.visitors), started: Number(r.started) }));
+}
+
 module.exports = {
   createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
@@ -472,4 +550,5 @@ module.exports = {
   createAuthRequest, getAuthRequest, bindAuthRequest, completeAuthRequest, consumeAuthRequest,
   getParentByChatId, getPendingAuthRequestForParent,
   getParentByToken, revokeParentToken,
+  recordEvent, funnelCounts, funnelBySource,
 };

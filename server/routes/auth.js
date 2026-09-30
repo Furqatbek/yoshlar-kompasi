@@ -27,6 +27,7 @@ const { telegram } = require('../services/delivery');
 const { rateLimit, clientIp } = require('../middleware/rateLimit');
 const { asyncHandler, badRequest } = require('../utils/http');
 const { randomToken } = require('../utils/tokens');
+const { visitorIdOf } = require('../utils/visitor');
 
 const startLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
@@ -101,6 +102,13 @@ router.get(
       const claimed = await repo.consumeAuthRequest(nonce);
       if (!claimed) return res.json({ status: 'expired' });
       const parent = await repo.getParentByToken(reqRow.token);
+      // Funnel: the login completed. The nonce is burned above, so this runs
+      // exactly once per login and is the moment the anonymous visitor becomes
+      // a lead — the join that lets the funnel report who never enrolled.
+      await repo.recordEvent({
+        visitorId: visitorIdOf(req), stage: 'login_done',
+        parentId: parent ? parent.id : null,
+      });
       return res.json({
         status: 'authorized',
         parent_token: reqRow.token,

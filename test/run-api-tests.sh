@@ -30,6 +30,9 @@ export BASE_URL="http://127.0.0.1:${PORT}"
 echo "==== unit: OpenRouter adapter + modelFor ===="
 node test/unit/openrouter-adapter.test.js
 
+echo "==== unit: funnel drop-off arithmetic ===="
+node test/unit/funnel.test.js
+
 echo "==== migrate + seed ===="
 (cd server && npm run migrate && npm run seed)
 
@@ -59,6 +62,10 @@ echo "==== api: report engagement gate ===="
 node test/api/gate-test.js
 echo "==== api: stale cross-provider model resolution ===="
 node test/api/stale-model-test.js
+# Last: it asserts on absolute funnel counts, so it wants the other suites'
+# traffic already in the table rather than arriving underneath it.
+echo "==== api: funnel tracking + drop-off ===="
+node test/api/funnel-test.js
 
 echo ""
 echo "ALL API TESTS PASSED"

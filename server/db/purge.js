@@ -14,8 +14,17 @@ function months() {
   return Number.isFinite(n) && n > 0 ? n : 24;
 }
 
+// Funnel events are high-volume and lose their value quickly — nobody plans
+// against last year's drop-off — so they get a much shorter window than the
+// assessment data, and one that is measured in days.
+function analyticsDays() {
+  const n = parseInt(process.env.ANALYTICS_RETENTION_DAYS, 10);
+  return Number.isFinite(n) && n > 0 ? n : 180;
+}
+
 async function run() {
   const m = months();
+  const ad = analyticsDays();
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -34,9 +43,18 @@ async function run() {
     const { rowCount: parents } = await client.query(
       `DELETE FROM parents p WHERE NOT EXISTS (SELECT 1 FROM children c WHERE c.parent_id = p.id)`
     );
+    // Old funnel events. Deleting a parent above already cascaded theirs away;
+    // this is the much larger anonymous remainder.
+    const { rowCount: events } = await client.query(
+      `DELETE FROM analytics_events WHERE created_at < now() - ($1 || ' days')::interval`,
+      [ad]
+    );
     await client.query('COMMIT');
     // eslint-disable-next-line no-console
-    console.log(`[purge] retention ${m} months — removed ${kids} child record(s), ${parents} orphan parent(s).`);
+    console.log(
+      `[purge] retention ${m} months — removed ${kids} child record(s), ${parents} orphan parent(s); ` +
+      `analytics ${ad} days — removed ${events} event(s).`
+    );
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

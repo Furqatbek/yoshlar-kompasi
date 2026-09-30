@@ -16,6 +16,7 @@ const v = require('../utils/validate');
 const { sessionToken, shareToken } = require('../utils/tokens');
 const { normalizeUzPhone } = require('../utils/phone');
 const { reportUrl } = require('../utils/reportUrl');
+const { visitorIdOf } = require('../utils/visitor');
 
 const newSessionLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
@@ -83,6 +84,13 @@ router.post(
     const { child, session } = await repo.createChildAndSession({
       nickname, grade, age, goal, notes, model, promptVersion, sessionToken: token,
       parentId: parent ? parent.id : null,
+    });
+
+    // Funnel: the assessment actually began. Recorded here rather than trusted
+    // from the browser, and never allowed to fail the request.
+    await repo.recordEvent({
+      visitorId: visitorIdOf(req), stage: 'session_start',
+      parentId: parent ? parent.id : null, sessionId: session.id,
     });
 
     // Store the generated intro as an internal (meta) user turn, then greet.
@@ -167,6 +175,15 @@ router.post(
       }
       // Store first, call Claude second (spec §4) — a failed call keeps the turn.
       await repo.addMessage(session.id, 'user', content, false);
+
+      // Funnel: the child engaged, as opposed to the adult opening the
+      // assessment and closing it at the first question. turn_count is 1 after
+      // the greeting, or 0 if the greeting call failed — either way this fires
+      // on the first real answer. A rare double-record costs nothing: the
+      // funnel counts distinct visitors, not events.
+      if (session.turn_count <= 1) {
+        await repo.recordEvent({ visitorId: visitorIdOf(req), stage: 'first_answer', sessionId: session.id });
+      }
     }
 
     const history = await repo.getMessages(session.id);
@@ -304,6 +321,13 @@ router.post(
     }
 
     await repo.setSessionStatus(session.id, 'finished', true);
+
+    // Funnel: the assessment produced a report. Only reached once per session,
+    // since a second call returns the existing report above.
+    await repo.recordEvent({
+      visitorId: visitorIdOf(req), stage: 'finished',
+      parentId: child.parent_id || null, sessionId: session.id,
+    });
 
     // Deliver to whichever channel we hold: a Telegram chat (the normal case
     // now that authorization comes first) or, for legacy rows, a phone.

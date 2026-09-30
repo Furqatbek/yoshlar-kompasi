@@ -10,6 +10,7 @@ const { adminAuth, signAdmin, adminCookieOptions } = require('../middleware/auth
 const { rateLimit, clientIp } = require('../middleware/rateLimit');
 const { asyncHandler, badRequest, unauthorized, notFound } = require('../utils/http');
 const leadStatus = require('../utils/leadStatus');
+const funnel = require('../services/funnel');
 const { formatUzPhone } = require('../utils/phone');
 
 const loginLimiter = rateLimit({
@@ -167,6 +168,23 @@ router.get(
         per_finished_usd: t.finished ? Math.round((estUsd / t.finished) * 100) / 100 : null,
       },
     });
+  })
+);
+
+// GET /admin/funnel?days=30 — where visitors leave before enrolling.
+//
+// The weekly buckets above only see people who already created a session. This
+// starts one step earlier, at "opened the site", which is where the largest
+// losses live and where the centre can actually do something about them.
+router.get(
+  '/funnel',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const allowed = [7, 30, 90];
+    const days = allowed.includes(Number(req.query.days)) ? Number(req.query.days) : 30;
+    const counts = await repo.funnelCounts(days);
+    const built = funnel.build(counts);
+    res.json({ days, ...built, sources: await repo.funnelBySource(days) });
   })
 );
 
