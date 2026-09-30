@@ -205,11 +205,25 @@ function assertProdConfig() {
   // gracefully — it locks every user out of starting an assessment. The webhook
   // secret matters here too: without it routes/telegram.js answers 503 and no
   // login can ever complete.
+  //
+  // AUTH_REQUIRED defaults to ON, so an existing deployment that upgrades into
+  // this without a bot stops booting. That is the right failure — a login
+  // screen nobody can get past is worse — but only if the operator is told how
+  // to get out of it, which is what authHint below is for.
+  let authHint = '';
   if (config.auth.required) {
     if (!config.delivery.telegram.botToken) missing.push('TELEGRAM_BOT_TOKEN (required while AUTH_REQUIRED is on)');
     if (!config.delivery.telegram.botUsername) missing.push('TELEGRAM_BOT_USERNAME (required while AUTH_REQUIRED is on)');
     if (config.isProd && !process.env.TELEGRAM_WEBHOOK_SECRET) {
       missing.push('TELEGRAM_WEBHOOK_SECRET (required while AUTH_REQUIRED is on)');
+    }
+    if (missing.some((m) => m.startsWith('TELEGRAM_'))) {
+      authHint =
+        'Telegram login is ON (AUTH_REQUIRED defaults to true). Two ways forward:\n' +
+        '  1. Create a bot with @BotFather and set TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME\n' +
+        '     and TELEGRAM_WEBHOOK_SECRET in .env — parents then log in through the bot.\n' +
+        '  2. Set AUTH_REQUIRED=false in .env to run without the login gate (no bot needed;\n' +
+        '     report delivery and reminders are unavailable).';
     }
   }
 
@@ -242,14 +256,21 @@ function assertProdConfig() {
     missing.push('ANTHROPIC_MODEL="' + config.anthropic.model + '" contains a "/" — that is an OpenRouter-style slug; the Anthropic API uses ids like claude-sonnet-4-6 (set LLM_PROVIDER=openrouter to use vendor/model slugs)');
   }
 
+  // The hint goes out with both, because under Docker NODE_ENV is production
+  // even on a laptop — which is exactly when someone is most likely to hit
+  // this and have no idea it is opt-out-able.
   if (config.isProd && missing.length) {
     // eslint-disable-next-line no-console
     console.error('[config] Invalid or missing required environment: ' + missing.join(', '));
+    // eslint-disable-next-line no-console
+    if (authHint) console.error('[config] ' + authHint);
     process.exit(1);
   }
   if (!config.isProd && missing.length) {
     // eslint-disable-next-line no-console
     console.warn('[config] (dev) missing/weak/invalid: ' + missing.join(', ') + ' — some features will error until set.');
+    // eslint-disable-next-line no-console
+    if (authHint) console.warn('[config] ' + authHint);
   }
 }
 

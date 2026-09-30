@@ -271,6 +271,21 @@ Clean links `/(hisobot|mashgulot)/:token` 302-redirect into the hash-routed SPA.
 
 ## Parent authorization
 
+> **Upgrading an existing deployment?** `AUTH_REQUIRED` defaults to **on**, so
+> an install without a Telegram bot will stop booting:
+>
+> ```
+> [config] Invalid or missing required environment: TELEGRAM_BOT_TOKEN …
+> ```
+>
+> That is deliberate — a login screen nobody can get past is worse than a loud
+> failure — but it needs one of two things in `.env` before it will start:
+> either the three `TELEGRAM_*` values (a bot from @BotFather), or
+> `AUTH_REQUIRED=false` to run without the login gate. Under Docker,
+> `NODE_ENV` is `production` even locally, so this bites on a laptop too. Run
+> `docker compose down` before fixing, or the container keeps restarting into
+> the same error.
+
 With `AUTH_REQUIRED=true` (the default) an assessment cannot begin until the
 adult has logged in through the Telegram bot. This is deliberate: a phone number
 typed into a form is a number you may call, but a **started bot chat is standing
