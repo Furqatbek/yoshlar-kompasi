@@ -54,6 +54,16 @@ router.post(
   newSessionLimiter,
   asyncHandler(async (req, res) => {
     const b = req.body || {};
+    // Telegram authorization gate. Enforced HERE, not only in the UI: the whole
+    // point is that every assessment belongs to a reachable adult, so a client
+    // that skips the login must not be able to start one.
+    let parent = null;
+    if (config.auth.required) {
+      parent = await repo.getParentByToken(String(req.get('x-parent-token') || b.parent_token || ''));
+      if (!parent) {
+        throw forbidden('Mashg‘ulotni boshlash uchun Telegram orqali tizimga kiring.', 'auth_required');
+      }
+    }
     // The adult assertion (parent/teacher, 18+, privacy accepted) is enforced
     // HERE, not only in the UI — client-side checks can be stale or bypassed.
     if (b.consent !== true) {
@@ -68,8 +78,11 @@ router.post(
     const model = claude.activeModel();
     const promptVersion = prompt.promptVersion();
     const token = sessionToken();
+    // The child belongs to the authorized adult from the start — no orphan row
+    // waiting for a contact gate to claim it later.
     const { child, session } = await repo.createChildAndSession({
       nickname, grade, age, goal, notes, model, promptVersion, sessionToken: token,
+      parentId: parent ? parent.id : null,
     });
 
     // Store the generated intro as an internal (meta) user turn, then greet.
@@ -292,12 +305,15 @@ router.post(
 
     await repo.setSessionStatus(session.id, 'finished', true);
 
-    // Deliver only when a phone was left (delivery consent is enforced at the gate).
+    // Deliver to whichever channel we hold: a Telegram chat (the normal case
+    // now that authorization comes first) or, for legacy rows, a phone.
     let deliveryInfo = null;
-    const parent = child.parent_id ? await repo.getParent(child.parent_id) : null;
-    if (parent && parent.phone) {
+    const reportParent = child.parent_id ? await repo.getParent(child.parent_id) : null;
+    if (reportParent && (reportParent.telegram_chat_id || reportParent.phone)) {
       deliveryInfo = await delivery.deliver({
-        reportUrl: reportUrl(req, shareTok), shareToken: shareTok, parentPhone: parent.phone, childNickname: child.nickname,
+        reportUrl: reportUrl(req, shareTok), shareToken: shareTok,
+        chatId: reportParent.telegram_chat_id || null,
+        parentPhone: reportParent.phone, childNickname: child.nickname,
       });
       if (deliveryInfo.status === 'sent') {
         await repo.markReportDelivered(shareTok);

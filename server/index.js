@@ -33,6 +33,7 @@ app.get('/readyz', async (req, res) => {
 });
 
 // API.
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/telegram', require('./routes/telegram'));

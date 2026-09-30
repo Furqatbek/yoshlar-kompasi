@@ -7,13 +7,16 @@ const { query, withTransaction } = require('./pool');
 
 // ---- sessions / children / messages ------------------------------------
 
-async function createChildAndSession({ nickname, grade, age, goal, notes, model, promptVersion, sessionToken }) {
+// parentId is required under the Telegram-first flow (the adult logs in before
+// the assessment). It stays a parameter rather than a hard NOT NULL so rows
+// created by the older contact-gate flow remain readable.
+async function createChildAndSession({ nickname, grade, age, goal, notes, model, promptVersion, sessionToken, parentId = null }) {
   return withTransaction(async (client) => {
     const child = (
       await client.query(
-        `INSERT INTO children (nickname, grade, age, goal, notes)
-         VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-        [nickname, grade, age, goal, notes]
+        `INSERT INTO children (nickname, grade, age, goal, notes, parent_id)
+         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+        [nickname, grade, age, goal, notes, parentId]
       )
     ).rows[0];
     const session = (
@@ -303,10 +306,170 @@ async function weeklyBuckets() {
   return buckets;
 }
 
+// ---- Telegram authorization --------------------------------------------
+// The adult logs in before the assessment, so every lead has a push channel.
+
+// One parent row per Telegram account. Called from the bot webhook, so it must
+// be idempotent: pressing /start twice must not create a second parent.
+async function upsertParentByTelegram({ chatId, username, firstName, lastName }) {
+  const name = [firstName, lastName].filter(Boolean).join(' ').trim() || 'Telegram foydalanuvchisi';
+  const existing = (await query('SELECT * FROM parents WHERE telegram_chat_id = $1', [chatId])).rows[0];
+  if (existing) {
+    const { rows } = await query(
+      `UPDATE parents
+          SET telegram_username = $2,
+              telegram_first_name = $3,
+              name = CASE WHEN parents.name = '' THEN $4 ELSE parents.name END
+        WHERE id = $1 RETURNING *`,
+      [existing.id, username, firstName, name]
+    );
+    return rows[0];
+  }
+  const { rows } = await query(
+    `INSERT INTO parents (name, telegram_chat_id, telegram_username, telegram_first_name, telegram_linked_at)
+     VALUES ($1,$2,$3,$4, now()) RETURNING *`,
+    [name, chatId, username, firstName]
+  );
+  return rows[0];
+}
+
+// Telegram-verified phone from a shared contact. The phone column is UNIQUE and
+// a legacy row (created by the old phone gate) may already hold this number —
+// in that case we keep the Telegram identity and leave the phone unset rather
+// than failing the login. Returns null when the number was already taken.
+async function setParentPhone(parentId, phone) {
+  const { rows } = await query(
+    `UPDATE parents SET phone = $2, phone_verified = TRUE
+      WHERE id = $1
+        AND NOT EXISTS (SELECT 1 FROM parents WHERE phone = $2 AND id <> $1)
+      RETURNING *`,
+    [parentId, phone]
+  );
+  return rows[0] || null;
+}
+
+// Consent recorded in the browser before the deep link was opened. Never
+// downgrades an existing marketing consent.
+async function applyAuthConsent(parentId, marketing, consentVersion) {
+  const { rows } = await query(
+    `UPDATE parents
+        SET marketing_consent = marketing_consent OR $2,
+            consent_text_version = COALESCE($3, consent_text_version),
+            consented_at = now()
+      WHERE id = $1 RETURNING *`,
+    [parentId, !!marketing, consentVersion]
+  );
+  return rows[0];
+}
+
+async function createAuthRequest({ nonce, marketing, consentVersion, ttlMinutes }) {
+  const { rows } = await query(
+    `INSERT INTO auth_requests (nonce, marketing_consent, consent_text_version, expires_at)
+     VALUES ($1,$2,$3, now() + ($4 || ' minutes')::interval) RETURNING *`,
+    [nonce, !!marketing, consentVersion, String(ttlMinutes)]
+  );
+  return rows[0];
+}
+
+async function getParentByChatId(chatId) {
+  const { rows } = await query('SELECT * FROM parents WHERE telegram_chat_id = $1', [chatId]);
+  return rows[0] || null;
+}
+
+// The login this parent is part-way through, so the contact message can finish
+// a handshake it does not carry the nonce for. Newest first: a second /start
+// supersedes an abandoned one.
+async function getPendingAuthRequestForParent(parentId) {
+  const { rows } = await query(
+    `SELECT * FROM auth_requests
+      WHERE parent_id = $1 AND status IN ('pending', 'awaiting_phone') AND expires_at > now()
+      ORDER BY created_at DESC LIMIT 1`,
+    [parentId]
+  );
+  return rows[0] || null;
+}
+
+async function getAuthRequest(nonce) {
+  const { rows } = await query(
+    'SELECT * FROM auth_requests WHERE nonce = $1 AND expires_at > now()',
+    [nonce]
+  );
+  return rows[0] || null;
+}
+
+// Bind a Telegram chat to a pending nonce. `status` is 'awaiting_phone' while
+// the bot waits for the contact, or 'linked' when no phone is required.
+async function bindAuthRequest(nonce, parentId, status) {
+  const { rows } = await query(
+    `UPDATE auth_requests
+        SET parent_id = $2, status = $3, linked_at = now()
+      WHERE nonce = $1 AND expires_at > now() AND status IN ('pending', 'awaiting_phone')
+      RETURNING *`,
+    [nonce, parentId, status]
+  );
+  return rows[0] || null;
+}
+
+// Issue the long-lived browser token and mark the handshake complete.
+async function completeAuthRequest(nonce, token, ttlDays) {
+  return withTransaction(async (client) => {
+    const req = (
+      await client.query(
+        `UPDATE auth_requests SET status = 'linked', token = $2
+          WHERE nonce = $1 AND expires_at > now() AND status IN ('pending', 'awaiting_phone')
+          RETURNING *`,
+        [nonce, token]
+      )
+    ).rows[0];
+    if (!req || !req.parent_id) return null;
+    await client.query(
+      `INSERT INTO parent_tokens (token, parent_id, expires_at)
+       VALUES ($1,$2, now() + ($3 || ' days')::interval)
+       ON CONFLICT (token) DO NOTHING`,
+      [token, req.parent_id, String(ttlDays)]
+    );
+    return req;
+  });
+}
+
+// Hand the token to the browser exactly once, then burn the nonce.
+async function consumeAuthRequest(nonce) {
+  const { rows } = await query(
+    `UPDATE auth_requests SET status = 'consumed'
+      WHERE nonce = $1 AND status = 'linked' AND expires_at > now()
+      RETURNING *`,
+    [nonce]
+  );
+  return rows[0] || null;
+}
+
+// Validate a browser login token. Touches last_used_at so idle logins are
+// visible, and refuses expired rows without needing a sweeper to have run.
+async function getParentByToken(token) {
+  if (!token) return null;
+  const { rows } = await query(
+    `UPDATE parent_tokens SET last_used_at = now()
+      WHERE token = $1 AND expires_at > now()
+      RETURNING parent_id`,
+    [token]
+  );
+  if (!rows[0]) return null;
+  const p = await query('SELECT * FROM parents WHERE id = $1', [rows[0].parent_id]);
+  return p.rows[0] || null;
+}
+
+async function revokeParentToken(token) {
+  await query('DELETE FROM parent_tokens WHERE token = $1', [token]);
+}
+
 module.exports = {
   createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,
   getReportBySession, createReport, getReportByShareToken, markReportDelivered,
   getAdminByEmail, listLeads, getParent, getLeadChildren, updateLead, deleteParent, weeklyBuckets, tokenTotals,
+  upsertParentByTelegram, setParentPhone, applyAuthConsent,
+  createAuthRequest, getAuthRequest, bindAuthRequest, completeAuthRequest, consumeAuthRequest,
+  getParentByChatId, getPendingAuthRequestForParent,
+  getParentByToken, revokeParentToken,
 };

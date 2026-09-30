@@ -119,6 +119,22 @@ const config = {
     },
   },
 
+  // Telegram authorization, required before an assessment can start. Logging in
+  // through the bot is what gives the centre a push channel for the report,
+  // reminders and (with consent) promotions.
+  auth: {
+    // AUTH_REQUIRED=false reverts to the old flow (session first, contact gate
+    // later). Kept as an escape hatch for local development without a bot.
+    required: process.env.AUTH_REQUIRED !== 'false',
+    // How long a deep-link nonce stays valid while the adult opens Telegram.
+    nonceTtlMinutes: Number(process.env.AUTH_NONCE_TTL_MINUTES || 15),
+    // How long the browser stays logged in before the bot dance repeats.
+    tokenTtlDays: Number(process.env.AUTH_TOKEN_TTL_DAYS || 90),
+    // When true the bot asks for the phone with a Share-contact button and the
+    // login only completes once it is shared. Set false to make it optional.
+    requirePhone: process.env.AUTH_REQUIRE_PHONE !== 'false',
+  },
+
   // Prompt version override; otherwise derived from the assembled prompt hash.
   promptVersionOverride: process.env.PROMPT_VERSION || '',
 
@@ -142,6 +158,17 @@ function assertProdConfig() {
   // A Telegram webhook with no shared secret is unauthenticated (see routes/telegram.js).
   if (config.isProd && config.delivery.provider === 'telegram' && !process.env.TELEGRAM_WEBHOOK_SECRET) {
     missing.push('TELEGRAM_WEBHOOK_SECRET (required when DELIVERY_PROVIDER=telegram)');
+  }
+  // Authorization runs through the bot, so an unconfigured bot does not degrade
+  // gracefully — it locks every user out of starting an assessment. The webhook
+  // secret matters here too: without it routes/telegram.js answers 503 and no
+  // login can ever complete.
+  if (config.auth.required) {
+    if (!config.delivery.telegram.botToken) missing.push('TELEGRAM_BOT_TOKEN (required while AUTH_REQUIRED is on)');
+    if (!config.delivery.telegram.botUsername) missing.push('TELEGRAM_BOT_USERNAME (required while AUTH_REQUIRED is on)');
+    if (config.isProd && !process.env.TELEGRAM_WEBHOOK_SECRET) {
+      missing.push('TELEGRAM_WEBHOOK_SECRET (required while AUTH_REQUIRED is on)');
+    }
   }
 
   // Model-id shape check. The most common — and hardest to diagnose —
