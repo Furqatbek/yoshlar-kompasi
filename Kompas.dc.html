@@ -71,13 +71,21 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: clamp(36px, 5vw, 80px); align-items: start;">
       <div style="max-width: 640px;">
         <h1 style="font-size: clamp(36px, 5vw, 62px); line-height: 1.07; letter-spacing: -0.02em; margin: 0 0 var(--space-4); text-wrap: pretty;"><span style="display: block;">Farzandingizning kuchli</span><span style="display: block;">tomonlari — va unga mos yo'l.</span><span style="display: block; color: var(--color-accent);">30 daqiqada.</span></h1>
-        <p style="font-size: 17px; line-height: 1.65; max-width: 54ch; margin: 0 0 var(--space-6);">Savollarni bolangizga ovoz chiqarib o'qib berasiz, javoblarini yozasiz — sun'iy intellekt aynan uning javoblaridan shaxsiy hisobot tuzadi: yo'l xaritasi, o'qish tavsiyalari va mos sport turlari.</p>
+        <p style="font-size: 17px; line-height: 1.65; max-width: 54ch; margin: 0 0 var(--space-6);">Savollarni bolangizga ovoz chiqarib o'qib berasiz, javoblarini yozasiz — sun'iy intellekt aynan uning javoblaridan shaxsiy hisobot tuzadi: kuchli tomonlari, iqtidorlar xaritasi, qiziqishlari, o'rganish usuli va 3–6 oylik yo'l xaritasi.</p>
         <div style="display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start;">
           <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none; font-size: 17px; padding: 14px 22px; min-width: 240px;">Boshlash</a>
           <div style="display: flex; gap: var(--space-2) var(--space-4); flex-wrap: wrap; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;">
-            <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px;"></span>Bepul</span>
+            <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+              <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px;"></span>Bepul</span>
+            </sc-if>
+            <sc-if value="{{ isPaid }}" hint-placeholder-val="{{ true }}">
+              <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px;"></span>Mashg'ulot bepul</span>
+            </sc-if>
             <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px;"></span>~30 daqiqa</span>
-            <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px;"></span>Faqat ism so'raladi</span>
+            <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px;"></span>Bola haqida faqat ism</span>
+            <sc-if value="{{ needsLogin }}" hint-placeholder-val="{{ true }}">
+              <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px;"></span>Telegram orqali kirish</span>
+            </sc-if>
           </div>
         </div>
       </div>
@@ -138,7 +146,7 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-6);">
       <div>
         <h6 style="margin-bottom: var(--space-2);">Nima bu?</h6>
-        <p style="margin: 0; font-size: 16px;">1–4-sinf bolasi bilan birga o'tkaziladigan bepul yo'naltiruvchi mashg'ulot — o'zbek tilida, uyda, oddiy telefonda.</p>
+        <p style="margin: 0; font-size: 16px;">1–4-sinf bolasi bilan birga o'tkaziladigan yo'naltiruvchi mashg'ulot — o'zbek tilida, uyda, oddiy telefonda. Mashg'ulotning o'zi bepul.</p>
       </div>
       <div>
         <h6 style="margin-bottom: var(--space-2);">Qanday o'tadi?</h6>
@@ -158,7 +166,9 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div style="display: flex; flex-direction: column;">
       <div style="display: flex; gap: var(--space-3); align-items: flex-start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;"><span style="width: 10px; height: 10px; background: var(--color-accent); flex: 0 0 10px; margin-top: 10px;"></span><span style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.3vw, 26px); line-height: 1.3; letter-spacing: -0.01em; max-width: 32ch; text-wrap: pretty;">Farzandingiz nimada kuchli ekanini aniq ko'rasiz.</span></div>
       <div style="display: flex; gap: var(--space-3); align-items: flex-start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;"><span style="width: 10px; height: 10px; background: var(--color-accent); flex: 0 0 10px; margin-top: 10px;"></span><span style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.3vw, 26px); line-height: 1.3; letter-spacing: -0.01em; max-width: 32ch; text-wrap: pretty;">3–6 oylik aniq reja bo'ladi — nimadan boshlash, qachon qayta baholash.</span></div>
-      <div style="display: flex; gap: var(--space-3); align-items: flex-start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;"><span style="width: 10px; height: 10px; background: var(--color-accent); flex: 0 0 10px; margin-top: 10px;"></span><span style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.3vw, 26px); line-height: 1.3; letter-spacing: -0.01em; max-width: 32ch; text-wrap: pretty;">Qaysi sport aynan sizning bolangizga mosligini bilasiz.</span></div>
+      <div style="display: flex; gap: var(--space-3); align-items: flex-start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;"><span style="width: 10px; height: 10px; background: var(--color-accent); flex: 0 0 10px; margin-top: 10px;"></span><span style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.3vw, 26px); line-height: 1.3; letter-spacing: -0.01em; max-width: 32ch; text-wrap: pretty;">Bolangiz qaysi yo'l bilan tezroq o'rganishini bilasiz — eshitib, ko'rib yoki qo'li bilan qilib.</span></div>
+      <div style="display: flex; gap: var(--space-3); align-items: flex-start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;"><span style="width: 10px; height: 10px; background: var(--color-accent); flex: 0 0 10px; margin-top: 10px;"></span><span style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.3vw, 26px); line-height: 1.3; letter-spacing: -0.01em; max-width: 32ch; text-wrap: pretty;">His-tuyg'ularini qanday boshqarayotgani haqida kuzatuv va amaliy maslahat olasiz.</span></div>
+      <div style="display: flex; gap: var(--space-3); align-items: flex-start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;"><span style="width: 10px; height: 10px; background: var(--color-accent); flex: 0 0 10px; margin-top: 10px;"></span><span style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.3vw, 26px); line-height: 1.3; letter-spacing: -0.01em; max-width: 32ch; text-wrap: pretty;">Qaysi sport va to'garak aynan sizning bolangizga mosligini bilasiz.</span></div>
       <div style="display: flex; gap: var(--space-3); align-items: flex-start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;"><span style="width: 10px; height: 10px; background: var(--color-accent); flex: 0 0 10px; margin-top: 10px;"></span><span style="font-family: var(--font-heading); font-weight: 800; font-size: clamp(19px, 2.3vw, 26px); line-height: 1.3; letter-spacing: -0.01em; max-width: 32ch; text-wrap: pretty;">Bolaga o'qib beriladigan ruhlantiruvchi xat olasiz.</span></div>
     </div>
     <div style="height: 2px; background: var(--color-divider); margin-top: clamp(44px, 7vw, 80px);"></div>
@@ -166,22 +176,29 @@ input, textarea, button, select { font-family: var(--font-body); }
 
   <section style="max-width: 1140px; margin: 0 auto; padding: clamp(44px, 7vw, 80px) clamp(20px, 5vw, 64px) 0;">
     <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">04 · Jarayon</h6>
-    <h2 style="font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.015em; margin: 0 0 var(--space-6); max-width: 24ch; text-wrap: pretty;">Uch qadam — hammasi shu</h2>
+    <h2 style="font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.015em; margin: 0 0 var(--space-6); max-width: 24ch; text-wrap: pretty;">{{ stepsTitle }}</h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6);">
+      <sc-if value="{{ needsLogin }}" hint-placeholder-val="{{ true }}">
       <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);"><h6 style="margin: 0;">01</h6><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><path d="M16 9a5 5 0 0 1 0 6"></path><path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path></svg></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);"><h6 style="margin: 0;">01</h6><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg></div>
+        <h4 style="margin-bottom: var(--space-2);">Telegram orqali kirasiz</h4>
+        <p class="text-muted" style="margin: 0;">Bir marta bosasiz, botda «Start» tugmasini bosasiz — tayyor. Hisobot o'sha yerga yuboriladi, shuning uchun havolani yo'qotmaysiz.</p>
+      </div>
+      </sc-if>
+      <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);"><h6 style="margin: 0;">{{ stepA }}</h6><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><path d="M16 9a5 5 0 0 1 0 6"></path><path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path></svg></div>
         <h4 style="margin-bottom: var(--space-2);">Savolni o'qib berasiz</h4>
         <p class="text-muted" style="margin: 0;">Savollar katta kartochkalarda, o'yin ohangida. Siz ularni bolaga ovoz chiqarib o'qib berasiz.</p>
       </div>
       <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);"><h6 style="margin: 0;">02</h6><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);"><h6 style="margin: 0;">{{ stepB }}</h6><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg></div>
         <h4 style="margin-bottom: var(--space-2);">Javobini yozasiz</h4>
         <p class="text-muted" style="margin: 0;">Bolaning javobini o'z so'zlari bilan yozasiz. «O'tkazib yuborish» va «Soddaroq savol» tugmalari bor.</p>
       </div>
       <div style="border-top: 2px solid var(--color-text); padding-top: var(--space-3);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);"><h6 style="margin: 0;">03</h6><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);"><h6 style="margin: 0;">{{ stepC }}</h6><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></div>
         <h4 style="margin-bottom: var(--space-2);">Tayyor hisobotni olasiz</h4>
-        <p class="text-muted" style="margin: 0;">Uch yo'nalish bo'yicha surat, yo'l xaritasi va sport tavsiyalari — havola telefoningizga yuboriladi.</p>
+        <p class="text-muted" style="margin: 0;">Kuchli tomonlari, iqtidorlar xaritasi, o'rganish usuli, yo'l xaritasi va tavsiyalar. {{ deliveryNote }}</p>
       </div>
     </div>
     <div style="height: 2px; background: var(--color-divider); margin-top: clamp(44px, 7vw, 80px);"></div>
@@ -189,7 +206,18 @@ input, textarea, button, select { font-family: var(--font-body); }
 
   <section style="max-width: 1140px; margin: 0 auto; padding: clamp(44px, 7vw, 80px) clamp(20px, 5vw, 64px) 0;">
     <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">05 · Namuna hisobot</h6>
-    <h2 style="font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.015em; margin: 0 0 var(--space-3); max-width: 24ch; text-wrap: pretty;">Mana shunday hisobot olasiz <span style="color: var(--color-accent);">— bepul.</span></h2>
+    <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+      <h2 style="font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.015em; margin: 0 0 var(--space-3); max-width: 24ch; text-wrap: pretty;">Mana shunday hisobot olasiz <span style="color: var(--color-accent);">— bepul.</span></h2>
+    </sc-if>
+    <sc-if value="{{ isPaid }}" hint-placeholder-val="{{ true }}">
+      <h2 style="font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.015em; margin: 0 0 var(--space-3); max-width: 24ch; text-wrap: pretty;">Mana shunday hisobot olasiz.</h2>
+      <!-- What is free and what is paid, stated before the sample rather than
+           sprung at the end. A parent who finds out at the paywall was misled. -->
+      <div style="border-left: 4px solid var(--color-accent); padding: var(--space-2) var(--space-3); background: var(--color-neutral-200); max-width: 62ch; margin: 0 0 var(--space-4);">
+        <p style="margin: 0 0 6px; font-weight: 700;">Mashg'ulot va hisobotning birinchi qismi — bepul.</p>
+        <p class="text-muted" style="margin: 0; font-size: 14px;">Bolangizning kuchli tomonlari va unga atalgan xatni to'lovsiz o'qiysiz. Qolgan qismi — hozirgi o'rni, iqtidorlar xaritasi, qiziqishlar, o'rganish usuli, yo'l xaritasi va tavsiyalar — {{ priceLabel }} evaziga ochiladi. Havola doimiy: keyin ham ochasiz, PDF qilib saqlaysiz.</p>
+      </div>
+    </sc-if>
     <p class="text-muted" style="max-width: 58ch; margin: 0 0 var(--space-6);">Namuna — tuzilmani ko'rsatish uchun. Sizning hisobotingiz aynan bolangizning javoblaridan tuziladi.</p>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: var(--space-4);">
       <div style="border: 2px solid var(--color-divider); background: var(--color-neutral-100); display: flex; flex-direction: column;">
@@ -228,7 +256,39 @@ input, textarea, button, select { font-family: var(--font-body); }
       </div>
       <div style="border: 2px solid var(--color-divider); background: var(--color-neutral-100); display: flex; flex-direction: column;">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid var(--color-divider); padding: 8px 14px;">
-          <h6 style="margin: 0; font-size: 11px;">Tavsiya etilgan sport</h6>
+          <h6 style="margin: 0; font-size: 11px;">Iqtidorlar xaritasi</h6>
+          <span class="text-muted" style="font-size: 11px;">Ali · 2-sinf</span>
+        </div>
+        <div style="padding: var(--space-4);">
+          <div style="margin-bottom: 14px;"><div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px;">Mantiqiy-matematik</div><div class="text-muted" style="font-size: 13px;">Yaqqol namoyon bo'ldi — qonuniyatni o'zi davom ettirdi</div></div>
+          <div style="margin-bottom: 14px;"><div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px;">Fazoviy-vizual</div><div class="text-muted" style="font-size: 13px;">Belgilari bor — shaklni boshqa tomondan tasavvur qildi</div></div>
+          <div><div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px;">Shaxslararo</div><div class="text-muted" style="font-size: 13px;">Belgilari bor — javoblarini do'stlari orqali tushuntirdi</div></div>
+        </div>
+      </div>
+      <div style="border: 2px solid var(--color-divider); background: var(--color-neutral-100); display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid var(--color-divider); padding: 8px 14px;">
+          <h6 style="margin: 0; font-size: 11px;">O'rganish usuli</h6>
+          <span class="text-muted" style="font-size: 11px;">Ali · 2-sinf</span>
+        </div>
+        <div style="padding: var(--space-4);">
+          <p class="text-muted" style="font-size: 13px; margin: 0;">Ali topshiriqni qo'li bilan qilib ko'rganda tezroq tushundi — sanoq tayoqchalari bilan ishlagan savolga eng aniq javob berdi.</p>
+          <div style="height: 1px; background: var(--color-divider); margin: 12px 0;"></div>
+          <p class="text-muted" style="font-size: 13px; margin: 0;">Uyda: yangi mavzuni avval predmet bilan ko'rsating, keyin daftarga yozdiring. Bu afzallik, yorliq emas — usullarni aralashtirib turing.</p>
+        </div>
+      </div>
+      <div style="border: 2px solid var(--color-divider); background: var(--color-neutral-100); display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid var(--color-divider); padding: 8px 14px;">
+          <h6 style="margin: 0; font-size: 11px;">Emotsional intellekt</h6>
+          <span class="text-muted" style="font-size: 11px;">Ali · 2-sinf</span>
+        </div>
+        <div style="padding: var(--space-4);">
+          <div style="margin-bottom: 14px;"><div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px;">His-tuyg'usini nomlaydi</div><div class="text-muted" style="font-size: 13px;">«Biroz asabiylashdim» dedi — o'zini kuzata olyapti</div></div>
+          <div><div style="font-family: var(--font-heading); font-weight: 800; font-size: 15px;">O'sish nuqtasi</div><div class="text-muted" style="font-size: 13px;">Xato javobdan keyin tez o'tib ketdi; to'xtab «nega shunday bo'ldi» deb o'ylashni mashq qilish foydali</div></div>
+        </div>
+      </div>
+      <div style="border: 2px solid var(--color-divider); background: var(--color-neutral-100); display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 2px solid var(--color-divider); padding: 8px 14px;">
+          <h6 style="margin: 0; font-size: 11px;">Sport va to'garaklar</h6>
           <span class="text-muted" style="font-size: 11px;">Ali · 2-sinf</span>
         </div>
         <div style="padding: var(--space-4);">
@@ -243,7 +303,7 @@ input, textarea, button, select { font-family: var(--font-body); }
     </div>
     <div style="display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-top: var(--space-6);">
       <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none; font-size: 16px; padding: 12px 20px; min-width: 220px;">Boshlash</a>
-      <span class="text-muted" style="font-size: 14px;">O'z hisobotingiz ~30 daqiqada tayyor bo'ladi — bepul.</span>
+      <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}"><span class="text-muted" style="font-size: 14px;">O'z hisobotingiz ~30 daqiqada tayyor bo'ladi — bepul.</span></sc-if><sc-if value="{{ isPaid }}" hint-placeholder-val="{{ true }}"><span class="text-muted" style="font-size: 14px;">O'z hisobotingiz ~30 daqiqada tayyor bo'ladi. Birinchi qismi bepul.</span></sc-if>
     </div>
     <div style="height: 2px; background: var(--color-divider); margin-top: clamp(44px, 7vw, 80px);"></div>
   </section>
@@ -279,8 +339,14 @@ input, textarea, button, select { font-family: var(--font-body); }
         <p class="text-muted" style="margin: 0; max-width: 62ch;">Savollar o'yin ohangida va ularni bola emas, siz o'qib berasiz. Istalgan payt tanaffus qilasiz — holat saqlanadi, keyin davom ettirasiz.</p>
       </div>
       <div style="border-top: 1px solid var(--color-divider); padding: var(--space-4) 0;">
+        <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
         <h4 style="margin: 0 0 var(--space-2); font-size: 17px;">«Bu chindan bepulmi?»</h4>
         <p class="text-muted" style="margin: 0; max-width: 62ch;">Ha — hisobot to'liq va bepul. Vositani o'quv markazi yaratgan: xohlasangiz, hisobotga mos dasturlarimizni taklif qilamiz. Bu ixtiyoriy — hisobot baribir sizniki.</p>
+        </sc-if>
+        <sc-if value="{{ isPaid }}" hint-placeholder-val="{{ true }}">
+        <h4 style="margin: 0 0 var(--space-2); font-size: 17px;">«Qancha turadi?»</h4>
+        <p class="text-muted" style="margin: 0; max-width: 62ch;">Mashg'ulot bepul, hisobotning birinchi qismi ham — bolaning kuchli tomonlari va unga atalgan xat. To'liq tahlil {{ priceLabel }}: bir marta to'laysiz, havola doimiy ishlaydi. To'lov Payme orqali, karta ma'lumotlari bizning serverimizga tushmaydi.</p>
+        </sc-if>
       </div>
     </div>
     <div style="height: 2px; background: var(--color-divider); margin-top: clamp(36px, 5vw, 56px);"></div>
@@ -290,17 +356,19 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div style="border: 2px solid var(--color-text); background: var(--color-neutral-100); padding: clamp(24px, 5vw, 48px); display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); align-items: center;">
       <div>
         <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-2);">Taklif</h6>
-        <h3 style="font-size: clamp(24px, 3vw, 34px); letter-spacing: -0.015em; margin: 0 0 var(--space-4); max-width: 20ch; text-wrap: pretty;">Bugun bepul olasiz:</h3>
+        <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}"><h3 style="font-size: clamp(24px, 3vw, 34px); letter-spacing: -0.015em; margin: 0 0 var(--space-4); max-width: 20ch; text-wrap: pretty;">Bugun bepul olasiz:</h3></sc-if>
+        <sc-if value="{{ isPaid }}" hint-placeholder-val="{{ true }}"><h3 style="font-size: clamp(24px, 3vw, 34px); letter-spacing: -0.015em; margin: 0 0 var(--space-4); max-width: 20ch; text-wrap: pretty;">Bugun qo'lingizda bo'ladi:</h3></sc-if>
         <div style="display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4);">
-          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-weight: 600;">To'liq hisobot — uch yo'nalish bo'yicha surat</span></div>
+          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-weight: 600;">Kuchli tomonlari va iqtidorlar xaritasi</span></div>
           <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-weight: 600;">3–6 oylik yo'l xaritasi va o'qish tavsiyalari</span></div>
-          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-weight: 600;">Bolangizga mos sport tavsiyalari</span></div>
+          <div style="display: flex; gap: var(--space-3); align-items: flex-start;"><span style="width: 22px; height: 22px; flex: 0 0 22px; background: var(--color-text); color: var(--color-neutral-100); display: inline-flex; align-items: center; justify-content: center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-weight: 600;">O'rganish usuli, sport va to'garak tavsiyalari</span></div>
         </div>
-        <p class="text-muted" style="font-size: 14px; margin: 0; max-width: 50ch;">Ro'yxatdan o'tish yo'q — bolaning ismi va sinfi kifoya. Hoziroq boshlanadi.</p>
+        <sc-if value="{{ needsLogin }}" hint-placeholder-val="{{ true }}"><p class="text-muted" style="font-size: 14px; margin: 0; max-width: 50ch;">Telegram orqali bir marta kirasiz — keyin bolaning ismi va sinfi kifoya. Hoziroq boshlanadi.</p></sc-if>
+        <sc-if value="{{ noLogin }}" hint-placeholder-val="{{ false }}"><p class="text-muted" style="font-size: 14px; margin: 0; max-width: 50ch;">Ro'yxatdan o'tish yo'q — bolaning ismi va sinfi kifoya. Hoziroq boshlanadi.</p></sc-if>
       </div>
       <div style="display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start;">
         <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none; font-size: 17px; padding: 14px 22px; min-width: 240px;">Boshlash</a>
-        <span class="text-muted" style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;">Bepul · ~30 daqiqa</span>
+        <span class="text-muted" style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;">{{ freeLabel }} · ~30 daqiqa</span>
       </div>
     </div>
     <div style="height: 2px; background: var(--color-divider); margin-top: clamp(44px, 7vw, 80px);"></div>
@@ -341,7 +409,12 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div style="max-width: 1140px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 64px);">
       <h2 style="color: var(--color-bg); font-size: clamp(32px, 4.5vw, 56px); line-height: 1.07; letter-spacing: -0.015em; max-width: 20ch; margin: 0 0 var(--space-6); text-wrap: pretty;">Farzandingizning kuchli tomonlarini bugun bilib oling.</h2>
       <a class="btn" href="#/boshlash" style="text-decoration: none; background: var(--color-bg); color: var(--color-accent-700); font-size: 17px; padding: 14px 22px; min-width: 240px;">Boshlash</a>
-      <p style="color: var(--color-accent-100); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin: var(--space-3) 0 0;">Bepul · ~30 daqiqa · Faqat ism so'raladi</p>
+      <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+        <p style="color: var(--color-accent-100); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin: var(--space-3) 0 0;">Bepul · ~30 daqiqa · Bola haqida faqat ism</p>
+      </sc-if>
+      <sc-if value="{{ isPaid }}" hint-placeholder-val="{{ true }}">
+        <p style="color: var(--color-accent-100); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin: var(--space-3) 0 0;">Mashg'ulot bepul · ~30 daqiqa · To'liq hisobot {{ priceLabel }}</p>
+      </sc-if>
     </div>
   </section>
 </main>
@@ -1200,7 +1273,7 @@ input, textarea, button, select { font-family: var(--font-body); }
 
 <sc-if value="{{ stickyCta }}" hint-placeholder-val="{{ false }}">
 <div class="no-print" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--color-bg); border-top: 2px solid var(--color-text); padding: 10px 16px; display: flex; align-items: center; gap: 14px;">
-  <div style="font-size: 11px; line-height: 1.35; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; flex: 0 0 auto;">Bepul<br><span class="text-muted">~30 daqiqa</span></div>
+  <div style="font-size: 11px; line-height: 1.35; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; flex: 0 0 auto;">{{ freeLabel }}<br><span class="text-muted">~30 daqiqa</span></div>
   <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none; flex: 1; font-size: 16px; padding: 13px 18px;">Boshlash</a>
 </div>
 <div style="height: 72px;"></div>
@@ -1228,7 +1301,10 @@ class Component extends DCLogic {
     // Admin drop-off funnel (`funnel` alone is the existing weekly bar block).
     dropoff: null, dropDays: 30, dropLoading: false,
     // Paid reports: the free part renders as usual, the rest is behind this.
-    repLocked: false, repLockedSections: [], repPrice: 0, payError: ''
+    repLocked: false, repLockedSections: [], repPrice: 0, payError: '',
+    // Server config (GET /api/config). Until it arrives the page must not
+    // claim a price or demand a login, so both default to the quieter side.
+    cfgLoaded: false, cfgAuthRequired: false, cfgPaid: false, cfgPrice: 0
   };
 
   brand() { return this.props.brandName ?? "Yosh Iste'dodlar Kompasi"; }
@@ -1343,6 +1419,25 @@ class Component extends DCLogic {
   saveParentTok(t) { this._ptok = t; try { localStorage.setItem('yik_parent_v1', JSON.stringify({ tok: t })); } catch (e) {} }
   clearParentTok() { this._ptok = null; try { localStorage.removeItem('yik_parent_v1'); } catch (e) {} }
 
+  // What the server is actually configured for. The page used to assume, and
+  // assumed wrong: with the login gate off it still blocked the form behind a
+  // Telegram login the server was not asking for.
+  async loadConfig() {
+    try {
+      const d = await this.api('/api/config');
+      this.setState({
+        cfgLoaded: true,
+        cfgAuthRequired: !!(d.auth && d.auth.required && d.auth.configured),
+        cfgPaid: !!(d.payments && d.payments.enabled),
+        cfgPrice: (d.payments && d.payments.price_uzs) || 0,
+      });
+    } catch (e) {
+      // Unreachable config is not worth blocking on: leave the defaults, which
+      // promise nothing and gate nothing. The server enforces both regardless.
+      this.setState({ cfgLoaded: true });
+    }
+  }
+
   async loadParent() {
     let saved = null; try { saved = JSON.parse(localStorage.getItem('yik_parent_v1') || 'null'); } catch (e) {}
     this._ptok = (saved && saved.tok) || null;
@@ -1453,8 +1548,9 @@ class Component extends DCLogic {
     let handle = null; try { handle = JSON.parse(localStorage.getItem('yik_sess_v1') || 'null'); } catch (e) {}
     if (handle && handle.tok) { this._stok = handle.tok; this.loadSession(handle.tok); }
 
-    // Restore (and validate) the Telegram login before the setup screen decides
-    // whether to show the form or the login card.
+    // What the server expects, then who the browser is: the setup screen needs
+    // both before it can decide between the form and the login card.
+    this.loadConfig();
     this.loadParent();
 
     // Is there an admin session? (httpOnly cookie — we can't read it directly.)
@@ -1982,11 +2078,37 @@ class Component extends DCLogic {
     return {
       brand: this.brand(), ctaPhone: this.props.ctaPhone ?? '+998 71 200-70-07',
       isLanding: route === '/' || route === '', isSetup: route === '/boshlash', isSession,
+      // Landing copy follows the server's actual configuration. The page used
+      // to promise a free report and ask for "only a name"; with the login
+      // gate and the paywall both live, saying either unconditionally would be
+      // untrue in one deployment or the other.
+      needsLogin: S.cfgLoaded && S.cfgAuthRequired,
+      noLogin: S.cfgLoaded && !S.cfgAuthRequired,
+      isPaid: S.cfgLoaded && S.cfgPaid,
+      isFree: S.cfgLoaded && !S.cfgPaid,
+      // "Bepul" alone would be a lie once the report is sold; the session
+      // still is, so the label says which.
+      freeLabel: (S.cfgLoaded && S.cfgPaid) ? 'Mashg‘ulot bepul' : 'Bepul',
+      priceLabel: S.cfgPrice
+        ? Number(S.cfgPrice).toLocaleString('en-US').replace(/,/g, ' ') + ' so‘m'
+        : '',
+      stepsTitle: (S.cfgLoaded && S.cfgAuthRequired) ? 'To‘rt qadam — hammasi shu' : 'Uch qadam — hammasi shu',
+      // The login is step 01 when it exists, so the rest shift down.
+      stepA: (S.cfgLoaded && S.cfgAuthRequired) ? '02' : '01',
+      stepB: (S.cfgLoaded && S.cfgAuthRequired) ? '03' : '02',
+      stepC: (S.cfgLoaded && S.cfgAuthRequired) ? '04' : '03',
+      deliveryNote: (S.cfgLoaded && S.cfgAuthRequired)
+        ? 'Hisobot ekranda ochiladi va havolasi Telegramingizga yuboriladi — yo‘qotib qo‘ymaysiz.'
+        : 'Hisobot ekranda ochiladi, havolasini saqlab qo‘yishingiz mumkin.',
       // Telegram authorization gate on the setup screen. While authChecked is
       // false neither branch renders, so a stored login never flashes the
       // login card on reload.
-      authed: S.authChecked && S.authed,
-      needsAuth: S.authChecked && !S.authed,
+      // Both branches stay hidden until the config AND the stored login have
+      // been resolved, so neither a login card nor the form flashes wrongly.
+      // With AUTH_REQUIRED off the form is simply shown: the server is not
+      // asking for a login, so neither should the page.
+      authed: S.cfgLoaded && S.authChecked && (S.authed || !S.cfgAuthRequired),
+      needsAuth: S.cfgLoaded && S.authChecked && !S.authed && S.cfgAuthRequired,
       authIdle: !S.authNonce, authWaiting: !!S.authNonce,
       authLink: S.authLink, authError: S.authError,
       authHint: S.authStatus === 'awaiting_phone'

@@ -61,12 +61,21 @@ node test/browser/start-btn-test.js  # start-button pending state; same-tick dou
 node test/browser/exit-test.js       # quit-without-report -> resume banner -> resume works
 node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
 node test/browser/auth-ui-test.js    # Telegram login card -> waiting state -> form unlocks from polling alone; survives reload
+node test/browser/landing-claims-test.js  # landing copy matches the server's config (needs TWO apps: see below)
 ```
 
 `auth-ui-test.js` stands in for Telegram by posting the real webhook update
 shapes against a running app, so it exercises the browser half of the login
 without a bot token — including the part no API test can reach: that the page
 flips from "waiting" to "unlocked" on its own, with no reload.
+
+`landing-claims-test.js` drives the landing page against **two** running apps —
+one with payments and the login gate on, one with both off — and checks the page
+tells the truth in each: no "bepul" promise when the report is sold, the price
+quoted up front, the Telegram step named in the flow, and the sample report
+showing what the prompt now actually assesses. Point it at both with
+`API_PAID=… API_FREE=… node test/browser/landing-claims-test.js`. Marketing copy
+is what nobody re-reads after shipping a feature, which is why it is pinned.
 
 The other three suites mock the API with `page.route` and never reach a server,
 so they call `stubLogin(page)` from `browser/auth-stub.js` **before**

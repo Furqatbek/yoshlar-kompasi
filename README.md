@@ -29,6 +29,7 @@ Browser (Kompas.dc.html + support.js + _ds)
    │  fetch /api/* (session token)   fetch /admin/* (httpOnly cookie)
    ▼
 Express (server/)
+   ├─ routes/config    public runtime config (auth required? price?)
    ├─ routes/auth      Telegram login: nonce · poll · me · logout
    ├─ routes/sessions  create · messages · resume · contact · report
    ├─ routes/reports   public report by share_token
@@ -230,6 +231,12 @@ runtime.
 ---
 
 ## API
+
+Public:
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/config` | What the browser must know: whether a login is required and what a report costs. No secrets |
 
 Login (Telegram; see [Parent authorization](#parent-authorization)):
 
@@ -589,7 +596,7 @@ server/
   index.js              Express app, static serving, redirects
   config.js             env config (provider switch, budgets, prices, gates)
   db/                   pool, migrations, migrate + seed + purge, repo (all SQL)
-  routes/               auth, sessions, reports, track, payme, admin, telegram
+  routes/               config, auth, sessions, reports, track, payme, admin, telegram
   services/             claude (Anthropic/OpenRouter dispatcher), prompt,
                         reportParse, funnel, paywall, reminders,
                         payments/payme, delivery/{telegram,console}
