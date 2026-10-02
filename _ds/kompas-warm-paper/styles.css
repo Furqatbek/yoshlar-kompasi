@@ -1,49 +1,65 @@
-/* Modernist — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md. */
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap');
+/* Kompas — warm paper. Design-system tokens and component classes; the source
+   of truth for the product's look.
+
+   Replaces the previous "Modernist" system (near-white, near-black, one hot
+   red #ec3013, 800-weight display type, 2px rules, square corners). That
+   system read as an examiner in a product whose first rule is never diagnose,
+   open with strengths — its loudest colour was the colour of a warning.
+
+   The governing metaphor here is a considered document about a child:
+   something a parent would keep and a teacher would print. Warm paper, deep
+   ink, and a green that means growth rather than alarm. Terracotta is held
+   back almost entirely for the letter written to the child, so that when it
+   appears it means something. */
+@import url('https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400&family=Public+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --color-bg: #f3f2f2;
-  --color-surface: #eae9e9;
-  --color-text: #201e1d;
-  --color-accent: #ec3013;
-  --color-accent-2: #e15b47;
-  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --color-bg: #faf7f2;        /* paper, not screen-white */
+  --color-surface: #efeae1;
+  --color-text: #1e2422;      /* deep charcoal with a green cast */
+  --color-accent: #1f6f5c;    /* growth */
+  --color-accent-2: #a85630;  /* warmth — the letter, and little else */
+  --color-divider: #e2ddd4;   /* a hairline, not a rule */
 
-  /* Tonal ramps — generated in OKLCH on one shared lightness scale, so the
-     same step of any role matches the others in visual value. */
-  --color-neutral-100: #f8f4f4;
-  --color-neutral-200: #eae7e7;
-  --color-neutral-300: #d7d3d3;
-  --color-neutral-400: #bab6b6;
-  --color-neutral-500: #9b9797;
-  --color-neutral-600: #7d7979;
-  --color-neutral-700: #605d5d;
-  --color-neutral-800: #444141;
-  --color-neutral-900: #2d2b2b;
+  /* Warm neutral ramp, landing on the ink. 700 is the muted-text value and is
+     carried over verbatim from the design, since it is the one most read. */
+  --color-neutral-100: #fffdfa;
+  --color-neutral-200: #f4f0e9;
+  --color-neutral-300: #e2ddd4;
+  --color-neutral-400: #cac5ba;
+  --color-neutral-500: #aba79c;
+  --color-neutral-600: #88857b;
+  --color-neutral-700: #5b615c;
+  --color-neutral-800: #3d423e;
+  --color-neutral-900: #2a2f2b;
 
-  --color-accent-100: #fff2ef;
-  --color-accent-200: #ffe0d9;
-  --color-accent-300: #ffc4b8;
-  --color-accent-400: #ff9783;
-  --color-accent-500: #ff563c;
-  --color-accent-600: #dd2b0f;
-  --color-accent-700: #ae1800;
-  --color-accent-800: #7c1405;
-  --color-accent-900: #4d170e;
+  /* Green. The base sits between 500 and 600 so hover/active still darken. */
+  --color-accent-100: #e6efea;
+  --color-accent-200: #c9ddd3;
+  --color-accent-300: #9cc4b4;
+  --color-accent-400: #68a692;
+  --color-accent-500: #2e8670;
+  --color-accent-600: #185a4a;
+  --color-accent-700: #124839;
+  --color-accent-800: #0d362b;
+  --color-accent-900: #0a261e;
 
-  --color-accent-2-100: #fff2ef;
-  --color-accent-2-200: #ffe0da;
-  --color-accent-2-300: #ffc4b9;
-  --color-accent-2-400: #ff9784;
-  --color-accent-2-500: #ef6853;
-  --color-accent-2-600: #c94b39;
-  --color-accent-2-700: #9e3526;
-  --color-accent-2-800: #71261b;
-  --color-accent-2-900: #471d16;
+  --color-accent-2-100: #faede3;
+  --color-accent-2-200: #f2d8c5;
+  --color-accent-2-300: #e5ba9d;
+  --color-accent-2-400: #d1906a;
+  --color-accent-2-500: #bc6f42;
+  --color-accent-2-600: #8e4727;
+  --color-accent-2-700: #74391f;
+  --color-accent-2-800: #592b18;
+  --color-accent-2-900: #3d1d10;
 
-  --font-heading: "Archivo", system-ui, sans-serif;
-  --font-heading-weight: 800;
-  --font-body: "Archivo", system-ui, sans-serif;
+  /* A humanist serif for headings says "document about a person"; a heavy
+     grotesque said "startup". Both faces carry oʻ and gʻ (U+02BB / U+02BC)
+     correctly — the usual silent failure in Uzbek Latin. */
+  --font-heading: "Literata", Georgia, serif;
+  --font-heading-weight: 700;
+  --font-body: "Public Sans", system-ui, sans-serif;
 
   --space-1: 4.0px;
   --space-2: 8.0px;
@@ -52,15 +68,15 @@
   --space-6: 24.0px;
   --space-8: 32.0px;
 
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
 
-  /* Elevation — derived from the ground: soft ink-tinted shadows on a
-     light theme, a hairline edge + ambient darkness on a dark one. */
-  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
-  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
-  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  /* Elevation — warm-tinted and shallow. The report sheet is the only surface
+     that should look lifted off the page. */
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #3d342a 10%, transparent);
+  --shadow-md: 0 4px 14px color-mix(in srgb, #3d342a 12%, transparent);
+  --shadow-lg: 0 14px 40px color-mix(in srgb, #3d342a 16%, transparent);
 }
 
 body {
@@ -106,7 +122,7 @@ figcaption {
 
 /* — rules — */
 .hr {
-  height: 2px; border: 0; margin: var(--space-4) 0;
+  height: 1px; border: 0; margin: var(--space-4) 0;
   background: var(--color-divider);
 }
 
@@ -203,6 +219,11 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
 .tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
+/* The middle step of the level ramp: filled, but not yet the full accent.
+   Shakllanmoqda / Me'yorda / Kuchli must read as empty -> pale -> full in one
+   colour family. A red/amber/green treatment would be a ranking, which this
+   product refuses to do to a child. */
+.tag-accent-soft { background: var(--color-accent-100); color: var(--color-accent-700); }
 .tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
 .tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); }
 
