@@ -33,6 +33,11 @@ export PAYME_MERCHANT_ID="${PAYME_MERCHANT_ID:-test-merchant}"
 export PAYME_MERCHANT_KEY="${PAYME_MERCHANT_KEY:-test-payme-key}"
 export RL_SESSIONS_PER_DAY=1000 RL_ADMIN_LOGIN_PER_MIN=1000 RL_MESSAGES_PER_MIN=1000
 export BASE_URL="http://127.0.0.1:${PORT}"
+# Reminder links ride on inline buttons, and Telegram rejects a relative URL on
+# one — so a reminder with no absolute base is skipped rather than sent broken.
+# Production requires PUBLIC_BASE_URL for the same reason; the suite sets it so
+# the reminder path under test is the one that actually ships.
+export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-$BASE_URL}"
 
 echo "==== unit: OpenRouter adapter + modelFor ===="
 node test/unit/openrouter-adapter.test.js

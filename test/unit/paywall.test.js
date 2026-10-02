@@ -140,19 +140,125 @@ test('the quiet window wraps midnight correctly', () => {
 
 test('every reminder names the child and offers a way out', () => {
   const m = reminders.messageFor('abandoned', { nickname: 'Ali', session_token: 'tok' });
-  assert.ok(m.includes('Ali'));
-  assert.ok(m.includes('/stop'), 'an opt-out the parent can actually use');
-  assert.ok(m.includes('/mashgulot/tok'), 'a link back to what they left');
+  assert.ok(m.text.includes('Ali'));
+  assert.ok(m.text.includes('/stop'), 'an opt-out the parent can actually use');
+  assert.strictEqual(m.button.url.endsWith('/mashgulot/tok'), true, m.button.url);
+  assert.ok(m.button.label, 'the button says what it does');
 });
 
 test('the unpaid reminder states the price', () => {
   const m = reminders.messageFor('unpaid', { nickname: 'Zuhra', share_token: 'sh', amount: 4900000 });
-  assert.ok(m.includes('49 000 so‘m'), m);
-  assert.ok(m.includes('/hisobot/sh'));
+  assert.ok(m.text.includes('49 000 so‘m'), m.text);
+  assert.strictEqual(m.button.url.endsWith('/hisobot/sh'), true, m.button.url);
 });
 
 test('an unknown reminder kind produces nothing to send', () => {
   assert.strictEqual(reminders.messageFor('made_up', {}), null);
+});
+
+// A nickname is typed by a parent and a Telegram display name by its owner, so
+// both reach the message body as untrusted text. With parse_mode on, an
+// unescaped "<" is not a cosmetic problem: Telegram rejects the send with a
+// 400, which releases the reminder claim and has us retry the same broken
+// message until the give-up window closes.
+test('a nickname with markup in it cannot break the message', () => {
+  const m = reminders.messageFor('abandoned', { nickname: '<b>Ali</b> & co', session_token: 'tok' });
+  assert.ok(!m.text.includes('<b>Ali'), 'the nickname is not left as live markup: ' + m.text);
+  assert.ok(m.text.includes('&lt;b&gt;Ali&lt;/b&gt; &amp; co'), m.text);
+  // Our own formatting still works — escaping the value, not the template.
+  assert.ok(/<b>&lt;b&gt;Ali/.test(m.text), m.text);
+});
+
+const KINDS_WITH_ROWS = [
+  ['abandoned', { session_token: 't' }],
+  ['unpaid', { share_token: 's', amount: 4900000 }],
+  ['never_started', {}],
+];
+
+// Both of these depend on PUBLIC_BASE_URL, which the API runner also sets, so
+// each sets the value it is testing rather than inheriting whatever is around.
+const loadReminders = (base) => {
+  const prev = process.env.PUBLIC_BASE_URL;
+  if (base === null) delete process.env.PUBLIC_BASE_URL; else process.env.PUBLIC_BASE_URL = base;
+  for (const m of ['../../server/config', '../../server/services/reminders']) {
+    delete require.cache[require.resolve(m)];
+  }
+  const rem = require('../../server/services/reminders');
+  if (prev === undefined) delete process.env.PUBLIC_BASE_URL; else process.env.PUBLIC_BASE_URL = prev;
+  return rem;
+};
+
+test('the links a reminder points at are absolute', () => {
+  const rem = loadReminders('https://kompas.uz');
+  for (const [kind, row] of KINDS_WITH_ROWS) {
+    const m = rem.buildMessage(kind, row);
+    assert.ok(m, kind + ' produced nothing');
+    assert.ok(/^https:\/\/kompas\.uz\//.test(m.button.url), kind + ': ' + m.button.url);
+    // A button carries the link, so it must not also be dumped in the prose.
+    assert.ok(!m.text.includes(m.button.url), kind + ' repeats its URL in the text');
+  }
+});
+
+// Found by the test above, not by review: moving the link onto a button turned
+// a merely-useless relative URL into a hard Telegram 400, which releases the
+// reminder claim and retries the same broken message every run until the
+// give-up window closes. Sending nothing is the only safe answer.
+test('with no PUBLIC_BASE_URL a reminder is skipped, not sent with a dead link', () => {
+  const rem = loadReminders(null);
+  for (const [kind, row] of KINDS_WITH_ROWS) {
+    assert.strictEqual(rem.buildMessage(kind, row), null, kind + ' should be skipped');
+  }
+});
+
+// ---- the message that delivers the report ---------------------------------
+//
+// The landing page states the free/paid split before a parent spends the
+// evening on this. The delivery message is the same promise at the moment they
+// trust us most, so it has to carry the same facts — a parent who taps through
+// to eight locked sections they were never warned about has been misled by us,
+// not by the paywall.
+
+const loadTelegram = (env) => {
+  const prev = {};
+  for (const k of Object.keys(env)) { prev[k] = process.env[k]; process.env[k] = env[k]; }
+  for (const m of ['../../server/config', '../../server/services/delivery/telegram']) {
+    delete require.cache[require.resolve(m)];
+  }
+  const tg = require('../../server/services/delivery/telegram');
+  for (const k of Object.keys(prev)) {
+    if (prev[k] === undefined) delete process.env[k]; else process.env[k] = prev[k];
+  }
+  return tg;
+};
+
+test('when the report is sold, the delivery message says so before the tap', () => {
+  const tg = loadTelegram({ PAYMENTS_ENABLED: 'true', REPORT_PRICE_UZS: '49000' });
+  const m = tg.reportMessage('Ali', 'https://x.uz/hisobot/abc');
+  assert.ok(m.text.includes('49 000 so‘m'), m.text);
+  assert.ok(/[Bb]epul/.test(m.text), 'what is free is named too: ' + m.text);
+  assert.ok(m.text.includes('Ali'), m.text);
+  assert.strictEqual(m.reply_markup.inline_keyboard[0][0].url, 'https://x.uz/hisobot/abc');
+  assert.ok(!m.text.includes('https://'), 'the button carries the link, not the prose');
+});
+
+test('when it is free, the message promises no price', () => {
+  const tg = loadTelegram({ PAYMENTS_ENABLED: 'false' });
+  const m = tg.reportMessage('Ali', 'https://x.uz/hisobot/abc');
+  assert.ok(!/so‘m/.test(m.text), m.text);
+  assert.ok(/hammasi ochiq/.test(m.text), m.text);
+});
+
+test('a child nickname cannot inject markup into the delivery message', () => {
+  const tg = loadTelegram({ PAYMENTS_ENABLED: 'true' });
+  const m = tg.reportMessage('<i>Ali</i> & Co', 'https://x.uz/h/1');
+  assert.ok(!m.text.includes('<i>Ali'), m.text);
+  assert.ok(m.text.includes('&lt;i&gt;Ali&lt;/i&gt; &amp; Co'), m.text);
+});
+
+test('escaping covers the three characters Telegram parses', () => {
+  const tg = loadTelegram({});
+  assert.strictEqual(tg.esc('a & b < c > d'), 'a &amp; b &lt; c &gt; d');
+  assert.strictEqual(tg.esc(null), '', 'a missing value is empty, not "null"');
 });
 
 console.log('\n' + pass + ' passed, 0 failed');

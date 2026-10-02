@@ -40,11 +40,30 @@ async function apiCall(method, payload) {
   return data.result;
 }
 
+// A Telegram message is a message, not a page: one short paragraph, one button.
+//
+// Everything interpolated is escaped. A child's nickname is user input, and an
+// unescaped "<" makes Telegram reject the whole send with a 400 — which for a
+// reminder releases the claim and leaves us retrying the same broken message
+// until the give-up window closes.
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Links ride on a button rather than sitting raw in the text: it is the native
+// affordance, and a long URL wraps badly on the phone these are all read on.
+const linkButton = (label, url) => ({ inline_keyboard: [[{ text: label, url }]] });
+
 async function sendMessage(chatId, text, extra) {
   return apiCall('sendMessage', {
     chat_id: chatId,
     text,
-    disable_web_page_preview: false,
+    parse_mode: 'HTML',
+    // No preview card. /hisobot/:token 302s to a hash route and the crawler
+    // does not run JS, so the card is a content-free repeat of the site title
+    // under every message. Serving real metadata is not the fix either: the
+    // card would carry the child's name into every chat the link reaches, and
+    // this product asks for a first name precisely so there is nothing to leak.
+    disable_web_page_preview: true,
     ...(extra || {}),
   });
 }
@@ -58,12 +77,24 @@ const CONTACT_KEYBOARD = {
 };
 const HIDE_KEYBOARD = { remove_keyboard: true };
 
+// What the parent is handed at the moment they trust us most. The landing page
+// states the split before they spend the evening; saying nothing here and
+// letting them discover eight locked sections after tapping would undo exactly
+// that. So when the report is sold, the message says so — before the tap.
 function reportMessage(childNickname, url) {
-  return (
-    'Salom! ' + childNickname + ' uchun "Yosh Iste‘dodlar Kompasi" hisoboti tayyor.\n\n' +
-    'Hisobotni shu havolada ochishingiz mumkin:\n' + url + '\n\n' +
-    '3 oydan so‘ng qayta baholab ko‘rishni tavsiya qilamiz.'
-  );
+  const name = esc(childNickname);
+  const lines = ['<b>' + name + '</b> uchun hisobot tayyor.'];
+  if (config.payments.enabled) {
+    const price = Number(config.payments.priceUzs).toLocaleString('en-US').replace(/,/g, ' ') + ' so‘m';
+    lines.push(
+      'Bepul: kuchli tomonlari va ' + name + ' uchun xat.\n' +
+      'Qolgan sakkiz qism — ' + esc(price) + ', bir marta. Havola doim ishlaydi.'
+    );
+  } else {
+    lines.push('O‘n qismning hammasi ochiq. Havola doim ishlaydi.');
+  }
+  lines.push('3 oydan so‘ng qayta baholab ko‘rishni tavsiya qilamiz.');
+  return { text: lines.join('\n\n'), reply_markup: linkButton('Hisobotni ochish', url) };
 }
 
 const provider = {
@@ -77,7 +108,8 @@ const provider = {
     // so the report can be pushed immediately instead of waiting for the parent
     // to discover a deep link.
     if (chatId) {
-      await sendMessage(chatId, reportMessage(childNickname, reportUrl));
+      const m = reportMessage(childNickname, reportUrl);
+      await sendMessage(chatId, m.text, { reply_markup: m.reply_markup });
       return { status: 'sent', channel: 'telegram' };
     }
     // Legacy parents (contact-gate era) have no chat: hand back the deep link
@@ -157,7 +189,9 @@ async function handleUpdate(update, deps) {
       lastName: from.last_name || null,
     });
     if (res) {
-      const hi = 'Salom' + (from.first_name ? ', ' + from.first_name : '') + '! «Yosh Iste‘dodlar Kompasi»ga xush kelibsiz.';
+      // A Telegram display name is whatever its owner typed, so it is escaped
+      // like any other untrusted value now that parse_mode is on.
+      const hi = 'Salom' + (from.first_name ? ', ' + esc(from.first_name) : '') + '! «Yosh Iste‘dodlar Kompasi»ga xush kelibsiz.';
       if (res.needPhone) {
         await sendMessage(
           chatId,
@@ -185,11 +219,12 @@ async function handleUpdate(update, deps) {
     ).catch(() => {});
     return;
   }
-  await sendMessage(chatId, reportMessage(rep.childNickname, rep.reportUrl));
+  const rm = reportMessage(rep.childNickname, rep.reportUrl);
+  await sendMessage(chatId, rm.text, { reply_markup: rm.reply_markup });
   await deps.markDelivered(payload);
 }
 
 module.exports = {
   name: 'telegram', provider, configured, deepLink, authLink, AUTH_PREFIX,
-  sendMessage, handleUpdate,
+  sendMessage, handleUpdate, reportMessage, esc, linkButton,
 };

@@ -39,42 +39,62 @@ function baseUrl() {
   return String(config.publicBaseUrl || '').replace(/\/+$/, '');
 }
 
+// A reminder's whole purpose is the link, and the link now rides on an inline
+// button — where a relative URL is not merely useless but rejected outright by
+// Telegram. A 400 releases the claim, so we would retry the same broken message
+// every run until the give-up window closed. Without an absolute base there is
+// nothing worth sending, so we send nothing. PUBLIC_BASE_URL is required in
+// production (config.js), so this only bites a half-configured dev box.
+const absolute = (u) => /^https?:\/\//i.test(u);
+
 const money = (tiyin) =>
   Math.round(Number(tiyin) / 100).toLocaleString('en-US').replace(/,/g, ' ') + ' so‘m';
 
-// Every message names the child, says what is unfinished, gives one link and
+// Every message names the child, says what is unfinished, gives one button and
 // one way out. No urgency tricks, no second ask.
+//
+// Returns { text, button } rather than a string: the link rides on an inline
+// button instead of sitting raw in the paragraph. The child's name is escaped
+// because parse_mode is on — see the note in delivery/telegram.js.
 function messageFor(kind, row) {
-  const child = row.nickname || 'farzandingiz';
+  const child = telegram.esc(row.nickname || 'farzandingiz');
   const stop = '\n\nEslatmalarni to‘xtatish: /stop';
   if (kind === 'abandoned') {
-    const link = baseUrl() + '/mashgulot/' + row.session_token;
-    return (
-      `${child} bilan boshlagan mashg‘ulot tugallanmay qoldi.\n\n` +
-      'Javoblar saqlanib turibdi — istalgan qurilmadan davom ettirsangiz bo‘ladi:\n' +
-      link + stop
-    );
+    return {
+      text:
+        `<b>${child}</b> bilan boshlagan mashg‘ulot tugallanmay qoldi.\n\n` +
+        'Javoblar saqlanib turibdi — istalgan qurilmadan davom ettirsangiz bo‘ladi.' + stop,
+      button: { label: 'Davom ettirish', url: baseUrl() + '/mashgulot/' + row.session_token },
+    };
   }
   if (kind === 'unpaid') {
-    const link = baseUrl() + '/hisobot/' + row.share_token;
-    return (
-      `${child} uchun hisobot tayyor.\n\n` +
-      'Bepul qismini o‘qigan bo‘lsangiz kerak. To‘liq tahlil — hozirgi o‘rni, ' +
-      'iqtidorlar xaritasi, qiziqishlar, o‘rganish usuli va tavsiyalar — ' +
-      `${money(row.amount)} evaziga ochiladi va havola doim ishlaydi:\n` +
-      link + stop
-    );
+    return {
+      text:
+        `<b>${child}</b> uchun hisobot tayyor.\n\n` +
+        'Bepul qismini o‘qigan bo‘lsangiz kerak. To‘liq tahlil — hozirgi o‘rni, ' +
+        'iqtidorlar xaritasi, qiziqishlar, o‘rganish usuli va tavsiyalar — ' +
+        `${telegram.esc(money(row.amount))} evaziga ochiladi va havola doim ishlaydi.` + stop,
+      button: { label: 'Hisobotni ochish', url: baseUrl() + '/hisobot/' + row.share_token },
+    };
   }
   if (kind === 'never_started') {
-    const link = baseUrl() + '/boshlash';
-    return (
-      'Ro‘yxatdan o‘tdingiz, lekin mashg‘ulotni hali boshlamadingiz.\n\n' +
-      'Bu 15–20 daqiqa oladi va farzandingizning kuchli tomonlari haqida ' +
-      'hisobot bilan tugaydi:\n' + link + stop
-    );
+    return {
+      text:
+        'Ro‘yxatdan o‘tdingiz, lekin mashg‘ulotni hali boshlamadingiz.\n\n' +
+        'Bu 15–20 daqiqa oladi va farzandingizning kuchli tomonlari haqida ' +
+        'hisobot bilan tugaydi.' + stop,
+      button: { label: 'Boshlash', url: baseUrl() + '/boshlash' },
+    };
   }
   return null;
 }
+
+// messageFor's three branches all build their URL the same way, so the check
+// sits once, here, rather than three times above.
+const buildMessage = (kind, row) => {
+  const m = messageFor(kind, row);
+  return m && absolute(m.button.url) ? m : null;
+};
 
 // Send one reminder. Claims it first, and gives the claim back if Telegram
 // refuses, so a transient failure does not silently consume someone's single
@@ -85,11 +105,13 @@ async function sendOne(kind, row) {
   });
   if (!claim) return { sent: false, reason: 'already_sent' };
 
-  const text = messageFor(kind, row);
-  if (!text) { await repo.releaseReminder(claim.id); return { sent: false, reason: 'no_message' }; }
+  const msg = buildMessage(kind, row);
+  if (!msg) { await repo.releaseReminder(claim.id); return { sent: false, reason: 'no_message' }; }
 
   try {
-    const ok = await telegram.sendMessage(row.telegram_chat_id, text);
+    const ok = await telegram.sendMessage(row.telegram_chat_id, msg.text, {
+      reply_markup: telegram.linkButton(msg.button.label, msg.button.url),
+    });
     if (ok === false) throw new Error('telegram refused');
     return { sent: true };
   } catch (err) {
@@ -136,4 +158,4 @@ async function run({ now = new Date(), dryRun = false } = {}) {
   return summary;
 }
 
-module.exports = { run, sendOne, messageFor, withinQuietHours, KINDS };
+module.exports = { run, sendOne, messageFor, buildMessage, withinQuietHours, KINDS };
