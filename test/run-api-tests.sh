@@ -48,6 +48,9 @@ node test/unit/funnel.test.js
 echo "==== unit: paywall split + reminder rules ===="
 node test/unit/paywall.test.js
 
+echo "==== unit: what the bot says back ===="
+node test/unit/bot-replies.test.js
+
 echo "==== unit: compose passes every setting through ===="
 node test/unit/compose-env.test.js
 

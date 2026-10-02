@@ -53,6 +53,18 @@ const esc = (s) => String(s == null ? '' : s)
 // affordance, and a long URL wraps badly on the phone these are all read on.
 const linkButton = (label, url) => ({ inline_keyboard: [[{ text: label, url }]] });
 
+// Several bot replies end in "go back to the site and press the button". A
+// button beats telling someone to go and find a browser tab — but only when we
+// know our own origin: Telegram rejects a relative URL on an inline button
+// outright, so without PUBLIC_BASE_URL the message goes out as prose instead.
+// Returns an `extra` object to spread into sendMessage, empty when there is no
+// usable link.
+function siteButton(label, path) {
+  const base = String(config.publicBaseUrl || '').replace(/\/+$/, '');
+  if (!/^https?:\/\//i.test(base)) return {};
+  return { reply_markup: linkButton(label, base + path) };
+}
+
 async function sendMessage(chatId, text, extra) {
   return apiCall('sendMessage', {
     chat_id: chatId,
@@ -135,17 +147,23 @@ async function handleUpdate(update, deps) {
     // Telegram lets a user forward somebody else's contact card; only a card
     // about the sender is a verified phone for THIS account.
     if (msg.contact.user_id && msg.from && msg.contact.user_id !== msg.from.id) {
-      await sendMessage(chatId, 'Iltimos, o‘zingizning raqamingizni ulashing.', {
-        reply_markup: CONTACT_KEYBOARD,
-      }).catch(() => {});
+      await sendMessage(
+        chatId,
+        '<b>Bu boshqa odamning raqami.</b>\n\nPastdagi tugma orqali o‘zingizning raqamingizni ulashing.',
+        { reply_markup: CONTACT_KEYBOARD }
+      ).catch(() => {});
       return;
     }
     const res = await deps.onContact({ chatId, phone: msg.contact.phone_number });
+    // reply_markup holds one thing at a time, so a message that clears the
+    // phone keyboard cannot also carry a button. Clearing wins: a stale
+    // "share your number" keyboard sitting under the chat is worse than a
+    // missing shortcut, and the page unlocks on its own from polling anyway.
     await sendMessage(
       chatId,
       res && res.ok
-        ? 'Rahmat! Ro‘yxatdan o‘tdingiz. Endi brauzerdagi sahifaga qayting — mashg‘ulotni boshlashingiz mumkin.'
-        : 'Raqamni saqlab bo‘lmadi. Iltimos, saytdagi «Telegram orqali kirish» tugmasini qayta bosing.',
+        ? '<b>Tayyor — ro‘yxatdan o‘tdingiz.</b>\n\nBrauzerdagi sahifaga qayting, u sizni kutib turibdi.'
+        : '<b>Raqamni saqlab bo‘lmadi.</b>\n\nSaytdagi «Telegram orqali kirish» tugmasini qayta bosing.',
       { reply_markup: HIDE_KEYBOARD }
     ).catch(() => {});
     return;
@@ -158,11 +176,14 @@ async function handleUpdate(update, deps) {
   // decided. Report delivery is unaffected: that is something they asked for.
   if (/^\/stop\b/i.test(msg.text.trim())) {
     const ok = deps.onStop ? await deps.onStop({ chatId }) : false;
+    // No button here, deliberately. Someone who typed /stop is not looking for
+    // another way back in; the only thing they need is confirmation that it
+    // worked and that it did not cost them the report they paid for.
     await sendMessage(
       chatId,
       ok
-        ? 'Eslatmalar to‘xtatildi. Hisobotlaringiz avvalgidek yetkaziladi.'
-        : 'Eslatmalar allaqachon o‘chirilgan.'
+        ? '<b>Eslatmalar to‘xtatildi.</b>\n\nHisobotlaringiz avvalgidek yetkaziladi.'
+        : '<b>Eslatmalar allaqachon o‘chirilgan.</b>\n\nHisobotlaringiz avvalgidek yetkaziladi.'
     ).catch(() => {});
     return;
   }
@@ -172,7 +193,10 @@ async function handleUpdate(update, deps) {
   if (!payload) {
     await sendMessage(
       chatId,
-      'Salom! Bu — «Yosh Iste‘dodlar Kompasi» boti. Boshlash uchun saytdagi «Telegram orqali kirish» tugmasini bosing.'
+      '<b>«Yosh Iste‘dodlar Kompasi» boti.</b>\n\n' +
+        'Bu bot hisobotni yuboradi va mashg‘ulotni eslatadi. Boshlash saytda — ' +
+        'u yerda «Telegram orqali kirish» tugmasini bosasiz.',
+      siteButton('Saytni ochish', '/')
     ).catch(() => {});
     return;
   }
@@ -191,16 +215,16 @@ async function handleUpdate(update, deps) {
     if (res) {
       // A Telegram display name is whatever its owner typed, so it is escaped
       // like any other untrusted value now that parse_mode is on.
-      const hi = 'Salom' + (from.first_name ? ', ' + esc(from.first_name) : '') + '! «Yosh Iste‘dodlar Kompasi»ga xush kelibsiz.';
+      const hi = '<b>Salom' + (from.first_name ? ', ' + esc(from.first_name) : '') + '!</b>';
       if (res.needPhone) {
         await sendMessage(
           chatId,
-          hi + '\n\nRo‘yxatdan o‘tishni yakunlash uchun pastdagi tugma orqali telefon raqamingizni ulashing. ' +
-            'Raqam hisobotni yuborish va eslatmalar uchun kerak bo‘ladi.',
+          hi + '\n\nOxirgi qadam: pastdagi tugma orqali telefon raqamingizni ulashing. ' +
+            'Raqam hisobotni yuborish va eslatmalar uchun kerak — SMS kod kerak emas.',
           { reply_markup: CONTACT_KEYBOARD }
         ).catch(() => {});
       } else {
-        await sendMessage(chatId, hi + '\n\nTayyor! Brauzerdagi sahifaga qayting — mashg‘ulotni boshlashingiz mumkin.', {
+        await sendMessage(chatId, hi + '\n\nTayyor. Brauzerdagi sahifaga qayting, u sizni kutib turibdi.', {
           reply_markup: HIDE_KEYBOARD,
         }).catch(() => {});
       }
@@ -211,11 +235,16 @@ async function handleUpdate(update, deps) {
   // 3. Report share token (the original delivery flow).
   const rep = await deps.findReportByShareToken(payload);
   if (!rep) {
+    // An expired login is recoverable in one tap, so it gets the button. A
+    // missing report is not — sending them to the site would only restate the
+    // dead end — so it gets a plain sentence and no false promise of a fix.
+    const expired = payload.startsWith(AUTH_PREFIX);
     await sendMessage(
       chatId,
-      payload.startsWith(AUTH_PREFIX)
-        ? 'Bu havola eskirgan. Iltimos, saytdagi «Telegram orqali kirish» tugmasini qayta bosing.'
-        : 'Kechirasiz, bu hisobot topilmadi yoki muddati o‘tgan.'
+      expired
+        ? '<b>Bu havola eskirgan.</b>\n\nSaytda «Telegram orqali kirish» tugmasini qayta bosing — yangi havola bir soniyada keladi.'
+        : '<b>Bu hisobot topilmadi.</b>\n\nHavola noto‘g‘ri bo‘lishi yoki hisobot o‘chirilgan bo‘lishi mumkin.',
+      expired ? siteButton('Saytni ochish', '/boshlash') : {}
     ).catch(() => {});
     return;
   }
