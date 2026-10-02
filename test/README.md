@@ -62,7 +62,7 @@ node test/browser/exit-test.js       # quit-without-report -> resume banner -> r
 node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
 node test/browser/auth-ui-test.js    # Telegram login card -> waiting state -> form unlocks from polling alone; survives reload
 node test/browser/landing-claims-test.js  # landing copy matches the server's config (needs TWO apps: see below)
-node test/browser/landing-scroll-test.js  # the scroll device: sheet fills, strip + drawer, reduced-motion fallback
+node test/browser/landing-scroll-test.js  # the scroll device: sheet fills, mobile bar, reduced-motion fallback
 ```
 
 `auth-ui-test.js` stands in for Telegram by posting the real webhook update
@@ -73,17 +73,29 @@ flips from "waiting" to "unlocked" on its own, with no reload.
 `landing-claims-test.js` drives the landing page against **two** running apps —
 one with payments and the login gate on, one with both off — and checks the page
 tells the truth in each: no "bepul" promise when the report is sold, the price
-quoted up front, the Telegram step named in the flow, and the sample report
-showing what the prompt now actually assesses. Point it at both with
+quoted up front and before the sample, the Telegram detour walked through when
+it exists and *absent* when it does not, and the sample report showing what the
+prompt now actually assesses. Point it at both with
 `API_PAID=… API_FREE=… node test/browser/landing-claims-test.js`. Marketing copy
 is what nobody re-reads after shipping a feature, which is why it is pinned.
+
+Each assertion there pins a **claim, not a sentence** — the copy gets rewritten
+and the claim has to survive the rewrite. The warm-paper redesign reworded every
+one of them (`Emotsional intellekt` → `His-tuyg'ular`, a step counter → a
+three-frame walkthrough) and the only change needed here was re-pointing the
+matchers; a failure means a claim was *dropped*, so check which before touching
+a matcher.
 
 `landing-scroll-test.js` covers the landing's scroll device — the sample
 report that writes itself as the reader descends. It proves the sheet fills,
 that it is **forward-only** (scrolling back must not undo the reader's
-progress), that the mobile strip and its drawer work, that reduced motion and
-low-end devices get a complete static sheet with no strip, and that none of it
-runs on other routes. Point it at the paid build with `API_PAID=…`.
+progress), that the mobile bottom bar carries the sheet's progress and the CTA
+without covering text, that reduced motion and low-end devices get a complete
+static sheet and a plain CTA bar that needs no scrolling, and that none of it
+runs on other routes. It also asserts there is **exactly one** bottom bar: two
+stacked CTAs is what a superseded bar from an older design looks like, and it is
+invisible in a screenshot taken at the top of the page. Point it at the paid
+build with `API_PAID=…`.
 
 The other three suites mock the API with `page.route` and never reach a server,
 so they call `stubLogin(page)` from `browser/auth-stub.js` **before**
