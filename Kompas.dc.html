@@ -31,13 +31,22 @@ input, textarea, button, select { font-family: var(--font-body); }
   #yik-report h1, #yik-report h3, #yik-report h4, #yik-report h6 { break-after: avoid-page; break-inside: avoid; }
   #yik-report p { orphans: 3; widows: 3; }
   .rep-item, .rep-letter { break-inside: avoid; }
-  /* Keep the report's real colors when printing (the letter card is accent-red
-     with light text, number chips are dark, dots are accent). print-color-adjust
-     asks the browser not to economize them away. If the user prints WITHOUT
-     background graphics, Chromium auto-darkens the light text and the accent
-     border below still frames the letter card, so it stays readable. */
-  .rep-letter, .rep-msn, .rep-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .rep-letter { border: 3px solid var(--color-accent) !important; }
+  /* On paper the report is ink on paper, so anything that depends on a FILL
+     for its contrast is re-cut as outline plus dark text. Chrome's print
+     dialog ships with "Background graphics" OFF and that overrides
+     print-color-adjust, so a terracotta card with light text on it prints as
+     an empty rectangle — and that card is the letter the parent is meant to
+     read to the child aloud. It is the last thing in this report that may
+     fail silently. Outlining it also costs almost no ink and survives a mono
+     printer, which is what a school actually has. */
+  .rep-letter { background: none !important; border: 1px solid var(--color-accent-2) !important;
+                color: var(--color-text) !important; }
+  .rep-letter h6 { color: var(--color-accent-2) !important; }
+  .rep-msn { background: none !important; color: var(--color-text) !important;
+             border: 1px solid var(--color-neutral-400) !important; }
+  /* The dots carry their colour in a border as well as a fill, so they survive
+     as rings rather than vanishing. */
+  .rep-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   #yik-report .tag { border: 1px solid currentColor !important; }
 }
 </style>
@@ -782,7 +791,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">O'sish tafakkuri va o'z-o'zini boshqarish</h3>
           <div style="display: flex; flex-direction: column; gap: var(--space-2);">
             <sc-for list="{{ mindset }}" as="it" hint-placeholder-count="3">
-              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
+              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: 50%; box-sizing: border-box; flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
             </sc-for>
           </div>
         </sc-if>
@@ -794,7 +803,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ milestones }}" as="ms" hint-placeholder-count="3">
               <div class="rep-item" style="display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-divider);">
-                <div class="rep-msn" style="width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-text); color: var(--color-neutral-100); font-family: var(--font-heading); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center;">{{ ms.n }}</div>
+                <div class="rep-msn" style="width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-accent); color: var(--color-neutral-100); border-radius: var(--radius-sm); font-family: var(--font-heading); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center;">{{ ms.n }}</div>
                 <div style="align-self: center;">{{ ms.t }}</div>
               </div>
             </sc-for>
@@ -842,7 +851,7 @@ input, textarea, button, select { font-family: var(--font-body); }
           <h3 style="margin-bottom: var(--space-3);">Kattalar uchun</h3>
           <div style="display: flex; flex-direction: column; gap: var(--space-2);">
             <sc-for list="{{ adults }}" as="it" hint-placeholder-count="3">
-              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
+              <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: 50%; box-sizing: border-box; flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
             </sc-for>
           </div>
         </sc-if>
@@ -884,7 +893,7 @@ input, textarea, button, select { font-family: var(--font-body); }
         <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
         <div class="rep-item" style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span class="rep-dot" style="width: 12px; height: 12px; background: var(--color-accent); display: inline-block;"></span>
+            <span class="rep-dot" style="width: 12px; height: 12px; background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: 50%; box-sizing: border-box; display: inline-block;"></span>
             <div>
               <div style="font-family: var(--font-heading); font-weight: 700;">{{ brand }}</div>
               <div class="text-muted" style="font-size: 13px;">Hisobotdagi tavsiyalarga mos dasturlarimiz bor — birinchi dars bepul.</div>

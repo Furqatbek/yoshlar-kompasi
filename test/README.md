@@ -63,6 +63,7 @@ node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-
 node test/browser/auth-ui-test.js    # Telegram login card -> waiting state -> form unlocks from polling alone; survives reload
 node test/browser/landing-claims-test.js  # landing copy matches the server's config (needs TWO apps: see below)
 node test/browser/landing-scroll-test.js  # the scroll device: sheet fills, mobile bar, reduced-motion fallback
+node test/browser/report-print-test.js    # the report as a FILE: what "PDF yuklab olish" actually produces
 ```
 
 `auth-ui-test.js` stands in for Telegram by posting the real webhook update
@@ -96,6 +97,21 @@ runs on other routes. It also asserts there is **exactly one** bottom bar: two
 stacked CTAs is what a superseded bar from an older design looks like, and it is
 invisible in a screenshot taken at the top of the page. Point it at the paid
 build with `API_PAID=…`.
+
+`report-print-test.js` covers the report as a **file** rather than a screen.
+"PDF yuklab olish" is `window.print()`, so what a parent keeps, prints and shows
+a teacher is this page under print media — and nothing else looks at it. It
+drives a real paid report (it pays for one through the Payme endpoint, as
+`payments-test.js` does) and asserts the rule that makes a printed report
+survive: **on paper, contrast comes from ink, never from a fill.** Chrome's
+print dialog ships with "Background graphics" OFF and that overrides
+`print-color-adjust`, so a terracotta card with light text on it prints as an
+empty rectangle. The letter to the child is such a card and is the one part of
+the report meant to be read aloud, so a blank rectangle there reads as a
+rendering bug rather than a missing letter. Also checks the chrome is dropped,
+the frame colour belongs to the letter rather than another accent, and that the
+letter is never split across a page break. Point it at the paid build with
+`API_PAID=…`.
 
 The other three suites mock the API with `page.route` and never reach a server,
 so they call `stubLogin(page)` from `browser/auth-stub.js` **before**
