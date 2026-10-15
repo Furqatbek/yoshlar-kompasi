@@ -165,6 +165,31 @@ function serve(api, port) {
   ok('[free/no-auth] "no registration" is accurate again',
     /Ro.yxatdan o.tish yo.q/i.test(free.text));
 
+  // ---- every call to action has to actually go somewhere -----------------
+  //
+  // The design comps linked to an in-page section (#boshlash); this app is
+  // hash-routed and the route is #/boshlash, so five CTAs silently did nothing
+  // — the hash changed, no route matched, the landing stayed put. Invisible in
+  // a screenshot and invisible in the console. Pinned so it cannot return.
+  for (const [label, v] of [['paid', paid], ['free', free]]) {
+    const ctas = await v.page.evaluate(() => [...document.querySelectorAll('a[href^="#"]')]
+      .map((a) => ({ href: a.getAttribute('href'), text: (a.innerText || '').trim().slice(0, 30) }))
+      .filter((a) => a.text));
+    ok(`[${label}] the page has its calls to action`, ctas.length >= 5, 'found=' + ctas.length);
+    // A link is fine if it is a route (#/...) or if it scrolls to an element
+    // that exists. Anything else goes nowhere, which is how #boshlash and
+    // #markaz both shipped looking perfectly normal.
+    const dead = await v.page.evaluate(() => [...document.querySelectorAll('a[href^="#"]')]
+      .filter((a) => (a.innerText || '').trim())
+      .map((a) => a.getAttribute('href'))
+      .filter((h) => h && h !== '#' && !h.startsWith('#/') && !document.getElementById(h.slice(1))));
+    ok(`[${label}] every in-page link goes somewhere real`, dead.length === 0,
+      JSON.stringify(dead.slice(0, 4)));
+    const toStart = ctas.filter((a) => a.href === '#/boshlash');
+    ok(`[${label}] and the start buttons point at the setup route`, toStart.length >= 4,
+      JSON.stringify(toStart.map((a) => a.text)));
+  }
+
   for (const v of [paid, free]) { await v.page.context().close(); v.srv.close(); }
   await browser.close();
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
