@@ -32,91 +32,35 @@ git checkout claude/70-savol-qiziqishlar-inventari
 
 ## 3. Write `.env`
 
-`.env` sits next to `docker-compose.yml` and is gitignored — it never leaves
-your machine.
-
-Compose supplies a default for nearly every setting, so a short `.env` boots.
-The block below is the **complete** local set anyway, because three of the
-defaults are wrong for a Mac on plain HTTP and you would rather see them than
-discover them.
+Copy the ready-made file. Do **not** retype it and do **not** open it in
+TextEdit — TextEdit saves `.env.txt` or adds rich-text formatting, and Compose
+then silently finds nothing.
 
 ```bash
-cat > .env <<'EOF'
-# ─── database (local container; these values are fine as they are) ──────────
-POSTGRES_USER=yik
-POSTGRES_PASSWORD=yik
-POSTGRES_DB=yik
-
-# ─── app ────────────────────────────────────────────────────────────────────
-APP_PORT=8080
-PUBLIC_BASE_URL=http://localhost:8080
-
-# Compose sets NODE_ENV=production, which makes COOKIE_SECURE default to true.
-# A Secure cookie over plain http:// is refused by Safari, so admin login would
-# appear to work and bounce you straight back to the login screen. Off locally.
-COOKIE_SECURE=false
-
-# ─── admin panel (no defaults — compose warns if these are blank) ───────────
-ADMIN_EMAIL=admin@markaz.uz
-ADMIN_PASSWORD=change-this-now
-# JWT_SECRET is appended below by openssl.
-
-# ─── first run: no Telegram bot, no payments ────────────────────────────────
-# AUTH_REQUIRED defaults to ON and then demands a real bot, which is a slow way
-# to start. Off means the form is open immediately.
-AUTH_REQUIRED=false
-AUTH_REQUIRE_PHONE=true
-DELIVERY_PROVIDER=console
-PAYMENTS_ENABLED=false
-REPORT_PRICE_UZS=49000
-
-# ─── the model ──────────────────────────────────────────────────────────────
-LLM_PROVIDER=openrouter
-OPENROUTER_API_KEY=sk-or-REPLACE-ME
-OPENROUTER_MODEL=deepseek/deepseek-chat-v3.1:free
-# Used only when LLM_PROVIDER=anthropic:
-ANTHROPIC_API_KEY=
-ANTHROPIC_MODEL=claude-sonnet-4-6
-# Attribution shown on your OpenRouter dashboard; cosmetic.
-OPENROUTER_SITE_NAME=Yoshlar Kompasi
-
-# ─── limits (the default of 5 sittings a day will block you while testing) ───
-RL_SESSIONS_PER_DAY=100
-RL_MESSAGES_PER_MIN=60
-RL_ADMIN_LOGIN_PER_MIN=20
-MAX_TURNS=60
-MAX_MESSAGE_CHARS=2000
-MIN_ANSWERS_FOR_REPORT=1
-
-# ─── model budget ───────────────────────────────────────────────────────────
-CONVERSATION_MAX_TOKENS=1500
-REPORT_MAX_TOKENS=4500
-REPORT_TIMEOUT_MS=180000
-# Only used to price the admin cost dashboard; set to your model's real rates,
-# or 0 and 0 when running a free model so the dashboard does not invent a bill.
-PRICE_INPUT_PER_MTOK=0
-PRICE_OUTPUT_PER_MTOK=0
-
-# ─── data retention ─────────────────────────────────────────────────────────
-RETENTION_MONTHS=24
-ANALYTICS_RETENTION_DAYS=180
-BACKUP_KEEP_DAYS=14
-CONSENT_TEXT_VERSION=uz-2026-07
-
-# ─── reminders (off; they need a bot, and they message real people) ─────────
-REMINDERS_ENABLED=false
-EOF
-```
-
-Then set the two real values:
-
-```bash
+cp .env.local.example .env
 echo "JWT_SECRET=$(openssl rand -base64 48)" >> .env
-open -e .env        # edit ADMIN_PASSWORD and OPENROUTER_API_KEY
+nano .env     # set OPENROUTER_API_KEY, then Ctrl-O, Enter, Ctrl-X
 ```
 
-Get a free OpenRouter key at `openrouter.ai/keys`. The key costs nothing and
-the `:free` model slug costs nothing to call.
+Get a free key at `openrouter.ai/keys`. The key costs nothing and the `:free`
+model slug costs nothing to call.
+
+### Check Compose can actually see it
+
+This is the single most useful command here, because a missing `.env` does not
+look like a missing `.env` — it looks like a dozen unrelated settings being
+wrong at once:
+
+```bash
+docker compose config | grep -E 'AUTH_REQUIRED|LLM_PROVIDER|PUBLIC_BASE_URL|ADMIN_EMAIL'
+```
+
+You want to see `AUTH_REQUIRED: "false"`, `LLM_PROVIDER: openrouter`,
+`PUBLIC_BASE_URL: http://localhost:8080` and your admin email. If you see
+`AUTH_REQUIRED: "true"` or a blank email, `.env` is not being read — see §8.
+
+`.env.local.example` carries every setting already correct for localhost; the
+sections below explain what is in it and why.
 
 ### The three defaults that are wrong for local HTTP
 
@@ -242,8 +186,37 @@ and the log names the missing setting. The common ones:
 | `PUBLIC_BASE_URL` | compose sets `NODE_ENV=production`, which requires it |
 | `OPENROUTER_API_KEY (required when LLM_PROVIDER=openrouter)` | paste a real key |
 | port 8080 already allocated | `APP_PORT=8090` in `.env` |
-| `The "ADMIN_EMAIL" variable is not set` | `.env` is missing it, or you are not in the folder that holds `docker-compose.yml`. Check with `pwd` and `grep ADMIN_EMAIL .env` |
+| several unrelated settings missing at once (`ADMIN_EMAIL` blank, `AUTH_REQUIRED` still on, `ANTHROPIC_API_KEY` demanded although you chose OpenRouter) | **`.env` is not being read at all.** It is one cause, not five — see below |
 | `pull access denied for yoshlar-kompasi-app` | fixed in the compose file; `git pull` if you cloned before this. It meant the `cron` service had no build block and Docker tried to fetch a local-only image name from the registry |
+
+### When `.env` is not being read
+
+The signature is a cluster of unrelated complaints: the admin seed skips,
+`AUTH_REQUIRED` is still on, `PUBLIC_BASE_URL` is missing, and the app asks for
+`ANTHROPIC_API_KEY` even though you set `LLM_PROVIDER=openrouter`. Every one of
+those is a value `.env` supplies, so the file — not the settings — is the fault.
+
+```bash
+pwd                        # must be the folder containing docker-compose.yml
+ls -la .env                # must exist, and be exactly ".env"
+ls -la .env*               # looking for a stray ".env.txt" from TextEdit
+file .env                  # want "ASCII text", not "rich text"
+wc -l .env                 # should be ~45 lines, not 0 or 3
+```
+
+The usual causes, in order of how often they happen:
+
+1. **TextEdit saved `.env.txt`.** macOS hides known extensions, so it looks
+   right in Finder. `mv .env.txt .env`.
+2. **Wrong folder.** Compose reads `.env` from the directory you run it in, not
+   from the repo root. `cd` to where `docker-compose.yml` is.
+3. **The heredoc did not finish.** If a `cat > .env <<'EOF'` block was pasted
+   into a shell that swallowed part of it, the file is short or empty. Start
+   over with `cp .env.local.example .env`.
+
+Compose never errors on a missing `.env` — it warns about the handful of
+variables that have no default and silently uses defaults for everything else,
+which is why the symptom looks like several separate problems.
 
 **Apple Silicon:** both images are multi-arch, so nothing special is needed. If
 Docker ever complains about platform, `docker compose build --pull` usually
