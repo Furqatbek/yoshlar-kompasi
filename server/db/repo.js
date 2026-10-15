@@ -79,23 +79,32 @@ async function applyTurn(sessionId, { inputTokens = 0, outputTokens = 0, incTurn
   return rows[0];
 }
 
-// Record a batch of 1-5 answers. Re-answering a question overwrites it, so a
-// correction replaces rather than double-counts, and answered_count is kept in
-// step with the rows inside the same transaction.
-async function saveAnswers(sessionId, answers) {
-  if (!answers || !answers.length) return null;
+// Record a batch. `answers` carry a 1-5 value; `skipped` are question numbers
+// the child passed on, stored with a NULL value so the sitting can reach the
+// end without those questions ever entering an average.
+//
+// Re-answering overwrites, so a correction replaces rather than double-counts.
+// A skip never overwrites a real answer: going back and answering a question
+// is progress, and a later batch repeating the skip must not undo it.
+async function saveAnswers(sessionId, answers, skipped) {
+  const rowsIn = [
+    ...(answers || []).map((a) => [a.question_n, a.value]),
+    ...(skipped || []).map((n) => [n, null]),
+  ];
+  if (!rowsIn.length) return null;
   return withTransaction(async (c) => {
-    for (const a of answers) {
+    for (const [n, value] of rowsIn) {
       await c.query(
         `INSERT INTO answers (session_id, question_n, value) VALUES ($1, $2, $3)
-         ON CONFLICT (session_id, question_n)
-         DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-        [sessionId, a.question_n, a.value]
+         ON CONFLICT (session_id, question_n) DO UPDATE
+           SET value = COALESCE(EXCLUDED.value, answers.value), updated_at = now()`,
+        [sessionId, n, value]
       );
     }
     const { rows } = await c.query(
-      `UPDATE sessions SET answered_count =
-         (SELECT count(*) FROM answers WHERE session_id = $1)
+      `UPDATE sessions SET
+         answered_count = (SELECT count(*) FROM answers WHERE session_id = $1 AND value IS NOT NULL),
+         seen_count     = (SELECT count(*) FROM answers WHERE session_id = $1)
        WHERE id = $1 RETURNING *`,
       [sessionId]
     );
@@ -105,7 +114,7 @@ async function saveAnswers(sessionId, answers) {
 
 async function getAnswers(sessionId) {
   const { rows } = await query(
-    'SELECT question_n, value FROM answers WHERE session_id = $1 ORDER BY question_n ASC',
+    'SELECT question_n, value FROM answers WHERE session_id = $1 AND value IS NOT NULL ORDER BY question_n ASC',
     [sessionId]
   );
   return rows;

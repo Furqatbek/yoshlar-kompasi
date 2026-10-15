@@ -45,6 +45,12 @@ node test/unit/openrouter-adapter.test.js
 echo "==== unit: funnel drop-off arithmetic ===="
 node test/unit/funnel.test.js
 
+echo "==== unit: the 70 questions, pinned ===="
+node test/unit/questions.test.js
+
+echo "==== unit: scoring the inventory ===="
+node test/unit/scoring.test.js
+
 echo "==== unit: paywall split + reminder rules ===="
 node test/unit/paywall.test.js
 

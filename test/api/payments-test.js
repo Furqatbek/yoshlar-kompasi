@@ -56,7 +56,7 @@ const { authorize } = require('./auth-helper');
   // ---- the paywall --------------------------------------------------------
   let view = (await j('GET', '/api/reports/' + share)).data;
   ok('the report reads as locked', view.locked === true);
-  ok('  the child\'s portrait is still shown', /##\s*Surat/.test(view.content_md || ''), (view.content_md || '').slice(0, 40));
+  ok('  the free summary is still shown', /##\s*Qisqacha xulosa/.test(view.content_md || ''), (view.content_md || '').slice(0, 40));
   ok('  the locked sections are named', Array.isArray(view.locked_sections) && view.locked_sections.length > 0,
     JSON.stringify(view.locked_sections));
   ok('  the price is quoted', view.price_uzs === PRICE_UZS, String(view.price_uzs));
@@ -131,19 +131,34 @@ const { authorize } = require('./auth-helper');
 
   view = (await j('GET', '/api/reports/' + share)).data;
   ok('THE REPORT UNLOCKS', view.locked === false);
-  ok('  the full markdown is served', /Hozirgi o‘rni|Hozirgi o/.test(view.content_md || ''),
+  ok('  the full markdown is served', /12 yo‘nalish bo‘yicha natijalar/.test(view.content_md || ''),
     (view.content_md || '').slice(0, 60));
   ok('  locked_sections is gone', view.locked_sections === undefined);
-  // The parsed findings, asserted here rather than in e2e-driver because this
-  // is the only place a report is unlocked. The values come from the stub's
-  // fixed report, so they are exact.
-  ok('  the parsed levels come back intact',
-    view.levels && view.levels.logic === 'kuchli' && view.levels.activity === 'shakllanmoqda',
-    JSON.stringify(view.levels));
+  // The scored findings, asserted here rather than in e2e-driver because this
+  // is the only place a report is unlocked. These come from the SERVER's
+  // arithmetic over the stub's answers, not from the stub's JSON block — the
+  // stub deliberately states a wrong average, so a value matching the block
+  // would mean the model's numbers had been believed.
+  ok('  the scored areas come back', view.categories && typeof view.categories === 'object',
+    JSON.stringify(view.categories && Object.keys(view.categories)));
+  ok('  every one of the twelve areas is present',
+    view.categories && Object.keys(view.categories).length === 12,
+    String(view.categories && Object.keys(view.categories).length));
+  ok('  the averages are the server\'s, not the model\'s claim',
+    view.categories && view.categories.construction_engineering
+    && view.categories.construction_engineering.average !== 4.5,
+    JSON.stringify(view.categories && view.categories.construction_engineering));
+  ok('  a skipped question is not scored as a zero',
+    view.categories && view.categories.construction_engineering
+    && view.categories.construction_engineering.answered === 5
+    && view.categories.construction_engineering.of === 6,
+    JSON.stringify(view.categories && view.categories.construction_engineering));
+  ok('  the ranked interests come back', Array.isArray(view.top_interests) && view.top_interests.length > 0,
+    JSON.stringify((view.top_interests || []).map((t) => t.key)));
   ok('  and the parsed sports', Array.isArray(view.sports) && view.sports.length === 2,
     JSON.stringify(view.sports));
-  ok('  with the json block and markers still stripped',
-    !/```json/.test(view.content_md || '') && !/YAKUN/.test(view.content_md || ''));
+  ok('  with the json block and answer markers still stripped',
+    !/```json/.test(view.content_md || '') && !/JAVOBLAR/.test(view.content_md || ''));
 
   const performAgain = await rpc('PerformTransaction', { id: TXN });
   ok('performing twice is idempotent',

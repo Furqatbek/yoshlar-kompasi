@@ -49,7 +49,7 @@ const server = http.createServer((req, res) => {
     try { payload = JSON.parse(body); } catch (e) {}
     const msgs = payload.messages || [];
     const lastUser = [...msgs].reverse().find((m) => m.role === 'user');
-    const isReport = lastUser && /hisobotni tayyorlang/i.test(lastUser.content || '');
+    const isReport = lastUser && /\[HISOBOT-SOROVI\]/i.test(lastUser.content || '');
     const text = isReport ? REPORT : TURN;
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify({

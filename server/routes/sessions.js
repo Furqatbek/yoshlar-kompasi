@@ -46,19 +46,23 @@ const TOTAL_QUESTIONS = require('../data/questions').COUNT;
 
 function progressOf(session) {
   const answered = Number(session.answered_count || 0);
-  return { answered, total: TOTAL_QUESTIONS, pct: Math.round((answered / TOTAL_QUESTIONS) * 100) };
+  const seen = Number(session.seen_count || 0);
+  return { answered, seen, total: TOTAL_QUESTIONS, pct: Math.round((seen / TOTAL_QUESTIONS) * 100) };
 }
+// The inventory is finished when every question has been put to the child —
+// counting the ones they passed on. A child who skips fourteen questions must
+// still be able to reach the end; measuring by answers alone would strand them.
 function allDone(session) {
-  return Number(session.answered_count || 0) >= TOTAL_QUESTIONS;
+  return Number(session.seen_count || 0) >= TOTAL_QUESTIONS;
 }
 
 // Record whatever the model says it just captured, and hand back the session
 // with its refreshed count. A reply with no marker leaves the count alone.
 async function captureAnswers(sessionId, text, fallback) {
-  const { answers } = parseAnswerMarkers(text);
-  if (!answers.length) return fallback;
+  const { answers, skipped } = parseAnswerMarkers(text);
+  if (!answers.length && !skipped.length) return fallback;
   try {
-    return (await repo.saveAnswers(sessionId, answers)) || fallback;
+    return (await repo.saveAnswers(sessionId, answers, skipped)) || fallback;
   } catch (err) {
     // A bad batch must not cost the adult their turn — the reply is already
     // written and the questions can be re-answered.

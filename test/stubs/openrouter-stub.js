@@ -3,53 +3,64 @@
 const http = require('http');
 
 const REPORT = [
-  '## Surat',
-  '- **Qonuniyatlarni tez ilg‘aydi** — topshiriqlarni mustaqil yechdi.',
-  '- **Qat‘iyatli** — xato javobdan keyin yana urindi.',
-  '## Hozirgi o‘rni',
-  "- **Mantiq va tafakkur** — Kuchli. Ketma-ketliklarni tez davom ettirdi.",
-  "- **Psixologiya va qiziqishlar** — Me’yorda. Qiziquvchan.",
-  '- **Tana va harakat** — Shakllanmoqda. Muvozanat mashq talab qiladi.',
-  '## Maqsad va yo‘l xaritasi',
-  'Maqsad: matematikada kuchli bo‘lish.',
-  '1. Haftasiga 3 kun qonuniyat topshirig‘i.',
-  '2. Oyiga bitta mantiqiy o‘yin.',
-  '## Nimani o‘rganish va mashq qilish',
-  '- **Mantiq** — kuniga 2 ta topshiriq.',
-  '## Tavsiya etilgan sport va mashg‘ulotlar',
-  '- **Futbol** — g‘ayrati baland.',
-  '- **Shaxmat** — strategik fikrlaydi.',
-  '## Ali uchun xat',
+  '## Qisqacha xulosa',
+  'Ali hozirda yasash va tekshirishga qiziqadi. Bu qobiliyat bahosi emas —',
+  'u shu kunlarda nimani yoqtirishini ko‘rsatadi.',
+  '## 12 yo‘nalish bo‘yicha natijalar',
+  '- **Konstruktorlik va muhandislik** — 6/6 javob, o‘rtacha 4.50 — kuchli qiziqish bildirildi.',
+  '- **Mantiq va matematika** — 6/6 javob, o‘rtacha 4.00 — qiziqish sezilarli.',
+  '- **Tashkiliy qobiliyat** — 6/6 javob, o‘rtacha 1.83 — hozircha kamroq qiziqish bildirildi.',
+  '## Hozirgi qiziqishlar xaritasi',
+  '- **Konstruktorlik va muhandislik** — konstruktor bilan kichik ko‘prik yasab ko‘ring.',
+  '## Rivojlantirish mumkin bo‘lgan yo‘nalishlar',
+  '- **Tashkiliy qobiliyat** — bu hozircha qiziq emas; qobiliyatsizlik emas.',
+  '## To‘garak va mashg‘ulot tavsiyalari',
+  '- **Robototexnika to‘garagi** — qurish javoblariga bog‘liq.',
+  '- **Shaxmat** — mantiq javoblariga bog‘liq.',
+  '## Bolaga o‘qib beriladigan dalda',
   'Ali, sen qiyin savollardan qo‘rqmaysan!',
-  '## Kattalar uchun',
-  '- Urinishni maqtang.',
+  '## Kattalar uchun muhim eslatmalar',
+  'Bu standartlashtirilgan test emas. Qiziqishlar vaqt bilan o‘zgaradi.',
   '',
   '```json',
-  '{"levels": {"mantiq": "kuchli", "psixologiya": "meyorda", "harakat": "shakllanmoqda"}, "sports": ["Futbol", "Shaxmat"]}',
+  '{"categories": {"construction_engineering": {"answered": 6, "average": 4.5, "interest": "strong"}},'
+    + ' "top_interests": ["construction_engineering"], "developing_interests": ["organization"],'
+    + ' "clubs": ["Robototexnika to‘garagi"], "sports": ["Futbol", "Shaxmat"], "data_completeness": "complete"}',
   '```',
 ].join('\n');
 
-const TURN = [
-  'Rahmat! Ali bilan boshlaymiz. Quyidagilarni ovoz chiqarib o‘qing:',
+// Every reply records the batch it just collected.
+//
+// Stateless on purpose: the stub serves every session in the run, so a counter
+// that walked 1..70 once would hand the first driver a full inventory and every
+// later one an empty line. Saving answers is an upsert, so repeating the same
+// batch is harmless. STUB_ANSWERS_PER_TURN=n covers the partial case.
+function answerLine(count) {
+  const pairs = [];
+  for (let n = 1; n <= Math.min(count, 70); n += 1) {
+    pairs.push(n + '=' + (n % 5 === 0 ? 'x' : ((n % 5) + 1)));
+  }
+  return pairs.length ? '[JAVOBLAR: ' + pairs.join(', ') + ']' : '';
+}
+
+const TURN = () => [
+  'Rahmat! Ali bilan davom etamiz. Quyidagilarni ovoz chiqarib o‘qing:',
   '',
-  '> Doira, kvadrat, doira, kvadrat... keyin nima keladi?',
+  '> LEGO yoki konstruktor yig‘ishni yaxshi ko‘raman.',
   '',
-  '> Senda 3 ta konfet bor edi, 2 ta qo‘shildi. Nechta bo‘ldi?',
+  '> Jumboqlar yechishni yaxshi ko‘raman.',
   '',
-  'Javoblarini yozing.',
-  '[YAKUN: MANTIQ]',
-  '[YAKUN: PSIXOLOGIYA]',
-  '[YAKUN: HARAKAT]',
+  'Javoblarini 1–5 oralig‘ida yozing.',
+  answerLine(Number(process.env.STUB_ANSWERS_PER_TURN || 70)),
 ].join('\n');
 
-// A greeting has no answers yet, so it must NOT emit [YAKUN] markers. STUB_MODE=
-// realistic reproduces that (the default keeps the marker-on-greeting behaviour
-// the older e2e-driver relies on).
+// A greeting has collected nothing yet, so it must NOT emit an answer line.
 const REALISTIC = process.env.STUB_MODE === 'realistic';
 const GREETING = [
-  'Assalomu alaykum! Ali bilan mashg‘ulotni boshlaymiz. Quyidagini ovoz chiqarib o‘qing:',
+  'Assalomu alaykum! Ali bilan mashg‘ulotni boshlaymiz.',
+  'Har bir savolga 1–5 oralig‘ida javob bering.',
   '',
-  '> Doira, kvadrat, doira, kvadrat... keyin nima keladi?',
+  '> LEGO yoki konstruktor yig‘ishni yaxshi ko‘raman.',
   '',
   'Javobini yozing.',
 ].join('\n');
@@ -75,12 +86,12 @@ const server = http.createServer((req, res) => {
     // Sanity: OpenAI format must start with a system message and carry no
     // top-level `system` field.
     const lastUser = [...msgs].reverse().find((m) => m.role === 'user');
-    const isReport = lastUser && /hisobotni tayyorlang/i.test(lastUser.content || '');
-    const isGreeting = lastUser && /birinchi savollar guruhini bering/i.test(lastUser.content || '');
+    const isReport = lastUser && /\[HISOBOT-SOROVI\]/i.test(lastUser.content || '');
+    const isGreeting = lastUser && /1-savoldan boshlang/i.test(lastUser.content || '');
     let text;
     if (isReport) text = REPORT;
     else if (REALISTIC && isGreeting) text = GREETING; // no markers
-    else text = TURN;
+    else text = TURN();
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify({
       id: 'gen-stub', object: 'chat.completion', model: payload.model,

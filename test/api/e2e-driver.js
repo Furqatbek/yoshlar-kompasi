@@ -29,7 +29,13 @@ const { installAuth } = require('./auth-helper');
   const visible = (r.data.messages || []).filter((m) => !m.meta);
   ok('  greeting returned (non-meta assistant msg)', visible.some((m) => m.role === 'assistant'));
   ok('  intro user turn is meta (hidden)', (r.data.messages || []).some((m) => m.role === 'user' && m.meta));
-  ok('  progress all tracks done (stub emits markers)', r.data.done === true, JSON.stringify(r.data.progress));
+  // The stub skips every fifth question, so the sitting reaches the end of the
+  // inventory with fewer answers than questions — which is the point: a skip
+  // counts as addressed, never as a zero.
+  ok('  progress counts real answers, and skips still reach the end',
+    r.data.done === true && r.data.progress.seen === 70
+    && r.data.progress.answered === 56 && r.data.progress.total === 70,
+    JSON.stringify(r.data.progress));
 
   const auth = { 'content-type': 'application/json', 'x-session-token': stok };
 
@@ -75,7 +81,8 @@ const { installAuth } = require('./auth-helper');
   r = await j('/api/reports/' + share);
   ok('GET /api/reports/:token -> 200 (public)', r.status === 200);
   ok('  locked until paid', r.data.locked === true, JSON.stringify({ locked: r.data.locked }));
-  ok('  free portrait still served', /##\s*Surat/.test(r.data.content_md || ''), (r.data.content_md || '').slice(0, 40));
+  ok('  the free summary is still served', /##\s*Qisqacha xulosa/.test(r.data.content_md || ''),
+    (r.data.content_md || '').slice(0, 40));
   ok('  findings withheld', r.data.levels && r.data.levels.logic === null && (r.data.sports || []).length === 0, JSON.stringify(r.data.levels));
   ok('  json block stripped from content_md', !/```json/.test(r.data.content_md || ''));
   ok('  markers stripped from content_md', !/YAKUN/.test(r.data.content_md || ''));
