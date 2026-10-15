@@ -64,23 +64,51 @@ async function getMessages(sessionId) {
   return rows;
 }
 
-// Apply the results of one Claude turn: bump turn count, add token usage, OR the
-// completed tracks in, and (optionally) mark the session finished.
-async function applyTurn(sessionId, { inputTokens = 0, outputTokens = 0, progress = null, incTurn = true }) {
+// Apply the results of one Claude turn: bump turn count and add token usage.
+// Progress through the 70 questions is not kept here — it is recorded by
+// saveAnswers() from the model's [JAVOBLAR:] line, so the count always matches
+// rows that exist rather than a flag somebody set.
+async function applyTurn(sessionId, { inputTokens = 0, outputTokens = 0, incTurn = true }) {
   const sets = ['input_tokens = input_tokens + $2', 'output_tokens = output_tokens + $3'];
   const params = [sessionId, inputTokens, outputTokens];
   if (incTurn) sets.push('turn_count = turn_count + 1');
-  if (progress) {
-    sets.push('done_mantiq = done_mantiq OR $4');
-    sets.push('done_psixologiya = done_psixologiya OR $5');
-    sets.push('done_harakat = done_harakat OR $6');
-    params.push(!!progress.MANTIQ, !!progress.PSIXOLOGIYA, !!progress.HARAKAT);
-  }
   const { rows } = await query(
     `UPDATE sessions SET ${sets.join(', ')} WHERE id = $1 RETURNING *`,
     params
   );
   return rows[0];
+}
+
+// Record a batch of 1-5 answers. Re-answering a question overwrites it, so a
+// correction replaces rather than double-counts, and answered_count is kept in
+// step with the rows inside the same transaction.
+async function saveAnswers(sessionId, answers) {
+  if (!answers || !answers.length) return null;
+  return withTransaction(async (c) => {
+    for (const a of answers) {
+      await c.query(
+        `INSERT INTO answers (session_id, question_n, value) VALUES ($1, $2, $3)
+         ON CONFLICT (session_id, question_n)
+         DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+        [sessionId, a.question_n, a.value]
+      );
+    }
+    const { rows } = await c.query(
+      `UPDATE sessions SET answered_count =
+         (SELECT count(*) FROM answers WHERE session_id = $1)
+       WHERE id = $1 RETURNING *`,
+      [sessionId]
+    );
+    return rows[0];
+  });
+}
+
+async function getAnswers(sessionId) {
+  const { rows } = await query(
+    'SELECT question_n, value FROM answers WHERE session_id = $1 ORDER BY question_n ASC',
+    [sessionId]
+  );
+  return rows;
 }
 
 async function setSessionStatus(sessionId, status, finished = false) {
@@ -157,15 +185,18 @@ async function getReportBySession(sessionId) {
 async function createReport(r) {
   const { rows } = await query(
     `INSERT INTO reports
-       (session_id, child_id, content_md, level_logic, level_psych, level_activity, sports, partial, share_token, delivered, delivered_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$11)
+       (session_id, child_id, content_md, sports, clubs, partial, share_token,
+        delivered, delivered_at, categories, top_interests, developing_areas, data_completeness)
+     VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9,$10::jsonb,$11::jsonb,$12::jsonb,$13)
      ON CONFLICT (session_id) DO NOTHING
      RETURNING *`,
     [
       r.sessionId, r.childId, r.contentMd,
-      r.levelLogic, r.levelPsych, r.levelActivity,
-      JSON.stringify(r.sports || []), r.partial, r.shareToken,
+      JSON.stringify(r.sports || []), JSON.stringify(r.clubs || []),
+      r.partial, r.shareToken,
       !!r.delivered, r.delivered ? new Date() : null,
+      JSON.stringify(r.categories || null), JSON.stringify(r.topInterests || []),
+      JSON.stringify(r.developingAreas || []), r.dataCompleteness || null,
     ]
   );
   return rows[0] || null;
@@ -784,6 +815,7 @@ async function optOutReminders(chatId) {
 }
 
 module.exports = {
+  saveAnswers, getAnswers,
   createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,

@@ -1,30 +1,20 @@
 'use strict';
 
-// Parsing helpers for Claude output.
-//  - track markers: [YAKUN: MANTIQ|PSIXOLOGIYA|HARAKAT] drive the report gate.
-//  - the report's trailing ```json block feeds the structured admin columns.
+// Parsing helpers for the model's output.
+//
+//  - [JAVOBLAR: 1=4, 2=5, 3=x] records the 1-5 answers as they are given;
+//    see services/answerMarkers.js. Progress through the 70 is counted from
+//    those rows, which replaced the old [YAKUN:] three-track markers when the
+//    instrument changed.
+//  - the report's trailing ```json block is the model's own copy of the
+//    scores. It is kept for comparison, but services/scoring.js on the server
+//    is what the report and the admin columns are actually built from.
 
-const TRACKS = ['MANTIQ', 'PSIXOLOGIYA', 'HARAKAT'];
+const { parseAnswerMarkers, stripAnswerMarkers } = require('./answerMarkers');
 
-// Which tracks a reply reports as complete.
-function parseTrackMarkers(text) {
-  const found = { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false };
-  const re = /\[YAKUN:\s*(MANTIQ|PSIXOLOGIYA|HARAKAT)\s*\]/gi;
-  let m;
-  while ((m = re.exec(String(text)))) found[m[1].toUpperCase()] = true;
-  return found;
-}
-
-function stripMarkers(text) {
-  return String(text)
-    .split('\n')
-    .filter((l) => !/^\s*\[YAKUN:\s*(MANTIQ|PSIXOLOGIYA|HARAKAT)\s*\]\s*$/i.test(l))
-    .join('\n')
-    .replace(/\[YAKUN:\s*(MANTIQ|PSIXOLOGIYA|HARAKAT)\s*\]/gi, '')
-    .trim();
-}
-
-const LEVELS = ['shakllanmoqda', 'meyorda', 'kuchli'];
+// Kept so reports written under the previous instrument still read correctly:
+// their level columns hold real values and the admin list still shows them.
+const LEGACY_LEVELS = ['shakllanmoqda', 'meyorda', 'kuchli'];
 function normLevel(v) {
   if (v == null) return null;
   const s = String(v).toLowerCase();
@@ -34,37 +24,43 @@ function normLevel(v) {
   return null;
 }
 
-// Parse the report: pull the last ```json block into structured columns and
-// strip it (and any stray markers) from the markdown stored/shown to users.
+const strList = (v) => (Array.isArray(v) ? v.map((x) => String(x)).filter(Boolean) : []);
+
+// Pull the last ```json block out, and strip it (plus any stray answer marker)
+// from the markdown stored and shown to people.
 function parseReport(rawText) {
-  const text = stripMarkers(rawText);
+  const text = stripAnswerMarkers(rawText);
   const re = /```json\s*([\s\S]*?)```/gi;
   let m;
   let last = null;
   while ((m = re.exec(text))) last = m;
 
-  let levels = null;
-  let sports = [];
+  let modelJson = null;
   let contentMd = text;
 
   if (last) {
     try {
       const j = JSON.parse(last[1].trim());
-      if (j && typeof j === 'object') {
-        levels = j.levels && typeof j.levels === 'object' ? j.levels : null;
-        sports = Array.isArray(j.sports) ? j.sports.map((s) => String(s)).filter(Boolean) : [];
-      }
-    } catch (_) { /* leave structured fields null */ }
+      if (j && typeof j === 'object') modelJson = j;
+    } catch (_) { /* a mangled block is simply not a cross-check */ }
     contentMd = (text.slice(0, last.index) + text.slice(last.index + last[0].length)).trim();
   }
 
   return {
     contentMd,
-    levelLogic: levels ? normLevel(levels.mantiq) : null,
-    levelPsych: levels ? normLevel(levels.psixologiya) : null,
-    levelActivity: levels ? normLevel(levels.harakat) : null,
-    sports,
+    // The model's own numbers. scoring.compare() checks them against the
+    // server's; nothing downstream reads them as truth.
+    modelJson,
+    // Recommendations are the model's job — they are prose, not arithmetic —
+    // so these do come from the block.
+    sports: strList(modelJson && modelJson.sports),
+    clubs: strList(modelJson && modelJson.clubs),
   };
 }
 
-module.exports = { TRACKS, LEVELS, parseTrackMarkers, stripMarkers, parseReport, normLevel };
+module.exports = {
+  LEGACY_LEVELS, normLevel, parseReport,
+  parseAnswerMarkers, stripAnswerMarkers,
+  // Back-compat alias: sessions.js strips markers from every reply.
+  stripMarkers: stripAnswerMarkers,
+};

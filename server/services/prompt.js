@@ -65,7 +65,14 @@ Siz “Yosh Iste’dodlar Kompasi” veb-ilovasi ichida ishlayapsiz. Maqsad — 
 
 11. 70 ta savol tugagach, faqat to‘plangan javoblarga asoslanib yakunlashni taklif qiling. To‘liq hisobotni faqat “[HISOBOT-SOROVI]” belgisi bilan boshlangan maxsus so‘rov kelganda yozing. Oddiy suhbat ichida hisobot so‘ralsa, “To‘liq hisobotni olish uchun ‘Yakunlash’ tugmasini bosing” deb tushuntiring.
 
-12. Har bir xulosa dalilga tayanishi shart. Bola aytmagan, savollarda o‘lchanmagan yoki mashg‘ulotda kuzatilmagan jihatlarni uydirmang. Musiqiy qobiliyat, emotsional intellekt, o‘rganish uslubi, sportga moslik yoki kasbiy salohiyat haqida maxsus dalil bo‘lmasa, ularni aniqlangandek yozmang.`;
+12. Har bir xulosa dalilga tayanishi shart. Bola aytmagan, savollarda o‘lchanmagan yoki mashg‘ulotda kuzatilmagan jihatlarni uydirmang. Musiqiy qobiliyat, emotsional intellekt, o‘rganish uslubi, sportga moslik yoki kasbiy salohiyat haqida maxsus dalil bo‘lmasa, ularni aniqlangandek yozmang.
+
+13. Har bir savol guruhi javoblarini qayd etgandan so‘ng, javobingiz OXIRIDA alohida qatorda aynan shu texnik belgini yozing:
+
+   [JAVOBLAR: 1=4, 2=5, 3=x, 4=2]
+
+   Bunda raqam — savol raqami, qiymat — bolaning 1–5 javobi, x — o‘tkazib yuborilgan savol. Faqat shu guruhda haqiqatan javob olingan savollarni yozing; javob olinmagan savolni umuman kiritmang va qiymatni taxmin qilmang. Bu belgi kattalarga ko‘rinmaydi — uni tizim o‘qiydi va o‘rtacha ballarni o‘zi hisoblaydi. Siz hisoblamang.
+`;
 
 const REPORT_JSON_RULE = `## Hisobot uchun tuzilmali ma’lumot (majburiy)
 

@@ -8,7 +8,8 @@ const repo = require('../db/repo');
 const prompt = require('../services/prompt');
 const claude = require('../services/claude');
 const delivery = require('../services/delivery');
-const { parseTrackMarkers, parseReport } = require('../services/reportParse');
+const { parseAnswerMarkers, stripAnswerMarkers, parseReport } = require('../services/reportParse');
+const scoring = require('../services/scoring');
 const { sessionAuth } = require('../middleware/auth');
 const { rateLimit, clientIp } = require('../middleware/rateLimit');
 const { asyncHandler, badRequest, forbidden } = require('../utils/http');
@@ -38,15 +39,32 @@ const reportLimiter = rateLimit({
   message: 'Hisobot tayyorlanmoqda — biroz kuting.',
 });
 
+// Progress is now "how far through the 70", counted from answers that exist
+// rather than from flags a model set. `done` means every question has an
+// answer or was deliberately skipped past; the adult can still finish early.
+const TOTAL_QUESTIONS = require('../data/questions').COUNT;
+
 function progressOf(session) {
-  return { mantiq: session.done_mantiq, psixologiya: session.done_psixologiya, harakat: session.done_harakat };
+  const answered = Number(session.answered_count || 0);
+  return { answered, total: TOTAL_QUESTIONS, pct: Math.round((answered / TOTAL_QUESTIONS) * 100) };
 }
 function allDone(session) {
-  return session.done_mantiq && session.done_psixologiya && session.done_harakat;
+  return Number(session.answered_count || 0) >= TOTAL_QUESTIONS;
 }
-function markerFlags(text) {
-  const p = parseTrackMarkers(text);
-  return { MANTIQ: p.MANTIQ, PSIXOLOGIYA: p.PSIXOLOGIYA, HARAKAT: p.HARAKAT };
+
+// Record whatever the model says it just captured, and hand back the session
+// with its refreshed count. A reply with no marker leaves the count alone.
+async function captureAnswers(sessionId, text, fallback) {
+  const { answers } = parseAnswerMarkers(text);
+  if (!answers.length) return fallback;
+  try {
+    return (await repo.saveAnswers(sessionId, answers)) || fallback;
+  } catch (err) {
+    // A bad batch must not cost the adult their turn — the reply is already
+    // written and the questions can be re-answered.
+    console.error('[answers] session=' + sessionId + ' save failed: ' + err.message);
+    return fallback;
+  }
 }
 
 // POST /api/sessions — create child + session, greet + first batch.
@@ -111,10 +129,11 @@ router.post(
         system: prompt.systemPrompt(), model,
         maxTokens: config.llm.conversationMaxTokens, messages: history,
       });
-      await repo.addMessage(session.id, 'assistant', out.text, false);
-      const updated = await repo.applyTurn(session.id, {
-        inputTokens: out.inputTokens, outputTokens: out.outputTokens, progress: markerFlags(out.text), incTurn: true,
+      await repo.addMessage(session.id, 'assistant', stripAnswerMarkers(out.text), false);
+      let updated = await repo.applyTurn(session.id, {
+        inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: true,
       });
+      updated = await captureAnswers(session.id, out.text, updated);
       const messages = await repo.getMessages(session.id);
       return res.status(201).json({ ...base, messages, progress: progressOf(updated), done: allDone(updated) });
     } catch (err) {
@@ -191,12 +210,13 @@ router.post(
       system: prompt.systemPrompt(), model: claude.modelFor(session.model),
       maxTokens: config.llm.conversationMaxTokens, messages: history,
     });
-    await repo.addMessage(session.id, 'assistant', out.text, false);
-    const updated = await repo.applyTurn(session.id, {
-      inputTokens: out.inputTokens, outputTokens: out.outputTokens, progress: markerFlags(out.text), incTurn: true,
+    await repo.addMessage(session.id, 'assistant', stripAnswerMarkers(out.text), false);
+    let updated = await repo.applyTurn(session.id, {
+      inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: true,
     });
+    updated = await captureAnswers(session.id, out.text, updated);
     res.json({
-      reply: out.text, progress: progressOf(updated), done: allDone(updated),
+      reply: stripAnswerMarkers(out.text), progress: progressOf(updated), done: allDone(updated),
       turn_count: updated.turn_count, cap_reached: false,
     });
   })
@@ -305,6 +325,19 @@ router.post(
     await repo.applyTurn(session.id, { inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: false });
 
     const parsed = parseReport(out.text);
+
+    // The scores are computed here, from the answers in the database, not taken
+    // from the model's JSON block. A language model averaging seventy items
+    // across twelve buckets is not something a paid report should rest on, and
+    // "a skipped question is not a zero" is exactly the rule it gets wrong.
+    // Its block is kept only as a cross-check.
+    const scored = scoring.score(await repo.getAnswers(session.id));
+    const drift = scoring.compare(scored, parsed.modelJson);
+    if (drift.length) {
+      console.warn('[scoring] session=' + session.id + ' model JSON disagrees with the server: '
+        + drift.slice(0, 5).join('; '));
+    }
+
     const shareTok = shareToken();
 
     // Atomic claim: ON CONFLICT DO NOTHING means a concurrent request that
@@ -312,8 +345,10 @@ router.post(
     // never sent twice.
     const created = await repo.createReport({
       sessionId: session.id, childId: child.id, contentMd: parsed.contentMd,
-      levelLogic: parsed.levelLogic, levelPsych: parsed.levelPsych, levelActivity: parsed.levelActivity,
-      sports: parsed.sports, partial, shareToken: shareTok, delivered: false,
+      sports: parsed.sports, clubs: parsed.clubs,
+      categories: scored.categories, topInterests: scored.top_interests,
+      developingAreas: scored.developing_interests, dataCompleteness: scored.data_completeness,
+      partial, shareToken: shareTok, delivered: false,
     });
     if (!created) {
       const winner = await repo.getReportBySession(session.id);

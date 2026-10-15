@@ -68,7 +68,7 @@ Hisobotni o'zbek tilida, ixcham, quyidagi bo'limlar bilan yozing:
 - **Hozirgi qiziqishlar xaritasi** — ballar bilan asoslangan eng yuqori 2–3 qiziqish va ularni sinab ko'rish uchun oddiy faoliyatlar. Ballar teng bo'lsa, teng deb ko'rsating — sun'iy ravishda bittasini g'olib qilmang.
 - **Rivojlantirish mumkin bo'lgan yo'nalishlar** — past ball **qobiliyatsizlik emas**: bu faoliyat bolaga hozircha qiziq emasligini anglatishi mumkin. Tanqidsiz va yorliqsiz yozing.
 - **To'garak va mashg'ulot tavsiyalari** — javoblar bilan asoslangan 1–3 ta variant, qiziqishni sinab ko'rish imkoniyati sifatida, kasb bashorati sifatida emas.
-- **[Bolaning ismi]ga dalda** — bola tushunadigan sodda, mehribon 2–3 jumla. Boshqa bolalar bilan solishtirmang.
+- **Bolaga o'qib beriladigan dalda** — bola tushunadigan sodda, mehribon 2–3 jumla. Boshqa bolalar bilan solishtirmang.
 - **Kattalar uchun muhim eslatmalar** — natijalar standartlashtirilgan test yoki tashxis emasligi; qiziqishlar vaqt bilan o'zgarishi; bolaning tanlovi va hordig'ini hurmat qilish.
 
 ## To'garak va sport tavsiyalari — yo'riqnoma
