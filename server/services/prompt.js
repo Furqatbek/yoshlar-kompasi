@@ -163,11 +163,19 @@ Qoidalar:
 let _prompt = null;
 let _version = null;
 
+// Drop the assembled prompt so the next call rebuilds it. Called when the
+// question bank changes: an edited bank is a different instrument and must not
+// go on serving the cached text, nor keep the old version hash.
+function invalidate() { _prompt = null; _version = null; }
+
 function assemble() {
   if (_prompt) return _prompt;
 
   const instructions = readSource('loyiha-korsatmalari-uz.md');
-  const bank = readSource('savollar-banki-1-4-sinflar-uz.md');
+  // The live bank when the database has been read (the admin panel can edit
+  // it), otherwise the seeded file — so a cold start never serves an empty one.
+  const bank = require('./questionBank').cachedMarkdown()
+    || readSource('savollar-banki-1-4-sinflar-uz.md');
 
   _prompt = [
     instructions,
@@ -277,6 +285,7 @@ function buildReportRequest(name, partial) {
 }
 
 module.exports = {
+  invalidate,
   systemPrompt,
   promptVersion,
   buildIntro,

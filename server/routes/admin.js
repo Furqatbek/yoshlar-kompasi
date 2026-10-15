@@ -11,6 +11,8 @@ const { rateLimit, clientIp } = require('../middleware/rateLimit');
 const { asyncHandler, badRequest, unauthorized, notFound } = require('../utils/http');
 const leadStatus = require('../utils/leadStatus');
 const funnel = require('../services/funnel');
+const questionBank = require('../services/questionBank');
+const prompt = require('../services/prompt');
 const { formatUzPhone } = require('../utils/phone');
 
 const loginLimiter = rateLimit({
@@ -221,6 +223,72 @@ router.get(
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="lidlar.csv"');
     res.send('﻿' + lines.join('\n'));
+  })
+);
+
+// ---- the question bank ----------------------------------------------------
+//
+// Editing a question changes what every future score means, so the panel shows
+// which questions are the approved defaults and the API records nothing beyond
+// the edit itself. Disabling keeps the row: answers already given to a question
+// must not be orphaned, and a disabled question simply stops being asked.
+
+router.get(
+  '/questions',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const bank = await questionBank.load();
+    res.json({
+      sections: bank.sections.map((sec) => ({
+        key: sec.key, title: sec.title, position: sec.position,
+        questions: sec.items.map((q) => ({
+          n: q.n, text: q.text, active: q.active, is_default: q.is_default,
+        })),
+      })),
+      bands: bank.bands,
+      active_count: bank.activeCount,
+      total: bank.total,
+      prompt_version: prompt.promptVersion(),
+    });
+  })
+);
+
+router.patch(
+  '/questions/:n',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const n = Number(req.params.n);
+    if (!Number.isInteger(n) || n < 1) throw badRequest('Savol raqami noto\u2018g\u2018ri');
+    const b = req.body || {};
+    if (typeof b.text === 'string' && b.text.trim().length > 300) {
+      throw badRequest('Savol matni juda uzun (300 belgidan oshmasin)');
+    }
+    const updated = await questionBank.updateQuestion(n, {
+      text: b.text, active: typeof b.active === 'boolean' ? b.active : undefined,
+    });
+    if (!updated) throw notFound('Savol topilmadi');
+    // The bank is part of the prompt, so both caches go together — otherwise
+    // the next sitting would be scored against a bank nobody is being asked.
+    await questionBank.refresh();
+    prompt.invalidate();
+    res.json({ question: updated, prompt_version: prompt.promptVersion() });
+  })
+);
+
+router.patch(
+  '/bands/:key',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const b = req.body || {};
+    const maxValue = b.max_value == null ? undefined : Number(b.max_value);
+    if (maxValue !== undefined && !(maxValue > 1 && maxValue <= 5.01)) {
+      throw badRequest('Chegara 1 dan 5 gacha bo\u2018lishi kerak');
+    }
+    const updated = await questionBank.updateBand(req.params.key, { maxValue, label: b.label });
+    if (!updated) throw notFound('Chegara topilmadi');
+    await questionBank.refresh();
+    prompt.invalidate();
+    res.json({ band: updated });
   })
 );
 

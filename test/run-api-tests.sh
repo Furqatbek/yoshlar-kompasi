@@ -97,6 +97,9 @@ echo "==== api: Telegram reminders ===="
 node test/api/reminders-test.js
 # Last: it asserts on absolute funnel counts, so it wants the other suites'
 # traffic already in the table rather than arriving underneath it.
+echo "==== api: the admin question bank ===="
+node test/api/questions-test.js
+
 echo "==== api: funnel tracking + drop-off ===="
 node test/api/funnel-test.js
 

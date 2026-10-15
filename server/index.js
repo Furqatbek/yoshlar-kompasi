@@ -76,9 +76,24 @@ app.get('*', (req, res, next) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const server = app.listen(config.port, () => {
+const server = app.listen(config.port, async () => {
   // eslint-disable-next-line no-console
   console.log('[yoshlar-kompasi] listening on :' + config.port + ' (' + config.nodeEnv + ')');
+  // Load the live question bank before anything assembles a prompt. If the
+  // database is unreachable the seeded file still serves, so a bank problem
+  // degrades to the shipped default rather than to an empty assessment.
+  try {
+    const questionBank = require('./services/questionBank');
+    await questionBank.refresh();
+    require('./services/prompt').invalidate();
+    const bank = await questionBank.load();
+    // eslint-disable-next-line no-console
+    console.log('[bank] ' + bank.activeCount + '/' + bank.total + ' questions active across '
+      + bank.sections.length + ' sections');
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[bank] falling back to the seeded file: ' + err.message);
+  }
   // Surface which LLM is actually wired up (a mismatched model id is the most
   // common misconfiguration) and which prompt version this build carries, so a
   // stale image is immediately visible in the logs. Never logs the API key.

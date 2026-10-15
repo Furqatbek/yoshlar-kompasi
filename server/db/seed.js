@@ -28,8 +28,19 @@ async function run() {
   }
 }
 
+// The question bank ships with the app, so seeding it is part of every deploy
+// rather than a one-off. Non-destructive: an administrator's edits survive.
+async function runAll() {
+  await run();
+  const { seedQuestions } = require('./seed-questions');
+  const added = await seedQuestions(pool);
+  // eslint-disable-next-line no-console
+  console.log('[seed] question bank: +' + added.questions + ' questions, +'
+    + added.sections + ' sections, +' + added.bands + ' bands');
+}
+
 if (require.main === module) {
-  run()
+  runAll()
     .then(() => pool.end())
     .then(() => process.exit(0))
     .catch((err) => {
@@ -39,4 +50,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { run };
+module.exports = { run, runAll };

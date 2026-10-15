@@ -20,6 +20,8 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 | Suite | Covers |
 |---|---|
 | `unit/openrouter-adapter.test.js` | Provider dispatch, request/response wire shapes, retryable-error classification, cross-provider `modelFor` resolution (self-contained — spins its own stub on `:5698`) |
+| `unit/questions.test.js` | The 70 approved question texts, word for word, plus the section boundaries, the 1-5 scale and the interpretation bands. The instrument is the product: a reworded question silently changes what every score means and nothing else would notice |
+| `unit/scoring.test.js` | Per-area means over answered items only (a skipped question is never a zero), the band boundaries including a perfect 5.00, ties kept as ties, areas with too few answers scoring nothing, and that a model doing the arithmetic wrong is caught rather than believed |
 | `unit/funnel.test.js` | Drop-off arithmetic: loss per step, biggest leak vs steepest step, a later stage out-counting an earlier one, empty windows, tiny samples (no DB, no app) |
 | `unit/compose-env.test.js` | Every setting documented in `.env.example` is actually passed through to the container that reads it, the feature switches default to off, and no passthrough is wired to a differently-named variable. Exists because this failed silently once: new settings reached `config.js` and `.env.example` but not `docker-compose.yml`, so Docker deployments quietly ran on defaults |
 | `unit/paywall.test.js` | What stays free (the portrait and the child's letter) vs what is sold, findings withheld from the JSON, and the reminder rules — quiet hours across midnight, message content. Also the Telegram messages themselves: that the delivery message states the price **before** the parent taps through to a paywall, that a child's nickname cannot inject markup, and that a reminder with no absolute base URL is skipped rather than sent with a link Telegram will reject |
@@ -32,6 +34,7 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 | `api/stale-model-test.js` | Sessions stamped under one LLM provider keep working after switching providers |
 | `api/payments-test.js` | Paid reports end to end. Payme's integration is inbound, so the driver **plays Payme** — the same JSON-RPC calls in the same order — and checks both the protocol answers (auth, error codes, idempotent retries, one live transaction per order) and their effect: the report unlocks on `PerformTransaction` and re-locks on a refund |
 | `api/reminders-test.js` | Who gets chased and who does not: timing thresholds, the give-up window, paid reports excluded, opt-out and `/stop`, quiet hours, claim-once, and that a failed send releases the claim so it can be retried. Ages rows in the DB rather than waiting |
+| `api/questions-test.js` | The admin question bank: reading it, editing a question, disabling one (the row is kept, so answers already given are not orphaned), tuning a score threshold, and the consequence that matters — a bank edit reaches the prompt and changes its version, because an edited bank is a different instrument |
 | `api/funnel-test.js` | Funnel tracking end to end: the collector accepts only client-observable stages (a forged `finished` is dropped), server-recorded stages fire on the real requests, reloads do not inflate counts, and marking a lead enrolled closes the funnel. Runs **last** — it asserts absolute counts |
 
 The suites run with authorization ON, as production does. Those written before
@@ -123,7 +126,7 @@ page in the state an adult who logged in yesterday would see.
 
 - `stubs/openrouter-stub.js` — OpenAI-format `/chat/completions`; rejects bare
   (slash-less) model ids with 400 like real OpenRouter; `STUB_MODE=realistic`
-  makes the greeting markerless (no `[YAKUN]`) as a real greeting would be.
+  makes the greeting markerless (no `[JAVOBLAR:]`) as a real greeting would be.
 - `stubs/anthropic-stub.js` — Anthropic `/v1/messages` format.
 
 Both accept `STUB_PORT` to relocate.

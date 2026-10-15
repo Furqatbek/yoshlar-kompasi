@@ -1063,6 +1063,7 @@ input, textarea, button, select { font-family: var(--font-body); }
       <span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 12px; height: 12px; background: var(--color-accent); display: inline-block;"></span><span style="font-family: var(--font-heading); font-weight: 700;">{{ brand }}</span><span class="tag tag-accent">Admin</span></span>
       <a href="#/admin/leads" style="color: var(--color-neutral-100); text-decoration: none; font-weight: {{ leadsNavW }};">Lidlar</a>
       <a href="#/admin/stats" style="color: var(--color-neutral-100); text-decoration: none; font-weight: {{ statsNavW }};">Statistika</a>
+      <a href="#/admin/savollar" style="color: var(--color-neutral-100); text-decoration: none; font-weight: {{ qNavW }};">Savollar</a>
       <span style="flex: 1;"></span>
       <button type="button" onClick="{{ admLogout }}" style="background: none; border: 1px solid var(--color-neutral-700); color: var(--color-neutral-100); padding: 6px 12px; cursor: pointer; font-size: 13px;">Chiqish</button>
     </div>
@@ -1166,6 +1167,48 @@ input, textarea, button, select { font-family: var(--font-body); }
       </sc-if>
     </div>
   </main>
+  </sc-if>
+
+  <sc-if value="{{ isQuestions }}" hint-placeholder-val="{{ false }}">
+    <main data-screen-label="Admin — savollar" style="flex: 1;">
+      <div style="max-width: 980px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);">
+        <h2 style="margin-bottom: 2px;">Savollar banki</h2>
+        <p class="text-muted" style="margin-bottom: var(--space-4);">{{ qSummary }}</p>
+
+        <!-- Editing a question changes what every future score means, and the
+             old scores were produced by the old wording. Saying so once, here,
+             is cheaper than explaining it after the fact. -->
+        <div style="background: var(--color-accent-100); border: 1px solid var(--color-accent-300); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5);">
+          <p style="margin: 0; font-size: 14px; line-height: 1.5; max-width: 72ch;">Savol matnini o'zgartirsangiz, undan keyingi barcha natijalar yangi matnga tegishli bo'ladi — eski hisobotlar esa eski savolga. Savolni o'chirish o'rniga «faolsizlantirish» tavsiya etiladi: shunda unga berilgan javoblar saqlanib qoladi.</p>
+        </div>
+
+        <sc-if value="{{ qError }}" hint-placeholder-val="{{ false }}">
+          <p class="text-muted" style="color: var(--color-accent-2); margin-bottom: var(--space-3);">{{ qError }}</p>
+        </sc-if>
+
+        <sc-for list="{{ qSections }}" as="sec" hint-placeholder-count="12">
+          <div style="margin-bottom: var(--space-5);">
+            <h4 style="margin-bottom: var(--space-2);">{{ sec.position }}. {{ sec.title }}</h4>
+            <sc-for list="{{ sec.questions }}" as="q" hint-placeholder-count="6">
+              <div style="display: grid; grid-template-columns: 34px 1fr auto; gap: var(--space-2); align-items: center; border-top: 1px solid var(--color-divider); padding: 8px 0;">
+                <span class="text-muted" style="font-size: 13px;">{{ q.n }}</span>
+                <input class="input" value="{{ q.text }}" onChange="{{ q.onText }}" style="font-size: 14px; opacity: {{ q.opacity }};">
+                <button type="button" class="{{ q.toggleCls }}" onClick="{{ q.toggle }}" style="cursor: pointer; white-space: nowrap;">{{ q.toggleLabel }}</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+
+        <h4 style="margin: var(--space-6) 0 var(--space-2);">Natija chegaralari</h4>
+        <p class="text-muted" style="font-size: 13px; max-width: 66ch; margin-bottom: var(--space-3);">Bu chegaralar javoblarni guruhlash uchun. Ular tasdiqlangan psixometrik me'yor emas va hisobotda shunday deb ko'rsatiladi.</p>
+        <sc-for list="{{ qBands }}" as="b" hint-placeholder-count="4">
+          <div style="display: grid; grid-template-columns: 90px 1fr; gap: var(--space-2); align-items: center; border-top: 1px solid var(--color-divider); padding: 8px 0;">
+            <input class="input" type="number" step="0.01" min="1" max="5" value="{{ b.max }}" onChange="{{ b.onMax }}" style="font-size: 14px;">
+            <input class="input" value="{{ b.label }}" onChange="{{ b.onLabel }}" style="font-size: 14px;">
+          </div>
+        </sc-for>
+      </div>
+    </main>
   </sc-if>
 
   <sc-if value="{{ isStats }}" hint-placeholder-val="{{ false }}">
@@ -1321,6 +1364,7 @@ class Component extends DCLogic {
     fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
     // server-fetched, route-scoped data
     report: null, reportLoading: false, reportNotFound: false, deliveryLink: '', sessLoading: false,
+    qBank: null, qError: '',
     leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null,
     // Telegram authorization (required before any assessment can start).
     authed: false, authChecked: false, authParent: null, authMarketing: false,
@@ -1804,6 +1848,7 @@ class Component extends DCLogic {
     if (seg[0] === 'admin' && this.state.admAuthed) {
       if (seg[1] === 'leads' && seg[2]) this.fetchLead(seg[2]);
       else if (seg[1] === 'stats') this.fetchStats();
+      else if (seg[1] === 'savollar') this.loadQuestions();
       else this.fetchLeads();
     }
   }
@@ -1902,6 +1947,36 @@ class Component extends DCLogic {
     const p = this.state.progress;
     if (p.seen >= p.total) this.setState({ gate: true, gateError: '' });
     else this.setState({ finishConfirm: true });
+  }
+
+  // ---- admin: the question bank -------------------------------------------
+  async loadQuestions() {
+    try {
+      const d = await this.api('/admin/questions');
+      this.setState({ qBank: d, qError: '' });
+    } catch (e) {
+      this.setState({ qError: "Savollarni yuklab bo'lmadi. Sahifani yangilang." });
+    }
+  }
+
+  // Each edit is saved on its own and the bank is reloaded, so the prompt
+  // version shown on screen is the one the next sitting will actually use.
+  async saveQuestion(n, patch) {
+    try {
+      await this.api('/admin/questions/' + n, { method: 'PATCH', body: patch });
+      await this.loadQuestions();
+    } catch (e) {
+      this.setState({ qError: "Saqlanmadi: " + (e && e.message ? e.message : 'xatolik') });
+    }
+  }
+
+  async saveBand(key, patch) {
+    try {
+      await this.api('/admin/bands/' + key, { method: 'PATCH', body: patch });
+      await this.loadQuestions();
+    } catch (e) {
+      this.setState({ qError: "Chegara saqlanmadi: " + (e && e.message ? e.message : 'xatolik') });
+    }
   }
 
   fmtPhone(v) {
@@ -2206,6 +2281,7 @@ class Component extends DCLogic {
     const leadId = admin && segs[1] === 'leads' && segs[2] ? segs[2] : '';
     const isLeadDetail = !!leadId;
     const isStats = admin && route === '/admin/stats';
+    const isQuestions = admin && route === '/admin/savollar';
 
     const repView = (isReport && S.report) ? { md: S.report.md, name: S.report.name, grade: S.report.grade, date: S.report.date, partial: S.report.partial, own: (segs[1] === S.shareToken) } : null;
     const repMd = repView ? repView.md : '';
@@ -2365,7 +2441,32 @@ class Component extends DCLogic {
       beginAuth: () => this.beginAuth(), cancelAuth: () => this.cancelAuth(),
       isReport, isPrivacy: route === '/maxfiylik', isAbout: route === '/haqida',
       isAdminLogin, isAdminArea: admin, isLeads, isLeadDetail, isStats,
-      leadsNavW: isLeads ? '800' : '400', statsNavW: isStats ? '800' : '400',
+      leadsNavW: isLeads ? '700' : '400', statsNavW: isStats ? '700' : '400',
+      qNavW: isQuestions ? '700' : '400',
+      isQuestions,
+      qError: S.qError || '',
+      qSummary: S.qBank
+        ? (S.qBank.active_count + ' / ' + S.qBank.total + " savol faol · prompt " + (S.qBank.prompt_version || ''))
+        : 'Yuklanmoqda…',
+      qSections: ((S.qBank && S.qBank.sections) || []).map((sec) => ({
+        key: sec.key, title: sec.title, position: sec.position,
+        questions: (sec.questions || []).map((q) => ({
+          n: q.n, text: q.text,
+          opacity: q.active ? '1' : '0.45',
+          toggleCls: q.active ? 'btn btn-ghost' : 'btn btn-secondary',
+          toggleLabel: q.active ? 'Faolsizlantirish' : 'Yoqish',
+          toggle: () => this.saveQuestion(q.n, { active: !q.active }),
+          onText: (e) => {
+            const text = e.target.value;
+            if (text && text.trim() && text.trim() !== q.text) this.saveQuestion(q.n, { text });
+          },
+        })),
+      })),
+      qBands: ((S.qBank && S.qBank.bands) || []).map((b) => ({
+        key: b.key, max: String(b.max_value), label: b.label,
+        onMax: (e) => this.saveBand(b.key, { max_value: Number(e.target.value) }),
+        onLabel: (e) => this.saveBand(b.key, { label: e.target.value }),
+      })),
       showNav: !isSession && !adminArea,
       showTestimonials: this.props.showTestimonials ?? false,
       resumeAvail: !!S.resumeName && (route === '/' || route === '' || route === '/boshlash'),

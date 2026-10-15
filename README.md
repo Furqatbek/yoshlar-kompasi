@@ -1,18 +1,28 @@
 # Yosh Iste'dodlar Kompasi
 
-An AI-assisted strengths assessment for primary-school children (grades 1–4) in
-Uzbek. An adult (parent or teacher) reads questions aloud, records the child's
-answers, and Claude produces a personalized report: a strengths profile, a
-"where they are now" read across three tracks, a Gardner multiple-intelligences
-map, a RIASEC interests compass, growth-mindset and self-regulation
-observations, a 3–6 month roadmap, study tips and sport recommendations. The
-centre gets a lead panel with reports, statuses, notes, a weekly funnel and an
-LLM cost estimate.
+An interest inventory for primary-school children (grades 1–4) in Uzbek. An
+adult (parent or teacher) reads 70 fixed statements aloud, the child rates each
+from 1 to 5, and the result is a map of what they are currently drawn to across
+twelve areas — construction, logic, science, creativity, language, leadership,
+empathy, organisation, sport, technology, growth mindset and curiosity.
+
+The scores are computed on the server from the answers in the database, not by
+the model: a skipped question must never count as a zero, and that is the
+arithmetic a language model gets wrong invisibly. Claude writes the prose around
+those numbers — the summary, the interest map, the club recommendations and the
+encouragement read aloud to the child.
+
+**What it is not:** an ability test. A high score means a child says they enjoy
+something, not that they are good at it, and every surface that shows a number
+says so. No diagnosis, no ranking, no comparison between children.
+
+The centre gets a lead panel with reports, statuses, notes, a weekly funnel, an
+LLM cost estimate, and an editable question bank.
 
 This repository contains both halves of the product:
 
 - **Frontend** — a single-file app (`Kompas.dc.html`) built on the `x-dc`
-  runtime (`support.js`) and the *Modernist* design system (`_ds/`). It is a
+  runtime (`support.js`) and the *warm paper* design system (`_ds/`). It is a
   hash-routed SPA that talks to the backend over `/api` and `/admin`.
 - **Backend** (`server/`) — Node + Express + PostgreSQL. It is the Claude proxy
   (holds the API key), the system of record (sessions, messages, reports,
