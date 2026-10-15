@@ -102,6 +102,44 @@ async function j(method, path, body) {
   // Leave the bank as we found it, so a re-run starts from the shipped 70.
   await j('PATCH', '/admin/questions/71', { active: false });
 
+  // ---- ordering -----------------------------------------------------------
+  const before = (await j('GET', '/admin/questions')).data.sections[0].questions.map((q) => q.n);
+  await j('POST', '/admin/questions/2/move', { direction: 'up' });
+  const afterMove = (await j('GET', '/admin/questions')).data.sections[0].questions.map((q) => q.n);
+  ok('a question can be moved within its section',
+    JSON.stringify(afterMove) !== JSON.stringify(before), before + ' -> ' + afterMove);
+  await j('POST', '/admin/questions/2/move', { direction: 'down' });
+  ok('  and moved back', JSON.stringify(
+    (await j('GET', '/admin/questions')).data.sections[0].questions.map((q) => q.n)) === JSON.stringify(before));
+
+  const secBefore = (await j('GET', '/admin/questions')).data.sections.map((x) => x.key);
+  await j('POST', '/admin/sections/logic_math/move', { direction: 'up' });
+  const secAfter = (await j('GET', '/admin/questions')).data.sections.map((x) => x.key);
+  ok('an area can be reordered', JSON.stringify(secAfter) !== JSON.stringify(secBefore),
+    secBefore.slice(0, 3) + ' -> ' + secAfter.slice(0, 3));
+  await j('POST', '/admin/sections/logic_math/move', { direction: 'down' });
+
+  const topQ = await j('POST', '/admin/questions/1/move', { direction: 'up' });
+  ok('  moving past the end is a no-op, not an error', topQ.status === 200, 'status=' + topQ.status);
+
+  // ---- the report's own wording -------------------------------------------
+  const rep = await j('GET', '/admin/report-sections');
+  ok('the report brief is readable', rep.status === 200 && rep.data.sections.length === 7,
+    String(rep.data.sections && rep.data.sections.length));
+  ok('  and says which sections are free',
+    rep.data.sections.filter((x) => x.free).length === 2,
+    JSON.stringify(rep.data.sections.filter((x) => x.free).map((x) => x.key)));
+
+  const vBefore = (await j('GET', '/admin/questions')).data.prompt_version;
+  const editRep = await j('PATCH', '/admin/report-sections/summary',
+    { instruction: 'Bolaning hozirgi qiziqishlari haqida 3 jumla.' });
+  ok('a report section brief can be edited', editRep.status === 200,
+    JSON.stringify(editRep.data).slice(0, 80));
+  ok('  and that also changes the prompt version', editRep.data.prompt_version !== vBefore,
+    vBefore + ' -> ' + editRep.data.prompt_version);
+  const badRep = await j('PATCH', '/admin/report-sections/nope', { heading: 'x' });
+  ok('an unknown report section is a 404', badRep.status === 404, 'status=' + badRep.status);
+
   // ---- guards -------------------------------------------------------------
   const missing = await j('PATCH', '/admin/questions/999', { text: 'x' });
   ok('an unknown question is a 404, not a silent no-op', missing.status === 404,

@@ -261,4 +261,17 @@ test('escaping covers the three characters Telegram parses', () => {
   assert.strictEqual(tg.esc(null), '', 'a missing value is empty, not "null"');
 });
 
+// The report template says which sections are free; paywall.js decides it from
+// the heading. Two places holding the same fact is how a paid section quietly
+// becomes free, so they are checked against each other.
+test('the report template and the paywall agree on what is free', () => {
+  const { SECTIONS } = require('../../server/data/reportTemplate');
+  for (const sec of SECTIONS) {
+    const headingIsFree = paywall.isFreeHeading(sec.heading);
+    assert.strictEqual(headingIsFree, sec.free,
+      sec.heading + ': template says free=' + sec.free + ', paywall says ' + headingIsFree);
+  }
+  assert.strictEqual(SECTIONS.filter((s) => s.free).length, 2, 'exactly two sections are free');
+});
+
 console.log('\n' + pass + ' passed, 0 failed');

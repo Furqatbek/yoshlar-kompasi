@@ -750,7 +750,8 @@ input, textarea, button, select { font-family: var(--font-body); }
       </sc-if>
       <div class="no-print" style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); align-items: center;">
         <button type="button" class="btn btn-primary" onClick="{{ printNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 9V2h12v7"></path><rect x="6" y="14" width="12" height="8"></rect></svg>PDF yuklab olish</button>
-        <button type="button" class="btn btn-secondary" onClick="{{ resetAll }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Yangi mashg'ulot</button>
+        <button type="button" class="btn btn-secondary" onClick="{{ printNow }}">Chop etish</button>
+        <button type="button" class="btn btn-secondary" onClick="{{ resetAll }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Boshqa bola uchun</button>
         <span style="flex: 1;"></span>
         <button type="button" class="btn btn-ghost" onClick="{{ copyShare }}" style="font-size: 13px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="0" ry="0"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>{{ copyLabel }}</button>
         <sc-if value="{{ deliveryLink }}" hint-placeholder-val="{{ false }}"><a class="btn btn-secondary no-print" href="{{ deliveryLink }}" target="_blank" rel="noopener" style="font-size: 13px; text-decoration: none;">Telegram orqali olish</a></sc-if>
@@ -1188,11 +1189,19 @@ input, textarea, button, select { font-family: var(--font-body); }
 
         <sc-for list="{{ qSections }}" as="sec" hint-placeholder-count="12">
           <div style="margin-bottom: var(--space-5);">
-            <h4 style="margin-bottom: var(--space-2);">{{ sec.position }}. {{ sec.title }}</h4>
+            <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+              <h4 style="margin: 0;">{{ sec.position }}. {{ sec.title }}</h4>
+              <button type="button" class="btn btn-ghost" onClick="{{ sec.up }}" title="Yo'nalishni yuqoriga" style="cursor: pointer; padding: 4px 8px;">↑</button>
+              <button type="button" class="btn btn-ghost" onClick="{{ sec.down }}" title="Yo'nalishni pastga" style="cursor: pointer; padding: 4px 8px;">↓</button>
+            </div>
             <sc-for list="{{ sec.questions }}" as="q" hint-placeholder-count="6">
-              <div style="display: grid; grid-template-columns: 34px 1fr auto; gap: var(--space-2); align-items: center; border-top: 1px solid var(--color-divider); padding: 8px 0;">
+              <div style="display: grid; grid-template-columns: 34px 1fr auto auto; gap: var(--space-2); align-items: center; border-top: 1px solid var(--color-divider); padding: 8px 0;">
                 <span class="text-muted" style="font-size: 13px;">{{ q.n }}</span>
                 <input class="input" value="{{ q.text }}" onChange="{{ q.onText }}" style="font-size: 14px; opacity: {{ q.opacity }};">
+                <span style="display: flex; gap: 2px;">
+                  <button type="button" class="btn btn-ghost" onClick="{{ q.up }}" title="Yuqoriga" style="cursor: pointer; padding: 4px 8px;">↑</button>
+                  <button type="button" class="btn btn-ghost" onClick="{{ q.down }}" title="Pastga" style="cursor: pointer; padding: 4px 8px;">↓</button>
+                </span>
                 <button type="button" class="{{ q.toggleCls }}" onClick="{{ q.toggle }}" style="cursor: pointer; white-space: nowrap;">{{ q.toggleLabel }}</button>
               </div>
             </sc-for>
@@ -1201,6 +1210,18 @@ input, textarea, button, select { font-family: var(--font-body); }
               <input class="input" placeholder="Yangi savol qo'shish…" value="{{ sec.draft }}" onChange="{{ sec.onDraft }}" style="font-size: 14px;">
               <button type="button" class="btn btn-secondary" onClick="{{ sec.add }}" style="cursor: pointer; white-space: nowrap;">Qo'shish</button>
             </div>
+          </div>
+        </sc-for>
+
+        <h4 style="margin: var(--space-6) 0 var(--space-2);">Hisobot bo'limlari</h4>
+        <p class="text-muted" style="font-size: 13px; max-width: 70ch; margin-bottom: var(--space-3);">Hisobot matnini sun'iy intellekt yozadi — bu yerda uning topshirig'i tahrirlanadi: sarlavha va o'sha bo'limda nima bo'lishi kerakligi. O'zgartirish keyingi hisobotlardan boshlab amal qiladi.</p>
+        <sc-for list="{{ qReport }}" as="r" hint-placeholder-count="7">
+          <div style="border-top: 1px solid var(--color-divider); padding: 10px 0;">
+            <div style="display: flex; gap: var(--space-2); align-items: center; margin-bottom: 6px;">
+              <input class="input" value="{{ r.heading }}" onChange="{{ r.onHeading }}" style="font-size: 14px; font-weight: 600;">
+              <span class="{{ r.freeCls }}" style="white-space: nowrap;">{{ r.freeLabel }}</span>
+            </div>
+            <textarea class="input" rows="2" value="{{ r.instruction }}" onChange="{{ r.onInstruction }}" style="font-size: 13px;"></textarea>
           </div>
         </sc-for>
 
@@ -1369,7 +1390,7 @@ class Component extends DCLogic {
     fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
     // server-fetched, route-scoped data
     report: null, reportLoading: false, reportNotFound: false, deliveryLink: '', sessLoading: false,
-    qBank: null, qError: '', qDrafts: {},
+    qBank: null, qReport: null, qError: '', qDrafts: {},
     leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null,
     // Telegram authorization (required before any assessment can start).
     authed: false, authChecked: false, authParent: null, authMarketing: false,
@@ -1957,8 +1978,11 @@ class Component extends DCLogic {
   // ---- admin: the question bank -------------------------------------------
   async loadQuestions() {
     try {
-      const d = await this.api('/admin/questions');
-      this.setState({ qBank: d, qError: '' });
+      const [d, r] = await Promise.all([
+        this.api('/admin/questions'),
+        this.api('/admin/report-sections').catch(() => null),
+      ]);
+      this.setState({ qBank: d, qReport: r, qError: '' });
     } catch (e) {
       this.setState({ qError: "Savollarni yuklab bo'lmadi. Sahifani yangilang." });
     }
@@ -1984,6 +2008,25 @@ class Component extends DCLogic {
       await this.loadQuestions();
     } catch (e) {
       this.setState({ qError: "Qo'shilmadi: " + (e && e.message ? e.message : 'xatolik') });
+    }
+  }
+
+  async moveQuestion(n, direction) {
+    try { await this.api('/admin/questions/' + n + '/move', { method: 'POST', body: { direction } }); await this.loadQuestions(); }
+    catch (e) { this.setState({ qError: "Tartib o'zgarmadi" }); }
+  }
+
+  async moveSection(key, direction) {
+    try { await this.api('/admin/sections/' + key + '/move', { method: 'POST', body: { direction } }); await this.loadQuestions(); }
+    catch (e) { this.setState({ qError: "Tartib o'zgarmadi" }); }
+  }
+
+  async saveReportSection(key, patch) {
+    try {
+      await this.api('/admin/report-sections/' + key, { method: 'PATCH', body: patch });
+      await this.loadQuestions();
+    } catch (e) {
+      this.setState({ qError: "Hisobot bo'limi saqlanmadi" });
     }
   }
 
@@ -2470,17 +2513,28 @@ class Component extends DCLogic {
         draft: (S.qDrafts || {})[sec.key] || '',
         onDraft: (e) => this.setState({ qDrafts: { ...(S.qDrafts || {}), [sec.key]: e.target.value } }),
         add: () => this.addQuestion(sec.key),
+        up: () => this.moveSection(sec.key, 'up'),
+        down: () => this.moveSection(sec.key, 'down'),
         questions: (sec.questions || []).map((q) => ({
           n: q.n, text: q.text,
           opacity: q.active ? '1' : '0.45',
           toggleCls: q.active ? 'btn btn-ghost' : 'btn btn-secondary',
           toggleLabel: q.active ? 'Faolsizlantirish' : 'Yoqish',
           toggle: () => this.saveQuestion(q.n, { active: !q.active }),
+          up: () => this.moveQuestion(q.n, 'up'),
+          down: () => this.moveQuestion(q.n, 'down'),
           onText: (e) => {
             const text = e.target.value;
             if (text && text.trim() && text.trim() !== q.text) this.saveQuestion(q.n, { text });
           },
         })),
+      })),
+      qReport: ((S.qReport && S.qReport.sections) || []).map((r) => ({
+        key: r.key, heading: r.heading, instruction: r.instruction,
+        freeCls: r.free ? 'tag tag-accent' : 'tag tag-outline',
+        freeLabel: r.free ? 'bepul' : "to'lovdan keyin",
+        onHeading: (e) => this.saveReportSection(r.key, { heading: e.target.value }),
+        onInstruction: (e) => this.saveReportSection(r.key, { instruction: e.target.value }),
       })),
       qBands: ((S.qBank && S.qBank.bands) || []).map((b) => ({
         key: b.key, max: String(b.max_value), label: b.label,

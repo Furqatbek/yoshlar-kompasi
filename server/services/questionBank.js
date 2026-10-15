@@ -10,7 +10,7 @@
 // Cached in memory because the prompt is assembled on every session start.
 // invalidate() is called whenever the panel writes.
 
-const { query } = require('../db/pool');
+const { query, withTransaction } = require('../db/pool');
 const { SCALE } = require('../data/questions');
 
 let _cache = null;
@@ -18,6 +18,7 @@ let _cache = null;
 // it is assembled on every session start and making it async would ripple
 // through every request path for no gain.
 let _md = null;
+let _report = null;   // the report brief, same caching story as the bank
 
 async function load() {
   if (_cache) return _cache;
@@ -40,7 +41,7 @@ async function load() {
   return _cache;
 }
 
-function invalidate() { _cache = null; _md = null; }
+function invalidate() { _cache = null; _md = null; _report = null; }
 
 // The markdown the prompt embeds. Disabled questions are left out entirely —
 // the model must not see a question it is not meant to ask.
@@ -86,7 +87,35 @@ async function markdown() {
 function cachedMarkdown() { return _md; }
 
 // Reload and re-render. Called at boot and after every admin edit.
-async function refresh() { invalidate(); return markdown(); }
+async function refresh() {
+  invalidate();
+  await loadReportSections();
+  return markdown();
+}
+
+// ---- the report brief ----------------------------------------------------
+async function loadReportSections() {
+  if (_report) return _report;
+  const { rows } = await query(
+    'SELECT key, heading, instruction, position, free FROM report_sections ORDER BY position ASC');
+  _report = rows.length ? rows : null;
+  return _report;
+}
+
+function cachedReportSections() { return _report; }
+
+async function updateReportSection(key, { heading, instruction }) {
+  const sets = [];
+  const params = [key];
+  if (typeof heading === 'string' && heading.trim()) { params.push(heading.trim()); sets.push('heading = $' + params.length); }
+  if (typeof instruction === 'string' && instruction.trim()) { params.push(instruction.trim()); sets.push('instruction = $' + params.length); }
+  if (!sets.length) return null;
+  sets.push('updated_at = now()');
+  const { rows } = await query(
+    'UPDATE report_sections SET ' + sets.join(', ') + ' WHERE key = $1 RETURNING *', params);
+  invalidate();
+  return rows[0] || null;
+}
 
 async function updateQuestion(n, { text, active }) {
   const sets = [];
@@ -123,6 +152,48 @@ async function addQuestion(sectionKey, text) {
   return rows[0] || null;
 }
 
+// Move a question up or down inside its section, or a section up or down in
+// the running order. Positions are rewritten densely afterwards so a list that
+// has been shuffled for a while cannot drift into ties.
+async function moveQuestion(n, dir) {
+  const { rows } = await query('SELECT n, section_key, position FROM questions WHERE n = $1', [n]);
+  if (!rows.length) return null;
+  const q = rows[0];
+  const { rows: sib } = await query(
+    `SELECT n, position FROM questions WHERE section_key = $1
+      AND position ${dir < 0 ? '<' : '>'} $2
+      ORDER BY position ${dir < 0 ? 'DESC' : 'ASC'} LIMIT 1`,
+    [q.section_key, q.position]
+  );
+  if (!sib.length) return q;            // already at the end; not an error
+  await withTransaction(async (c) => {
+    await c.query('UPDATE questions SET position = -1 WHERE n = $1', [q.n]);
+    await c.query('UPDATE questions SET position = $2, updated_at = now() WHERE n = $1', [sib[0].n, q.position]);
+    await c.query('UPDATE questions SET position = $2, updated_at = now() WHERE n = $1', [q.n, sib[0].position]);
+  });
+  invalidate();
+  return { ...q, position: sib[0].position };
+}
+
+async function moveSection(key, dir) {
+  const { rows } = await query('SELECT key, position FROM question_sections WHERE key = $1', [key]);
+  if (!rows.length) return null;
+  const cur = rows[0];
+  const { rows: sib } = await query(
+    `SELECT key, position FROM question_sections WHERE position ${dir < 0 ? '<' : '>'} $1
+      ORDER BY position ${dir < 0 ? 'DESC' : 'ASC'} LIMIT 1`,
+    [cur.position]
+  );
+  if (!sib.length) return cur;
+  await withTransaction(async (c) => {
+    await c.query('UPDATE question_sections SET position = -1 WHERE key = $1', [cur.key]);
+    await c.query('UPDATE question_sections SET position = $2 WHERE key = $1', [sib[0].key, cur.position]);
+    await c.query('UPDATE question_sections SET position = $2 WHERE key = $1', [cur.key, sib[0].position]);
+  });
+  invalidate();
+  return { ...cur, position: sib[0].position };
+}
+
 async function updateBand(key, { maxValue, label }) {
   const sets = [];
   const params = [key];
@@ -138,5 +209,6 @@ async function updateBand(key, { maxValue, label }) {
 
 module.exports = {
   load, invalidate, markdown, cachedMarkdown, refresh, renderMarkdown,
-  updateQuestion, addQuestion, updateBand,
+  updateQuestion, addQuestion, moveQuestion, moveSection, updateBand,
+  loadReportSections, cachedReportSections, updateReportSection,
 };

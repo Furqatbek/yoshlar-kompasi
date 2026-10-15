@@ -61,6 +61,8 @@ Siz “Yosh Iste’dodlar Kompasi” veb-ilovasi ichida ishlayapsiz. Maqsad — 
 
 9. Bola charchasa, tanaffus qilishga yoki keyin davom ettirishga ruxsat bering. Javob bermaslikni salbiy xususiyat deb talqin qilmang.
 
+   Har bir yo‘nalish tugaganda bitta qisqa, iliq jumla bilan dalda bering va keyingi yo‘nalish nomini ayting. Maqtov umumiy bo‘lsin («Zo‘r, shu qism tugadi»), bolaning javoblariga baho bermang — bu yerda to‘g‘ri yoki noto‘g‘ri javob yo‘q.
+
 10. Baholashga aloqasi bo‘lmagan so‘rovlarni muloyimlik bilan rad eting va mashg‘ulotga qayting.
 
 11. 70 ta savol tugagach, faqat to‘plangan javoblarga asoslanib yakunlashni taklif qiling. To‘liq hisobotni faqat “[HISOBOT-SOROVI]” belgisi bilan boshlangan maxsus so‘rov kelganda yozing. Oddiy suhbat ichida hisobot so‘ralsa, “To‘liq hisobotni olish uchun ‘Yakunlash’ tugmasini bosing” deb tushuntiring.
@@ -184,9 +186,20 @@ function assemble() {
     REPORT_JSON_RULE
   ].join('\n\n---\n\n');
 
+  // The version has to identify everything that shapes a report, not just the
+  // system prompt. The report brief is sent as a separate turn at report time,
+  // so hashing only _prompt would let two reports share a version while having
+  // been written to different instructions — and sessions.prompt_version is how
+  // a surprising report gets traced back to what produced it.
+  const brief = JSON.stringify(
+    (require('./questionBank').cachedReportSections()
+      || require('../data/reportTemplate').SECTIONS)
+      .map((sec) => [sec.key, sec.heading, sec.instruction])
+  );
+
   const hash = crypto
     .createHash('sha256')
-    .update(_prompt)
+    .update(_prompt + '\n\x00brief\x00' + brief)
     .digest('hex')
     .slice(0, 12);
 
@@ -236,48 +249,26 @@ function buildReportRequest(name, partial) {
       'yetarli ma’lumot bo‘lmagan yo‘nalishlarda ball va xulosa bermang.\n'
     : '';
 
+  // The section briefs come from the database when it has been read, so an
+  // administrator editing the report wording changes the next report. The
+  // shipped template is the fallback, which keeps a cold start producing a
+  // correct report rather than a headless one.
+  const sections = require('./questionBank').cachedReportSections()
+    || require('../data/reportTemplate').SECTIONS;
+
+  const body = sections
+    .map((sec) => '## ' + sec.heading + '\n' + sec.instruction + '\n')
+    .join('\n');
+
   return (
     '[HISOBOT-SOROVI] Mashg‘ulot yakunlandi.' +
     partialRule +
     ' Hisobotni faqat bolaning 70 savolga bergan haqiqiy javoblari va ' +
     'qayd etilgan kuzatuvlar asosida tayyorlang. Hech narsa uydirmang. ' +
-    'Markdown formatida quyidagi sarlavhalarni aynan shu tartibda ishlating:\n\n' +
-
-    '## Qisqacha xulosa\n' +
-    'Bolaning hozirgi qiziqishlari haqida 2–4 jumla. Buni qobiliyat yoki ' +
-    'kelajakdagi muvaffaqiyat bashorati sifatida ko‘rsatmang.\n\n' +
-
-    '## 12 yo‘nalish bo‘yicha natijalar\n' +
-    'Har bir yo‘nalish uchun javoblangan savollar soni, o‘rtacha ball ' +
-    '(1–5) va ehtiyotkor talqin. Yo‘nalish baholanmagan bo‘lsa, ' +
-    '“yetarli ma’lumot yo‘q” deb yozing.\n\n' +
-
-    '## Hozirgi qiziqishlar xaritasi\n' +
-    'Ballar bilan asoslangan eng yuqori 2–3 qiziqish va ularni ' +
-    'rivojlantirish uchun oddiy sinov faoliyatlari. Teng yoki yaqin ' +
-    'ballarni ochiq ko‘rsating.\n\n' +
-
-    '## Rivojlantirish mumkin bo‘lgan yo‘nalishlar\n' +
-    'Faqat ballar yoki kattalar qayd etgan kuzatuvlar asosida, ' +
-    'tanqidsiz va yorliqsiz yozing. Past ballni qobiliyatsizlik deb ' +
-    'talqin qilmang; bu faoliyat hozircha bolaga qiziq emasligini ' +
-    'anglatishi mumkin.\n\n' +
-
-    '## To‘garak va mashg‘ulot tavsiyalari\n' +
-    'Faqat javoblar bilan asoslangan 1–3 ta variantni yozing. ' +
-    'Ularni kasb bashorati emas, qiziqishni sinab ko‘rish imkoniyati ' +
-    'sifatida ko‘rsating.\n\n' +
-
-    '## Bolaga o‘qib beriladigan dalda\n' +
-    'Bola tushunadigan sodda, mehribon 2–3 jumla. Bolani boshqa ' +
-    'bolalar bilan solishtirmang.\n\n' +
-
-    '## Kattalar uchun muhim eslatmalar\n' +
-    'Natijalar standartlashtirilgan psixologik test yoki tashxis ' +
-    'emasligini; qiziqishlar vaqt o‘tishi bilan o‘zgarishini; ' +
-    'bolaning tanlovi va hordig‘ini hurmat qilish zarurligini eslating.\n\n' +
-
-    'Hisobot matnidan keyin REPORT_JSON_RULE da ko‘rsatilgan tuzilishga ' +
+    'Markdown formatida quyidagi sarlavhalarni aynan shu tartibda va aynan shu ' +
+    'matn bilan ishlating:\n\n' +
+    body +
+    '\nHisobot matnidan keyin REPORT_JSON_RULE da ko‘rsatilgan tuzilishga ' +
     'mos bitta JSON blokini yozing. JSON qiymatlari hisobotdagi haqiqiy ' +
     'natijalarga mos bo‘lsin. 30 kunlik reja, kunlik jadval yoki ' +
     'bosqichma-bosqich oylik dastur yaratmang.'

@@ -304,6 +304,61 @@ router.post(
   })
 );
 
+// Reordering. The thread asks for "bo‘limlar va savollar tartibini boshqarish";
+// one step at a time is enough and makes every move reversible by the opposite
+// click, which matters when the list is seventy long.
+router.post(
+  '/questions/:n/move',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const dir = (req.body || {}).direction === 'up' ? -1 : 1;
+    const moved = await questionBank.moveQuestion(Number(req.params.n), dir);
+    if (!moved) throw notFound('Savol topilmadi');
+    await afterBankWrite();
+    res.json({ ok: true });
+  })
+);
+
+router.post(
+  '/sections/:key/move',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const dir = (req.body || {}).direction === 'up' ? -1 : 1;
+    const moved = await questionBank.moveSection(String(req.params.key), dir);
+    if (!moved) throw notFound('Yo\u2018nalish topilmadi');
+    await afterBankWrite();
+    res.json({ ok: true });
+  })
+);
+
+// The report's own wording. What is editable is the brief, not the prose: the
+// heading the model must use and the line saying what belongs under it.
+router.get(
+  '/report-sections',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const sections = await questionBank.loadReportSections();
+    res.json({ sections: sections || [], prompt_version: prompt.promptVersion() });
+  })
+);
+
+router.patch(
+  '/report-sections/:key',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const b = req.body || {};
+    for (const [field, max] of [['heading', 120], ['instruction', 1000]]) {
+      if (typeof b[field] === 'string' && b[field].trim().length > max) {
+        throw badRequest('Matn juda uzun');
+      }
+    }
+    const updated = await questionBank.updateReportSection(req.params.key, b);
+    if (!updated) throw notFound('Bo\u2018lim topilmadi');
+    await afterBankWrite();
+    res.json({ section: updated, prompt_version: prompt.promptVersion() });
+  })
+);
+
 router.patch(
   '/bands/:key',
   adminAuth,

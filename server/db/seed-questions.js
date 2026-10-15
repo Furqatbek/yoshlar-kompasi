@@ -8,6 +8,7 @@
 // unit/questions.test.js, not in whatever the table happens to hold.
 
 const { SECTIONS, BANDS } = require('../data/questions');
+const { SECTIONS: REPORT_SECTIONS } = require('../data/reportTemplate');
 
 async function seedQuestions(client) {
   let sections = 0, questions = 0, bands = 0;
@@ -39,7 +40,16 @@ async function seedQuestions(client) {
     );
     bands += r.rowCount;
   }
-  return { sections, questions, bands };
+  let report = 0;
+  for (const r of REPORT_SECTIONS) {
+    const res = await client.query(
+      `INSERT INTO report_sections (key, heading, instruction, position, free)
+       VALUES ($1,$2,$3,$4,$5) ON CONFLICT (key) DO NOTHING`,
+      [r.key, r.heading, r.instruction, r.position, r.free]
+    );
+    report += res.rowCount;
+  }
+  return { sections, questions, bands, report };
 }
 
 module.exports = { seedQuestions };
