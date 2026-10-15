@@ -233,6 +233,16 @@ router.get(
 // the edit itself. Disabling keeps the row: answers already given to a question
 // must not be orphaned, and a disabled question simply stops being asked.
 
+// Everything a bank write has to touch. The prompt embeds the bank, the
+// sitting's length is the number of active questions, and both are cached —
+// so forgetting one of these means the next sitting is scored against a bank
+// nobody was asked, or can never reach its own end.
+async function afterBankWrite() {
+  await questionBank.refresh();
+  prompt.invalidate();
+  await require('./sessions').refreshTotal();
+}
+
 router.get(
   '/questions',
   adminAuth,
@@ -269,9 +279,28 @@ router.patch(
     if (!updated) throw notFound('Savol topilmadi');
     // The bank is part of the prompt, so both caches go together — otherwise
     // the next sitting would be scored against a bank nobody is being asked.
-    await questionBank.refresh();
-    prompt.invalidate();
+    await afterBankWrite();
     res.json({ question: updated, prompt_version: prompt.promptVersion() });
+  })
+);
+
+// Add a question of our own. It joins a section at the end and is marked as
+// not part of the approved set, so the panel can show which seventy shipped and
+// which were added here.
+router.post(
+  '/questions',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const b = req.body || {};
+    const text = typeof b.text === 'string' ? b.text.trim() : '';
+    const sectionKey = typeof b.section_key === 'string' ? b.section_key.trim() : '';
+    if (!text) throw badRequest('Savol matnini yozing');
+    if (text.length > 300) throw badRequest('Savol matni juda uzun (300 belgidan oshmasin)');
+    if (!sectionKey) throw badRequest('Yo\u2018nalishni tanlang');
+    const created = await questionBank.addQuestion(sectionKey, text);
+    if (!created) throw badRequest('Bunday yo\u2018nalish yo\u2018q');
+    await afterBankWrite();
+    res.status(201).json({ question: created, prompt_version: prompt.promptVersion() });
   })
 );
 
@@ -286,8 +315,7 @@ router.patch(
     }
     const updated = await questionBank.updateBand(req.params.key, { maxValue, label: b.label });
     if (!updated) throw notFound('Chegara topilmadi');
-    await questionBank.refresh();
-    prompt.invalidate();
+    await afterBankWrite();
     res.json({ band: updated });
   })
 );

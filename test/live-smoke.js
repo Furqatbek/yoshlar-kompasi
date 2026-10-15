@@ -24,7 +24,10 @@ const H = { 'content-type': 'application/json' };
   const greeting = ((r.data && r.data.messages) || []).filter((m) => m.role === 'assistant').map((m) => m.content).join('\n');
   ok('real greeting arrived (non-empty)', greeting.length > 50, 'len=' + greeting.length);
   note('greeting has child-facing blockquote (>)', /^>\s/m.test(greeting));
-  note('greeting has NO premature [YAKUN] markers', !/\[YAKUN:/i.test(greeting), 'markers in greeting');
+  note('greeting has NO premature [JAVOBLAR:] line', !/\[JAVOBLAR:/i.test(greeting), 'answers claimed before any were given');
+  ok('greeting quotes the bank verbatim', /LEGO yoki konstruktor yig/i.test(greeting),
+    'the model must read question 1 as written, not paraphrase it');
+  ok('greeting explains the 1-5 scale', /1\s*[–-]\s*5|1 dan 5/i.test(greeting));
   console.log('\n--- greeting excerpt ---\n' + greeting.slice(0, 400) + '\n---\n');
 
   // 2. Two real answers.
@@ -32,7 +35,12 @@ const H = { 'content-type': 'application/json' };
   ok('turn 1 -> 200 non-empty reply', r.status === 200 && r.data.reply && r.data.reply.length > 20, 'status=' + r.status);
   r = await j('/api/sessions/' + stok + '/messages', { method: 'POST', headers: H, body: JSON.stringify({ content: "Sinov: bo'sh kunimda biror narsani BILIB OLISHNI tanlayman, olim bo'lish qiziq dedi. Kun-tun o'yinida 8 tadan 6 tasini to'g'ri bajardi, adashganda kulib yubordi va yana urindi." }) });
   ok('turn 2 -> 200 non-empty reply', r.status === 200 && r.data.reply && r.data.reply.length > 20, 'status=' + r.status);
-  note('progress markers appearing or pending (info)', true, JSON.stringify(r.data && r.data.progress));
+  // THE contract this instrument rests on: without the answer line nothing is
+  // recorded, every area scores null, and the failure is silent — the report
+  // still generates, it is simply about nobody.
+  ok('the model recorded answers (the [JAVOBLAR:] contract holds)',
+    !!(r.data && r.data.progress && r.data.progress.answered > 0),
+    JSON.stringify(r.data && r.data.progress));
 
   // 3. Real report.
   await j('/api/sessions/' + stok + '/contact', { method: 'POST', headers: H, body: JSON.stringify({ parent_name: 'Sinovchi' }) });
@@ -49,10 +57,19 @@ const H = { 'content-type': 'application/json' };
   const md = (pub.data && pub.data.content_md) || '';
   ok('report body substantial', md.length > 400, 'len=' + md.length);
   ok('report uses ## sections', (md.match(/^## /gm) || []).length >= 3, 'sections=' + (md.match(/^## /gm) || []).length);
-  ok('structured levels parsed from JSON block', pub.data && pub.data.levels && typeof pub.data.levels === 'object', JSON.stringify(pub.data && pub.data.levels));
-  note('honest partial: unassessed levels are null', !!(pub.data && pub.data.levels && Object.values(pub.data.levels).some((v) => v === null)), JSON.stringify(pub.data && pub.data.levels));
-  note('no fabricated full-marks', !(pub.data && pub.data.levels && Object.values(pub.data.levels).every((v) => v === 'kuchli')));
-  note('markers stripped from report text', !/\[YAKUN:/i.test(md));
+  ok('the twelve areas came back scored', pub.data && pub.data.categories
+    && Object.keys(pub.data.categories).length === 12,
+    JSON.stringify(pub.data && pub.data.categories && Object.keys(pub.data.categories).length));
+  note('honest partial: unanswered areas score null', !!(pub.data && pub.data.categories
+    && Object.values(pub.data.categories).some((c) => c.average === null)));
+  note('no fabricated full marks', !(pub.data && pub.data.categories
+    && Object.values(pub.data.categories).every((c) => c.average === 5)));
+  // The instrument measures stated interest. These words in a report mean the
+  // model has written about something it was not given evidence for.
+  note('no claims the inventory cannot support',
+    !/emotsional intellekt|o.rganish uslubi|iqtidorlar xaritasi|IQ/i.test(md),
+    'report claims something seventy agreement ratings cannot show');
+  note('answer lines stripped from report text', !/\[JAVOBLAR:/i.test(md));
   console.log('\n--- report section headers ---\n' + (md.match(/^## .*$/gm) || []).join('\n') + '\n---\n');
   console.log('Full report link: ' + BASE + '/hisobot/' + r.data.share_token);
   console.log('(token usage & cost: admin panel -> Statistika -> LLM xarajati)');

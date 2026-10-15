@@ -13,10 +13,10 @@ palette. The visual direction is the next document, and it starts from here.
 
 ## 1. In one sentence
 
-**A parent sits with their 6–11 year old for half an hour, reads them questions
-from a phone, types back what the child says — and ends up with a written
-portrait of that child's strengths, interests and way of learning, built
-entirely out of the child's own answers.**
+**A parent sits with their 6–11 year old for half an hour, reads them seventy
+short statements from a phone, records how much the child agrees with each —
+and ends up with a map of what that child is currently drawn to, across twelve
+areas, built entirely out of the child's own answers.**
 
 The parent does not hand the phone to the child. The parent reads aloud, the
 child talks, the parent types. That is the product's physical shape and it
@@ -28,9 +28,15 @@ happens to produce a document**, not a test administered to a child.
 A parent should finish and think: *"I learned something true about my child
 tonight, and I didn't know it this morning."*
 
-Not "I got a score." Not "I was told what's wrong." Something specific,
-recognisable, and slightly surprising — the kind of observation a very
-attentive teacher might make after a term, arriving after thirty minutes.
+Not "I was told what's wrong." Something specific and recognisable — and
+sometimes slightly surprising, because a parent rarely hears their child answer
+seventy questions about what they enjoy in one sitting.
+
+**The honest limit of that feeling.** What a parent learns here is what their
+child *says they like*, gathered properly and laid out in one place. That is
+genuinely useful and most parents have never had it. It is not a discovery of
+talent, and the moment we let it sound like one we are selling something we
+cannot deliver.
 
 ---
 
@@ -117,7 +123,7 @@ This is the honest accounting, because the landing page has to earn all three:
 
 1. **A Telegram login.** One tap of "Start" in a bot. Small in effort, real in
    commitment — that chat is personal.
-2. **Thirty to forty minutes of an evening, with their child.** Not thirty
+2. **Twenty to thirty minutes of an evening, with their child.** Not twenty
    minutes of scrolling. This is the large ask and the one most often
    underestimated.
 3. **49 000 so'm**, later, to unlock the full report.
@@ -133,16 +139,18 @@ Landing
    ↓
 Telegram login          one tap in the bot; the bot may ask for the phone
    ↓                    with a Share-contact button (verified, no SMS code)
-Child details           name or nickname, grade 1–4, optional age / goal / notes
-   ↓                    + the adult's confirmation that they are the parent or teacher
-The session             ~30–40 min. The AI asks 2–4 questions at a time and
-   ↓                    switches between directions so the child does not tire.
-                        Adult reads aloud → child answers → adult types.
-                        "Skip", "simpler question" and "pause" always available.
-Report                  generated from the session's real answers only
+Child details           name or nickname, grade 1–4, who is running the sitting
+   ↓                    (parent or teacher), optional age / goal / notes
+                        + the adult's confirmation that they are the parent or teacher
+The session             ~20–30 min, 70 statements in blocks of five or six,
+   ↓                    always in the same order. Adult reads aloud → child
+                        answers 1–5 → adult records it. "Skip" and "pause"
+                        always available; a skipped question is never a zero.
+                        A progress line shows "18 / 70".
+Report                  scored on the server from the recorded answers
    ↓
-Free part               the strengths portrait + the letter to the child
-Paid part               the other eight sections — 49 000 so'm, once, link is permanent
+Free part               the summary + the encouragement written to the child
+Paid part               the other six sections — 49 000 so'm, once, link is permanent
 ```
 
 Everything is resumable. The session link works from any device; a parent can
@@ -152,77 +160,113 @@ stop at bedtime and finish tomorrow.
 
 ## 6. What the session looks at
 
-Three assessment directions, seven lenses. The parent never needs to know a
-single technical term — **the names below are for us, not for them.**
+Seventy statements, twelve areas, the same for every child. The parent never
+needs to know a single technical term — **the names below are for us, not for
+them.**
 
-### The three directions
+### The twelve areas
 
-| Direction | Covers |
+| # | Area | Questions |
+|---|---|---|
+| 1 | Konstruktorlik va muhandislik | 1–6 |
+| 2 | Mantiq va matematika | 7–12 |
+| 3 | Fan va tadqiqotchilik | 13–18 |
+| 4 | Ijodkorlik | 19–24 |
+| 5 | Nutq va til | 25–30 |
+| 6 | Liderlik | 31–36 |
+| 7 | Empatiya va yordam berish | 37–42 |
+| 8 | Tashkiliy qobiliyat | 43–48 |
+| 9 | Sport va faollik | 49–54 |
+| 10 | Texnologiya | 55–60 |
+| 11 | Rivojlanish fikrlashi | 61–65 |
+| 12 | Qiziquvchanlik | 66–70 |
+
+Each statement is something the child agrees with or does not — *"LEGO yoki
+konstruktor yig'ishni yaxshi ko'raman"* — answered from 1 (umuman yoqmaydi) to
+5 (juda yoqadi).
+
+### The questions do not change
+
+The bank is **not** a template of task types. The seventy texts are fixed and
+the model is forbidden from rewording, shortening or substituting them, and
+from reordering them. Every child answers the same instrument, which is the
+only reason the numbers mean anything at all. An administrator can edit the
+bank, and the admin panel says plainly that results after an edit belong to the
+new wording and results before it to the old.
+
+There are no A/B difficulty groups. A first-grader and a fourth-grader get the
+same seventy statements; the grade appears in the report, not in the questions.
+
+### How a score is produced
+
+An area's score is **the mean of the answers the child actually gave in it**.
+
+- A skipped question is not a zero. It is recorded as addressed — so the sitting
+  can reach the end — and left out of the average entirely.
+- An area with fewer than two answers scores nothing and says so. One tap is not
+  an interest.
+- The arithmetic happens **on the server**, from rows in the database. The model
+  is asked for the same numbers and they are compared; where they differ the
+  server's are used and the difference is logged. A language model averaging
+  seventy items across twelve buckets gets it wrong invisibly, and 4.2 looks
+  exactly as plausible as 3.1 on the page.
+
+| Mean | Reads as |
 |---|---|
-| **Mantiq va tafakkur** | Patterns and sequences, arithmetic reasoning, spatial puzzles, memory games, language tasks (making up a story, rhyme, analogy) |
-| **Psixologiya va qiziqishlar** | Interests, attitude to mistakes, self-regulation, emotions, preferred way of learning, curiosity and dreams |
-| **Tana va harakat** | Energy level, favourite games, simple physical mini-tasks the adult observes (balance, catching, jumping, rhythm) |
+| 1.00–2.49 | hozircha kamroq qiziqish bildirildi |
+| 2.50–3.49 | qiziqish aralash yoki vaziyatga bog'liq |
+| 3.50–4.19 | qiziqish sezilarli |
+| 4.20–5.00 | kuchli qiziqish bildirildi |
 
-Each direction is closed only once enough evidence exists — e.g. logic needs 5–6
-tasks of at least 3 kinds. Coverage is a requirement, not a suggestion.
+These bands group answers. They are **not validated psychometric norms** and
+every surface that shows one has to say so.
 
-### The seven lenses
+### What this does NOT measure
 
-1. **Strengths** — three things this child does best, each with an example from
-   their own answer.
-2. **Where they stand** — per direction: *Shakllanmoqda / Me'yorda / Kuchli*
-   (forming / on track / strong), against what is typical for their own grade
-   group. **Never against other children.**
-3. **Talents map** — Gardner's eight intelligences, written in plain Uzbek:
-   words, logic and numbers, imagination and shape, music, movement, getting on
-   with people, understanding oneself, noticing nature. Only what was actually
-   observed is listed.
-4. **Interests compass** — RIASEC leaning: builder, researcher, creator, helper,
-   organiser. Presented as a *current* leaning, not a destiny.
-5. **Attitude to mistakes and self-regulation** — Dweck's growth mindset:
-   what the child does when something goes wrong; persistence, attention,
-   patience. Tied to specific moments, never labelled.
-6. **Emotional intelligence** — recognising and naming feelings, managing them,
-   empathy, peer relationships. At this age this is *forming*, and the report
-   says so as a growth point, not a deficiency.
-7. **Learning style** — whether they got there faster by hearing, seeing or
-   doing. Mostly *observed during the session* rather than asked about, so it
-   costs no extra time. Explicitly a preference: the report is forbidden from
-   saying "a visual child".
+This matters more than the list above, because it is where a product like this
+usually starts lying.
 
-### Age groups
+A high score means **a child says they enjoy something.** It is not evidence
+they are good at it. The inventory does not measure ability, intelligence,
+memory, musical aptitude, emotional intelligence, learning style, speech
+development or fitness for a sport, and the prompt forbids writing about any of
+them without separate evidence. A low score is not an inability — most often it
+means that activity has not come up in that child's life yet.
 
-**A = grades 1–2** (~6–8), **B = grades 3–4** (~8–11). Questions adapt; the bank
-is a template of task *types and difficulty*, never a fixed script — every
-session generates fresh variants with local names, foods and games.
+**The known weakness.** Six-year-olds are unreliable reporters of their own
+preferences, and the scale invites agreement. The honest framing is that this is
+a structured conversation about what a child likes, written down properly — not
+a measurement. Practical tasks and adult observation would be the way to make
+it a measurement, and that is a later product, not a tweak.
 
 ---
 
-## 7. What comes out — the report, in ten parts
+## 7. What comes out — the report, in eight parts
 
 | # | Part | Free? |
 |---|---|---|
-| 01 | Strengths portrait | **Free** |
-| 02 | Where they stand | paid |
-| 03 | Talents map | paid |
-| 04 | Interests compass | paid |
-| 05 | Attitude to mistakes | paid |
-| 06 | Emotional intelligence | paid |
-| 07 | Learning style | paid |
-| 08 | 3–6 month roadmap | paid |
-| 09 | Sport and club recommendations | paid |
-| 10 | A letter to the child, to be read aloud | **Free** |
+| 01 | Qisqacha xulosa — what this child is currently drawn to | **Free** |
+| 02 | 12 yo'nalish bo'yicha natijalar — every area, its score and how many questions it rests on | paid |
+| 03 | Hozirgi qiziqishlar xaritasi — the strongest two or three, with things to try | paid |
+| 04 | Rivojlantirish mumkin bo'lgan yo'nalishlar — the low scores, without judgement | paid |
+| 05 | To'garak va mashg'ulot tavsiyalari — clubs and activities, tied to answers | paid |
+| 06 | Bolaga o'qib beriladigan dalda — written to the child, to be read aloud | **Free** |
+| 07 | Kattalar uchun muhim eslatmalar — what the result is and is not | paid |
 
-**Why 01 and 10 are free.** The child did the work. Holding all of it hostage
-would be a poor trade for them, and the letter is *addressed to the child* —
-charging their parent to read it to them is not something this product does. The
-free part is also what proves the report is real and specific, which is what
-makes the rest worth buying.
+Ties are shown as ties. If three areas score the same, all three are named;
+picking a winner would invent a preference the answers do not show.
 
-**The letter is the emotional core of the entire product.** A parent reading
-their own child a sentence like *"you are not afraid of hard questions — that is
-a real strength"* is the moment this justifies itself. Every design decision
-should protect that moment.
+**Why 01 and the encouragement are free.** The child did the work. Holding all
+of it hostage would be a poor trade for them, and the encouragement is
+*addressed to the child* — charging their parent to read it to them is not
+something this product does. The free part is also what proves the report is
+real and specific, which is what makes the rest worth buying.
+
+**The encouragement is the emotional core of the entire product.** A parent
+reading their own child a sentence like *"you are not afraid of hard questions
+— that is a real strength"* is the moment this justifies itself. Every design
+decision should protect that moment, including on paper: the printed report
+drops the fill behind it so it survives a mono printer rather than vanishing.
 
 ---
 
@@ -232,13 +276,26 @@ This is not a compliance section. **It is the product's identity**, and most of
 it is already enforced in code.
 
 - **No diagnosis.** No medical or psychological conclusion, ever.
-- **No IQ score, no number, no percentile.** Only observations in words.
-- **No comparison between children.** Not in the report, not anywhere. Levels
-  describe a child against typical expectations for their own grade group.
+- **No ability score, no IQ, no percentile, no ranking.** This rule used to read
+  "no number at all", and the inventory broke it: an area now carries a mean out
+  of 5. The rule is therefore stated precisely rather than quietly dropped.
+  **What the number is:** how strongly this child agreed with six statements
+  about one kind of activity. **What it is not:** a measure of ability, a
+  percentile, or a position against anybody. It is never compared to another
+  child, never aggregated into a single headline figure for the child, and every
+  surface that prints one also prints what it means. A parent who reads 4.2 as
+  "my child is good at this" has been misled, and preventing that reading is a
+  design requirement, not a disclaimer.
+- **No comparison between children.** Not in the report, not anywhere. A score
+  describes a child against their own other answers, nothing else. There is no
+  class ranking and no plan to build one.
 - **No fabricated observations.** A report cannot be generated until the child
   has actually answered — the server refuses. If a child barely engaged, the
   report says so honestly and suggests running a proper session instead.
 - **No labels.** "A visual child", "a shy child" — forbidden phrasing.
+- **No claims the instrument cannot support.** It measures stated interest.
+  Writing about talent, intelligence, learning style or emotional maturity from
+  seventy agreement ratings is fabrication, and the prompt forbids it by name.
 - **Minimal data about the child.** Name or nickname, grade, optional age. There
   is *no database column* for surname, address, school or photograph. Goal and
   notes stay on our server and are never sent to the AI.
@@ -389,9 +446,16 @@ choosing a new direction:
 
 ## 15. Open decisions
 
-- **Scope of the visual pivot**: landing only, or the whole product?
 - **Whether the sale is the report or the courses.** Currently both. The funnel
   measures them separately for exactly this reason.
+- **Whether showing a number was the right trade.** The inventory is quicker to
+  run, consistent between children and cheap to score, and it gives a parent
+  something concrete. It also puts a figure in front of someone primed to read
+  it as a verdict. Worth revisiting once there are real sittings to look at.
+- **Whether to add practical tasks back.** The previous assessment watched a
+  child solve problems; this one asks what they enjoy. Those are different
+  instruments and the first was better evidence. A later version could run the
+  inventory first and offer tasks as a second, deeper pass.
 - **Social proof**: nothing may be invented, so the first real numbers or a
   genuine parent quote would be the single biggest available trust upgrade.
 - **Teachers** as an addressed audience, or left as an unadvertised use.

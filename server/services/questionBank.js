@@ -101,6 +101,28 @@ async function updateQuestion(n, { text, active }) {
   return rows[0] || null;
 }
 
+// Append a question to a section. The number carries on from the highest in
+// the bank rather than filling a gap: question numbers are referenced by every
+// answer row ever recorded, so reusing one would silently attach old answers to
+// a new question.
+async function addQuestion(sectionKey, text) {
+  const { rows: sec } = await query('SELECT key FROM question_sections WHERE key = $1', [sectionKey]);
+  if (!sec.length) return null;
+  const { rows } = await query(
+    `INSERT INTO questions (n, section_key, text, position, is_default, active)
+     VALUES (
+       (SELECT COALESCE(MAX(n), 0) + 1 FROM questions),
+       $1, $2,
+       (SELECT COALESCE(MAX(position), 0) + 1 FROM questions WHERE section_key = $1),
+       false, true
+     )
+     RETURNING *`,
+    [sectionKey, text]
+  );
+  invalidate();
+  return rows[0] || null;
+}
+
 async function updateBand(key, { maxValue, label }) {
   const sets = [];
   const params = [key];
@@ -116,5 +138,5 @@ async function updateBand(key, { maxValue, label }) {
 
 module.exports = {
   load, invalidate, markdown, cachedMarkdown, refresh, renderMarkdown,
-  updateQuestion, updateBand,
+  updateQuestion, addQuestion, updateBand,
 };

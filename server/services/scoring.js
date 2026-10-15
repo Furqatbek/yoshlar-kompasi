@@ -14,8 +14,30 @@
 
 const { SECTIONS, BANDS } = require('../data/questions');
 
-const SECTION_OF = new Map();
-for (const s of SECTIONS) for (const [n] of s.items) SECTION_OF.set(n, s.key);
+// The shipped bank, used when no live one is supplied. An administrator can add
+// questions, so the caller passes the live shape in; defaulting to the module
+// keeps the unit tests free of a database and keeps a cold start scoring
+// something sensible rather than nothing.
+const DEFAULT_SHAPE = {
+  sections: SECTIONS.map((s) => ({ key: s.key, title: s.title, size: s.items.length })),
+  sectionOf: new Map(SECTIONS.flatMap((s) => s.items.map(([n]) => [n, s.key]))),
+};
+const SECTION_OF = DEFAULT_SHAPE.sectionOf;
+
+// Build the same shape from the live bank (services/questionBank.load()).
+// Inactive questions are excluded from the denominator: an area of six where
+// one is switched off is an area of five, not an area that can never be
+// complete.
+function shapeOf(bank) {
+  if (!bank || !bank.sections) return DEFAULT_SHAPE;
+  const sectionOf = new Map();
+  const sections = bank.sections.map((s) => {
+    const active = (s.items || []).filter((q) => q.active);
+    for (const q of active) sectionOf.set(Number(q.n), s.key);
+    return { key: s.key, title: s.title, size: active.length };
+  }).filter((s) => s.size > 0);
+  return { sections, sectionOf };
+}
 
 // Enough answers in an area to say anything at all. Below this the area reports
 // "ma'lumot yetarli emas" rather than an average built on one tap.
@@ -34,26 +56,28 @@ function bandFor(avg) {
 const round2 = (n) => Math.round(n * 100) / 100;
 
 // answers: [{ question_n, value }] — skipped questions are simply absent.
-function score(answers) {
-  const byArea = new Map(SECTIONS.map((s) => [s.key, []]));
+// shape: the live bank from shapeOf(), or the shipped one by default.
+function score(answers, shape) {
+  const { sections, sectionOf } = shape || DEFAULT_SHAPE;
+  const byArea = new Map(sections.map((s) => [s.key, []]));
   let counted = 0;
   for (const a of answers || []) {
     const n = Number(a.question_n);
     const v = Number(a.value);
-    if (!SECTION_OF.has(n) || !(v >= 1 && v <= 5)) continue;
-    byArea.get(SECTION_OF.get(n)).push(v);
+    if (!sectionOf.has(n) || !byArea.has(sectionOf.get(n)) || !(v >= 1 && v <= 5)) continue;
+    byArea.get(sectionOf.get(n)).push(v);
     counted += 1;
   }
 
   const categories = {};
-  for (const s of SECTIONS) {
+  for (const s of sections) {
     const vals = byArea.get(s.key);
     const enough = vals.length >= MIN_ANSWERS_PER_AREA;
     const average = enough ? round2(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
     const band = enough ? bandFor(average) : null;
     categories[s.key] = {
       answered: vals.length,
-      of: s.items.length,
+      of: s.size,
       average,
       interest: band ? band.key : null,
       label: band ? band.label : null,
@@ -78,7 +102,7 @@ function score(answers) {
     .filter(([, c]) => c.interest === 'low')
     .map(([key, c]) => ({ key, ...c }));
 
-  const total = SECTIONS.reduce((n, s) => n + s.items.length, 0);
+  const total = sections.reduce((n, s) => n + s.size, 0);
   return {
     categories,
     top_interests: top,
@@ -109,6 +133,6 @@ function compare(serverScored, modelJson) {
 }
 
 module.exports = {
-  score, compare, bandFor, SECTION_OF,
+  score, compare, bandFor, shapeOf, SECTION_OF, DEFAULT_SHAPE,
   MIN_ANSWERS_PER_AREA, COMPLETE_AT, TOP_N,
 };

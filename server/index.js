@@ -86,6 +86,7 @@ const server = app.listen(config.port, async () => {
     const questionBank = require('./services/questionBank');
     await questionBank.refresh();
     require('./services/prompt').invalidate();
+    await require('./routes/sessions').refreshTotal();
     const bank = await questionBank.load();
     // eslint-disable-next-line no-console
     console.log('[bank] ' + bank.activeCount + '/' + bank.total + ' questions active across '

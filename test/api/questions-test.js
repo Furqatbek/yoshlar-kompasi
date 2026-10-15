@@ -83,6 +83,25 @@ async function j(method, path, body) {
   const bad = await j('PATCH', '/admin/bands/low', { max_value: 9 });
   ok('  but not outside the 1-5 scale', bad.status === 400, 'status=' + bad.status);
 
+  // ---- adding our own questions -------------------------------------------
+  const add = await j('POST', '/admin/questions',
+    { section_key: 'curiosity', text: 'Yangi joylarni o‘rganishni yaxshi ko‘raman.' });
+  ok('a question of our own can be added', add.status === 201, 'status=' + add.status);
+  ok('  it carries on from the highest number, not into a gap',
+    add.data.question && add.data.question.n === 71, JSON.stringify(add.data.question));
+  ok('  and is marked as not part of the approved set',
+    add.data.question && add.data.question.is_default === false);
+  ok('  the bank grew', (await j('GET', '/admin/questions')).data.total === 71);
+  ok('  and the prompt version moved again', add.data.prompt_version !== v0);
+
+  const noSection = await j('POST', '/admin/questions', { section_key: 'nope', text: 'x' });
+  ok('an unknown area is refused', noSection.status === 400, 'status=' + noSection.status);
+  const noText = await j('POST', '/admin/questions', { section_key: 'curiosity', text: '  ' });
+  ok('an empty question is refused', noText.status === 400, 'status=' + noText.status);
+
+  // Leave the bank as we found it, so a re-run starts from the shipped 70.
+  await j('PATCH', '/admin/questions/71', { active: false });
+
   // ---- guards -------------------------------------------------------------
   const missing = await j('PATCH', '/admin/questions/999', { text: 'x' });
   ok('an unknown question is a 404, not a silent no-op', missing.status === 404,

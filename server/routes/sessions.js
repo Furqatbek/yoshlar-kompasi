@@ -42,18 +42,29 @@ const reportLimiter = rateLimit({
 // Progress is now "how far through the 70", counted from answers that exist
 // rather than from flags a model set. `done` means every question has an
 // answer or was deliberately skipped past; the adult can still finish early.
-const TOTAL_QUESTIONS = require('../data/questions').COUNT;
+const DEFAULT_TOTAL = require('../data/questions').COUNT;
+
+// How many questions this sitting has to get through. Follows the live bank so
+// a disabled question shortens the sitting instead of making it unfinishable.
+let _total = DEFAULT_TOTAL;
+async function refreshTotal() {
+  try {
+    const bank = await require('../services/questionBank').load();
+    if (bank && bank.activeCount > 0) _total = bank.activeCount;
+  } catch (_) { /* keep the shipped count */ }
+  return _total;
+}
 
 function progressOf(session) {
   const answered = Number(session.answered_count || 0);
   const seen = Number(session.seen_count || 0);
-  return { answered, seen, total: TOTAL_QUESTIONS, pct: Math.round((seen / TOTAL_QUESTIONS) * 100) };
+  return { answered, seen, total: _total, pct: Math.min(100, Math.round((seen / _total) * 100)) };
 }
 // The inventory is finished when every question has been put to the child —
 // counting the ones they passed on. A child who skips fourteen questions must
 // still be able to reach the end; measuring by answers alone would strand them.
 function allDone(session) {
-  return Number(session.seen_count || 0) >= TOTAL_QUESTIONS;
+  return Number(session.seen_count || 0) >= _total;
 }
 
 // Record whatever the model says it just captured, and hand back the session
@@ -338,7 +349,11 @@ router.post(
     // across twelve buckets is not something a paid report should rest on, and
     // "a skipped question is not a zero" is exactly the rule it gets wrong.
     // Its block is kept only as a cross-check.
-    const scored = scoring.score(await repo.getAnswers(session.id));
+    // Scored against the bank as it stands, not the shipped default: an
+    // administrator can add or disable questions, and an answer to a question
+    // the static module has never heard of would otherwise be dropped.
+    const liveBank = await require('../services/questionBank').load().catch(() => null);
+    const scored = scoring.score(await repo.getAnswers(session.id), scoring.shapeOf(liveBank));
     const drift = scoring.compare(scored, parsed.modelJson);
     if (drift.length) {
       console.warn('[scoring] session=' + session.id + ' model JSON disagrees with the server: '
@@ -403,3 +418,4 @@ router.post(
 );
 
 module.exports = router;
+module.exports.refreshTotal = refreshTotal;

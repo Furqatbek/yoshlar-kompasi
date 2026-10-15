@@ -1196,6 +1196,11 @@ input, textarea, button, select { font-family: var(--font-body); }
                 <button type="button" class="{{ q.toggleCls }}" onClick="{{ q.toggle }}" style="cursor: pointer; white-space: nowrap;">{{ q.toggleLabel }}</button>
               </div>
             </sc-for>
+            <div style="display: grid; grid-template-columns: 34px 1fr auto; gap: var(--space-2); align-items: center; padding: 8px 0;">
+              <span></span>
+              <input class="input" placeholder="Yangi savol qo'shish…" value="{{ sec.draft }}" onChange="{{ sec.onDraft }}" style="font-size: 14px;">
+              <button type="button" class="btn btn-secondary" onClick="{{ sec.add }}" style="cursor: pointer; white-space: nowrap;">Qo'shish</button>
+            </div>
           </div>
         </sc-for>
 
@@ -1364,7 +1369,7 @@ class Component extends DCLogic {
     fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
     // server-fetched, route-scoped data
     report: null, reportLoading: false, reportNotFound: false, deliveryLink: '', sessLoading: false,
-    qBank: null, qError: '',
+    qBank: null, qError: '', qDrafts: {},
     leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null,
     // Telegram authorization (required before any assessment can start).
     authed: false, authChecked: false, authParent: null, authMarketing: false,
@@ -1970,6 +1975,18 @@ class Component extends DCLogic {
     }
   }
 
+  async addQuestion(sectionKey) {
+    const text = ((this.state.qDrafts || {})[sectionKey] || '').trim();
+    if (!text) return;
+    try {
+      await this.api('/admin/questions', { method: 'POST', body: { section_key: sectionKey, text } });
+      this.setState({ qDrafts: { ...(this.state.qDrafts || {}), [sectionKey]: '' } });
+      await this.loadQuestions();
+    } catch (e) {
+      this.setState({ qError: "Qo'shilmadi: " + (e && e.message ? e.message : 'xatolik') });
+    }
+  }
+
   async saveBand(key, patch) {
     try {
       await this.api('/admin/bands/' + key, { method: 'PATCH', body: patch });
@@ -2450,6 +2467,9 @@ class Component extends DCLogic {
         : 'Yuklanmoqda…',
       qSections: ((S.qBank && S.qBank.sections) || []).map((sec) => ({
         key: sec.key, title: sec.title, position: sec.position,
+        draft: (S.qDrafts || {})[sec.key] || '',
+        onDraft: (e) => this.setState({ qDrafts: { ...(S.qDrafts || {}), [sec.key]: e.target.value } }),
+        add: () => this.addQuestion(sec.key),
         questions: (sec.questions || []).map((q) => ({
           n: q.n, text: q.text,
           opacity: q.active ? '1' : '0.45',
