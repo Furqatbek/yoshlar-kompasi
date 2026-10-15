@@ -1,164 +1,138 @@
-# Savollar banki — 1–4-sinflar (chuqurlashtirilgan to'plam)
+# Savollar banki — 1–4-sinflar (70 ta tasdiqlangan savol)
 
-**Metodik asos.** Bank yettita yondashuvga tayanadi: (1) Gardnerning ko'p qirrali iqtidorlar modeli (MI — 8 iqtidor), (2) RIASEC qiziqishlar modeli (bolalarga moslangan), (3) o'sish tafakkuri (Dweck), (4) o'z-o'zini boshqarish (diqqat, sabr, impuls nazorati), (5) emotsional intellekt (his-tuyg'ularni tanish, boshqarish va hamdardlik), (6) o'rganish usuli afzalligi (eshitish / vizual / amaliy-harakatli) va (7) yosh psixologiyasi.
+Bu ro‘yxat — loyihaning tasdiqlangan savollar banki. Savol matnlarini
+o‘zgartirish, qisqartirish, almashtirish yoki yangisini qo‘shish mumkin emas.
+Savollar quyidagi tartibda, 12 ta yo‘nalish bo‘yicha beriladi.
 
-**Qanday foydalaniladi:** **[A]** belgili topshiriqlar 1–2-sinflarga (~6–8 yosh), **[B]** belgililari 3–4-sinflarga (~8–11 yosh), belgisizlari ikkala guruhga mos. Kattalar savollarni bolaga ovoz chiqarib o'qib beradi va javoblarni yozib boradi. To'g'ri javob bor bo'lsa, (qavs ichida) ko'rsatilgan. Har javobdan keyin nafaqat NIMA deganini, balki QANDAY javob berganini ham yozib boring (tez/sekin, ishonch bilan/ikkilanib, tushuntira oldimi) — iqtidor belgilari ko'pincha ana shunda ko'rinadi.
+Har bir savolga 1–5 oralig‘ida javob olinadi:
 
-**MUHIM — bank bu andaza, ssenariy emas.** Topshiriqlarni har mashg'ulotda AYNAN shu matnda emas, shu tur va shu qiyinlikdagi YANGI variant qilib bering: raqamlar, narsalar, ismlar va misollarni almashtiring (mahalliy ismlar, taomlar, o'yinlar — 6–11 yoshli bolaga tanish narsalar). Bankdagi matnni so'zma-so'z o'qib bermang, bir mashg'ulot ichida savolni takrorlamang va ketma-ket mashg'ulotlarda bir xil savollar chiqmasin.
+- **1** — Umuman yoqmaydi
+- **2** — Unchalik yoqmaydi
+- **3** — Ba’zan yoki aniq bilmayman
+- **4** — Yoqadi
+- **5** — Juda yoqadi
 
----
+Bola javob berishni xohlamasa yoki savolni tushunmasa, savolni o‘tkazib
+yuborish mumkin. O‘tkazib yuborilgan savol nol deb hisoblanmaydi.
 
-## 1. Mantiq va tafakkur
-*(MI belgilari: mantiqiy-matematik, til-nutq, fazoviy-vizual, xotira)*
+## 1-bo‘lim. Konstruktorlik va muhandislik
 
-### Qonuniyatlar va ketma-ketliklar (mantiqiy-matematik)
-1. [A] Keyin nima keladi: qizil munchoq, ko'k munchoq, ko'k, qizil, ko'k, ko'k, ...? (qizil) — har safar boshqa juftlik oling: shakllar, mevalar, chapak ritmi (chap-chap-CHAP)
-2. [A] Sonlarni davom ettir: 5, 10, 15, 20, ...? (25) — variantlar: 1, 3, 5, 7 (9); 10, 9, 8 (7 — kamayuvchi)
-3. [B] Davom ettir: 4, 8, 16, 32, ...? (64 — har bir son ikki baravar ortadi)
-4. [A] Qaysi biri ortiqcha: qoshiq, piyola, lagan, koptok? Nega? (koptok — u idish emas)
-5. [B] Qaysi biri ortiqcha: avtobus, poyezd, velosiped, tramvay? Nega? (velosiped — motorsiz, pedal bilan yuradi; boshqa asosli izoh ham qabul qilinadi)
-6. [B] Davom ettir: 1, 1, 2, 3, 5, ...? (8 — har bir son oldingi ikkitasining yig'indisi)
+1. LEGO yoki konstruktor yig‘ishni yaxshi ko‘raman.
+2. Biror narsa buzilib qolsa, uni qanday tuzatishni o‘ylab ko‘raman.
+3. O‘yinchoqning ichida nima borligini bilishga qiziqaman.
+4. Biror narsani qo‘lim bilan yasashni yaxshi ko‘raman.
+5. Qog‘oz, karton yoki boshqa narsalardan model yasashni yoqtiraman.
+6. Narsalar qanday ishlashini bilishni istayman.
 
-### Arifmetik mulohaza
-7. [A] Dasturxonda 6 ta kulcha bor edi, 2 tasi yeyildi. Nechta qoldi? (4)
-8. [A] Akang senga 3 ta yong'oq berdi, buving yana 4 ta qo'shdi. Hammasi nechta bo'ldi? (7)
-9. [B] Bitta daftar 3 ming so'm turadi. 12 ming so'mga nechta daftar olish mumkin? (4)
-10. [B] Aziza Bekdan baland. Bek Temurdan baland. Eng balandi kim? (Aziza) — ismlarni bolaga tanish ismlarga almashtiring
-11. [B] Multfilm 40 daqiqa davom etadi. Yarmini ko'rgan bo'lsang, yana necha daqiqa qoldi? (20)
+## 2-bo‘lim. Mantiq va matematika
 
-### Fazoviy tasavvur (fazoviy-vizual)
-12. [A] "b" harfiga oynada qarasang, u qaysi harfga o'xshab ko'rinadi? ("d")
-13. [A] Chap qo'lingni ko'rsat. Endi mening o'ng qo'limni ko'rsat. (kattalar kuzatadi)
-14. [B] O'yin kubigini ko'z oldingga keltir. Uning nechta yog'i (tomoni) bor? (6) Nechta burchagi bor? (8)
-15. [B] Qog'oz varag'ini xayolan ikki marta buklab, bir chetidan kessang, ochganda nechta kesik ko'rinadi — bitta yoki bir nechta? (bir nechta; bola qanday tasavvur qilganini so'rang)
+7. Jumboqlar yechishni yaxshi ko‘raman.
+8. Matematik masalalarni yechish menga qiziq.
+9. O‘xshashlik va farqlarni tez topaman.
+10. Biror muammo chiqsa, yechim topishga harakat qilaman.
+11. Shaxmat yoki mantiqiy o‘yinlarni yoqtiraman.
+12. Sonlar bilan ishlash menga yoqadi.
 
-### Xotira
-16. [A] Kattalar: 4 ta oddiy so'zdan iborat ro'yxatni bir marta, sekin o'qib bering (masalan: *mushuk, quyosh, koptok, daraxt* — so'zlarni har mashg'ulotda almashtiring), so'ng boladan takrorlashni so'rang. (Nechta so'zni va qaysi tartibda eslaganini yozib oling)
-17. [B] Kattalar: 6 ta so'zli ro'yxatni bir marta o'qing (masalan: *non, daryo, yetti, deraza, qo'shiq, oyoq kiyim* — har safar yangi ro'yxat tuzing), so'ng takrorlashni so'rang. (Eslangan so'zlarni yozib oling)
-18. [B] Sonlarni TESKARI tartibda takrorla: 7–2–9. (9–2–7) Uddalasa: 3–8–1–5. (5–1–8–3) — ishchi xotira belgisi
+## 3-bo‘lim. Fan va tadqiqotchilik
 
-### Til va nutq (til-nutq iqtidori)
-19. Uchta so'z beraman: *mushuk, oy, velosiped*. Shu uch so'z qatnashgan qisqa hikoya to'qib ber. (Yozib oling: hikoya bog'liq va tugalmi, so'z boyligi qandayligini, o'ziga xos g'oya bormi)
-20. [A] "Non" so'ziga ohangdosh (qofiya) so'z top. Yana nechtasini topa oladi?
-21. [B] "Quvonch" so'zini boshqacha qanday aytish mumkin? Uning teskarisi (qarama-qarshisi) nima? (mas., shodlik / g'am, xafalik)
-22. [A] Qush bilan samolyotning qanday o'xshash tomoni bor? (ikkalasi ham uchadi)
-23. [B] Soat bilan kalendar qanday o'xshash? (ikkalasi ham vaqtni ko'rsatadi/o'lchaydi)
-24. [B] Topishmoq: mendan qancha ko'p olsang, men shuncha kattalashaman. Men nimaman? (chuqur)
-25. *(Kuzatuv)* Bola yechimlarini so'z bilan ravon tushuntira oladimi? O'zi savol to'qishga urindimi?
+13. Tajribalar o‘tkazishni yaxshi ko‘raman.
+14. Nima uchun degan savolni ko‘p beraman.
+15. Hayvonlar va tabiat haqida bilishni yoqtiraman.
+16. Kosmos haqida bilishga qiziqaman.
+17. Ilmiy videolarni tomosha qilishni yaxshi ko‘raman.
+18. Biror narsani tekshirib ko‘rishni yaxshi ko‘raman.
 
----
+## 4-bo‘lim. Ijodkorlik
 
-## 2. Psixologiya va qiziqishlar
-*(to'g'ri javob yo'q — javobni va xatti-harakatni yozib boring)*
+19. Rasm chizishni yaxshi ko‘raman.
+20. Yangi o‘yinlar o‘ylab topaman.
+21. Hikoya yoki ertak to‘qishni yoqtiraman.
+22. Ranglar bilan ishlashni yaxshi ko‘raman.
+23. Bir narsani boshqalardan boshqacharoq qilishni yoqtiraman.
+24. Tasavvur qilishni yaxshi ko‘raman.
 
-### 2.1 Qiziqishlar kompasi (RIASEC, bolalarga moslangan)
-Bolaga tanlov bering; "ikkalasi ham" desa, qaysi biri KO'PROQ yoqishini so'rang. Har javob qaysi harfga ishora qilishini yozib boring:
-1. Bo'sh kunda qaysi biri ko'proq yoqadi: biror narsa YASASH (konstruktor, uycha, loydan buyum) — yoki biror narsani BILIB OLISH ("nega osmon ko'k?", tajriba qilish)? (R — Quruvchi / I — Tadqiqotchi)
-2. Qaysi biri: rasm chizish, qo'shiq-ertak to'qish — yoki do'stlarga yordam berish, kichiklarga qarab turish? (A — Ijodkor / S — Yordamchi)
-3. Qaysi biri: o'yinni o'zing boshqarib, rollarni taqsimlash — yoki narsalarni chiroyli tartiblash, to'plamlarni saralash? (E — Tashkilotchi / C — Tartib ustasi)
-4. Bir kunga katta odam bo'lib ishlab ko'rsang, qaysi ish qiziqroq: usta yoki haydovchi (R); olim-kashfiyotchi (I); rassom yoki artist (A); shifokor yoki o'qituvchi (S); do'kon egasi yoki jamoa sardori (E); kutubxonachi yoki hisobchi (C)? Nega aynan shu?
-5. Maktabda eng yoqadigan mashg'ulot qaysi: qo'l mehnati (R), tajriba-savollar (I), rasm/musiqa (A), do'stlar bilan birga ishlash (S), sahnada chiqish yoki boshqarish (E), daftarni chiroyli-tartibli yuritish (C)?
-6. *(Kattalardan)* Bola uyda o'z xohishi bilan ko'proq nima qiladi: yasaydi, buzib-yig'adi (R); "nega?" deb so'rayveradi (I); chizadi, kuylaydi, to'qiydi (A); atrofdagilarga g'amxo'rlik qiladi (S); o'yin-ishlarni tashkil qiladi, boshqaradi (E); narsalarini saralab-tartiblaydi (C)?
+## 5-bo‘lim. Nutq va til
 
-*Yakunda: qaysi 1–2 harf belgilari eng ko'p takrorlanganini yozib oling — bu "Qiziqishlar kompasi" bo'limiga asos bo'ladi.*
+25. O‘qigan hikoyamni boshqalarga aytib berishni yoqtiraman.
+26. Sinf oldida gapirishdan qo‘rqmayman.
+27. Yangi so‘zlarni o‘rganishni yaxshi ko‘raman.
+28. Kitob o‘qishni yoqtiraman.
+29. Hikoyalar tinglashni yaxshi ko‘raman.
+30. O‘z fikrimni tushuntirib bera olaman.
 
-### 2.2 O'sish tafakkuri (Dweck)
-1. Miya ham xuddi muskulga o'xshaydi: mashq qilgan sari kuchayadi. Sen bunga ishonasanmi? Nega?
-2. Do'sting masalani sendan tezroq yechdi. Sening fikringcha, u bunga qanday erishgan? ("u shunday tug'ilgan/aqlli" — qotib qolgan tafakkur belgisi; "u ko'p mashq qilgan" — o'sish tafakkuri belgisi)
-3. Qiyin boshqotirma yechilmayapti. Nima qilasan: boshqa usulda urinib ko'rasanmi, yordam so'raysanmi, keyinroq qaytasanmi, tashlab qo'yasanmi?
-4. Xato qilish yomonmi? Xatodan nimani o'rganish mumkin?
-5. [B] Sen ilgari qilolmagan, keyin o'rganib olgan bitta narsani aytib ber. Qanday o'rganding?
-6. *(Kuzatuv — MAJBURIY)* Mantiq bo'limida xato javobdan keyin bola nima qildi: yana urindi / usulini o'zgartirdi / voz kechdi / xafa bo'ldi / kulib yubordi? Bu — o'sish tafakkurining eng ishonchli belgisi; hisobotda aynan shu kuzatuvga tayaning.
+## 6-bo‘lim. Liderlik
 
-### 2.3 O'z-o'zini boshqarish (diqqat, sabr, impuls nazorati)
-Mini-o'yinlar — o'yin ohangida o'tkazing, 2–3 daqiqadan oshirmang:
-1. "Kun–tun" o'yini: siz "kun" desangiz bola "tun" deydi, siz "tun" desangiz u "kun" deydi. Aralash tartibda 8 marta ayting. (Yozib oling: nechtasi to'g'ri; boshida adashib keyin o'zlashtirdimi — bu ham yaxshi belgi)
-2. Uch bosqichli topshiriq — faqat BIR marta ayting: "qo'lingni boshingga qo'y, ikki marta chapak chal, keyin joyingga o'tir". (Hammasini to'g'ri tartibda bajardimi? Ishchi xotira + diqqat belgisi)
-3. *(Kattalardan)* Bola boshlagan ishini odatda oxiriga yetkazadimi? Bir mashg'ulotda diqqati taxminan qancha turadi? Jahli chiqqanda qanday tinchlanadi?
-4. *(Kuzatuv)* Mashg'ulot davomida: savol tugashini kutdimi yoki gapni bo'lib javob berdimi? Charchaganda o'zini qanday tutdi — aytdimi, jim bo'lib qoldimi, qiziqishi so'ndimi?
+31. Do‘stlarim meni sardor qilib tanlashadi.
+32. Guruhda ish bo‘lsa boshqarishni yoqtiraman.
+33. Odamlarni birlashtirishni yaxshi ko‘raman.
+34. O‘yin qoidalarini tushuntirib bera olaman.
+35. Boshqalarga yordam berib ishni tugatishni yoqtiraman.
+36. Mas’uliyat olishdan qo‘rqmayman.
 
-### 2.4 Emotsional intellekt — his-tuyg'ular va ijtimoiy dunyo (ichki-shaxsiy, shaxslararo iqtidorlar)
-To'rt qismdan iborat: o'zini bilish, o'z his-tuyg'usini boshqarish, boshqalarni tushunish (hamdardlik) va munosabat ko'nikmalari. Har mashg'ulotda har qismdan kamida bittasini oling — hammasini emas.
+## 7-bo‘lim. Empatiya va yordam berish
 
-**O'zini bilish**
-1. Seni nima juda xursand qiladi? Nima xafa qiladi? (his-tuyg'ularini so'z bilan nomlay olishi — ichki-shaxsiy belgi)
-2. O'zingning qaysi qilig'ing yoki qobiliyating bilan faxrlanasan? (o'z-o'zini bilish)
-3. [B] Xafa bo'lganingni tanangda sezasanmi — masalan, qorning og'riydimi, yuzing qiziydimi? (his-tuyg'uni tanish belgisi)
+37. Kimdir xafa bo‘lsa, yordam berishni xohlayman.
+38. Kichik bolalarga yordam berishni yaxshi ko‘raman.
+39. Hayvonlarga g‘amxo‘rlik qilishni yoqtiraman.
+40. Do‘stlarimning his-tuyg‘ularini tushunishga harakat qilaman.
+41. Boshqalarga yangi narsani o‘rgatishni yoqtiraman.
+42. Odamlarga yaxshilik qilish menga yoqadi.
 
-**O'z his-tuyg'usini boshqarish**
-4. Jahling chiqqanda odatda nima qilasan? Qanday tinchlanasan? (tinchlanish usuli bormi — yozib oling)
-5. Juda xursand bo'lganingda buni qanday bildirasan?
-6. [B] Biror narsadan qo'rqsang yoki hayajonlansang (masalan, sahnada chiqish), o'zingni qanday tutasan?
+## 8-bo‘lim. Tashkiliy qobiliyat
 
-**Boshqalarni tushunish (hamdardlik)**
-7. Do'sting xafa bo'lib yig'lab tursa, nima qilasan? (shaxslararo belgi)
-8. Onangning yoki do'stingning kayfiyati yo'qligini qanday bilib olasan? (boshqaning holatini o'qiy olishi)
+43. Xonamni tartibli saqlashni yaxshi ko‘raman.
+44. O‘yinchoqlarimni joy-joyiga qo‘yaman.
+45. Vazifalar ro‘yxatini tuzishni yoqtiraman.
+46. Ishlarni vaqtida bajarishga harakat qilaman.
+47. Buyumlarim qayerda ekanini yaxshi bilaman.
+48. Qoidalarga amal qilish menga oson.
 
-**Munosabat ko'nikmalari**
-9. Do'sting bilan urishib qolsang, keyin nima bo'ladi: birinchi bo'lib yarashishga borasanmi? Kechira olasanmi?
-10. Bitta o'yinchoqni ikkovingiz ham xohlab qolsangiz, nima qilasiz? (gaplashib hal qilish belgisi)
-11. Katta davrada, bitta do'sting bilan yoki yolg'iz o'ynashni yoqtirasanmi? Nega?
-12. Jamoaviy o'yinda kim bo'lishni yoqtirasan: sardor, yordamchi yoki zukko g'oyalar beruvchi?
-13. *(Kuzatuv)* Mashg'ulot davomida bola his-tuyg'ularini qanday bildirdi: topshiriq uddalanmaganda xafa bo'ldimi, aytdimi, o'zini tutdimi; maqtaganingizda qanday munosabatda bo'ldi?
+## 9-bo‘lim. Sport va faollik
 
-### 2.5 O'rganish usuli (qaysi yo'l bilan tezroq o'zlashtiradi)
-**Muhim:** bu bolani "vizual bola", "eshituvchi bola" deb bitta turga bo'lish EMAS. Ilmiy jihatdan bola faqat bitta usul bilan o'rgana oladi degani noto'g'ri — biz faqat **afzallikni** va qaysi yo'l bilan tezroq tushunganini qayd etamiz. Tavsiyada har doim bir nechta usulni birga taklif qiling.
+49. Ko‘chada faol o‘yinlar o‘ynashni yaxshi ko‘raman.
+50. Sport musobaqalarida qatnashishni yoqtiraman.
+51. Yugurish va harakat qilish menga yoqadi.
+52. Jamoaviy sportlarni yaxshi ko‘raman.
+53. Yangi sport turlarini sinab ko‘rishni istayman.
+54. Har kuni harakatda bo‘lishni yoqtiraman.
 
-1. Yangi o'yinning qoidasini qanday tezroq tushunasan: kimdir tushuntirib bersa, rasm yoki chizmasini ko'rsang, yoki o'zing bir marta sinab ko'rsang?
-2. Ertakni eshitganing ko'proq esingda qoladimi yoki rasmli kitobdan ko'rganingmi?
-3. [B] Yangi so'zni yodda saqlash uchun nima qilasan: yozasanmi, ovoz chiqarib takrorlaysanmi, yoki biror rasm bilan bog'laysanmi?
-4. Bir o'zing o'rganishni yoqtirasanmi yoki kimdir bilan birga?
-5. [B] Do'stingga tushuntirib berganingda, o'zing ham yaxshiroq tushunasanmi?
-6. *(Kuzatuv — MAJBURIY)* Mashg'ulotning o'zida qaysi turdagi topshiriqda bola tez va ishonch bilan ishladi: faqat og'zaki aytilganda (eshitish), narsani ko'z oldiga keltirish kerak bo'lganda (vizual-fazoviy), yoki qo'li bilan bajarganda (amaliy-harakatli)? Xotira topshirig'ida so'zlarni qanday eslab qoldi — takrorlab aytdimi, ko'z oldiga keltirdimi?
-7. *(Kattalardan)* Uyda dars tayyorlaganda bolaga nima ko'proq yordam beradi: tushuntirish, rasm-chizma, yoki o'zi bajarib ko'rishi?
+## 10-bo‘lim. Texnologiya
 
-### 2.6 Qiziquvchanlik, ishtiyoq va orzular
-1. Qaysi mashg'ulot bilan band bo'lganingda vaqt qanday o'tganini sezmay qolasan?
-2. Shu yili bitta ajoyib narsani o'rganish imkoni bo'lsa, nimani o'rganarding?
-3. Hozirgacha xayolingga kelgan eng qiziq savol nima edi?
-4. Maktabga borishning eng yaxshi tomoni nima?
-5. Katta bo'lganingda kim bo'lmoqchisan? Sening fikringcha, u odam nimalarni yaxshi bilishi kerak?
-6. Musiqa yoqadimi? Sevimli qo'shig'ing bormi — ohangini eslab qola olasanmi? (musiqiy-ritmik iqtidor belgisi)
-7. Hayvonlar, o'simliklar yoki tabiat hodisalariga qiziqasanmi? Biror narsa to'playsanmi — toshlar, barglar, stikerlar? (tabiat iqtidori; tartiblab to'plasa — C belgisi ham)
+55. Kompyuterda yangi narsalarni o‘rganishni yaxshi ko‘raman.
+56. Robotlar haqida bilishga qiziqaman.
+57. Scratch yoki shunga o‘xshash dasturlar bilan ishlashni xohlayman.
+58. Texnika qanday ishlashini bilishni istayman.
+59. Elektron qurilmalarni kuzatishni yaxshi ko‘raman.
+60. Kelajakdagi texnologiyalar haqida o‘qishni yoqtiraman.
 
----
+## 11-bo‘lim. Rivojlanish fikrlashi (Growth Mindset)
 
-## 3. Tana va harakat
-*(MI belgilari: tana-harakat; g'ayrat, koordinatsiya, o'z tanasini boshqarish)*
+61. Biror narsani uddalay olmasam, yana urinib ko‘raman.
+62. Qiyin vazifalar menga qiziq tuyuladi.
+63. Xatolarimdan o‘rganaman.
+64. Mashq qilsam yaxshilanaman deb o‘ylayman.
+65. Yangi narsalarni sinab ko‘rishdan qo‘rqmayman.
 
-### Xohishlar (boladan so'raladi)
-1. Ko'chada o'ynaladigan eng sevimli o'yining qaysi?
-2. Qaysi biri ko'proq yoqadi: tez yugurish, tirmashib chiqish, raqsga tushish yoki to'p otib-ilib olish?
-3. Birov bilan poyga qilishni xohlaysanmi yoki bitta chiroyli harakatni mukammal chiqquncha mashq qilishnimi?
-4. Suvni yaxshi ko'rasanmi — basseyn, daryo, suzish?
+## 12-bo‘lim. Qiziquvchanlik
 
-### Mini-topshiriqlar (kattalar kuzatadi va yozib boradi; o'yin tarzida o'tkazing, bola xohlamasa to'xtating)
-5. Laylakdek bir oyoqda tur. (Yozib oling: ~10 soniya barqaror / chayqaldi / uddalay olmadi; ikkala oyoqda ham sinab ko'ring)
-6. Yumshoq to'pni 5 marta otib, ilib ol. (Yozib oling: 5 tadan nechtasini ildi)
-7. Ikki oyog'ingni juftlab, oldinga uch marta sakra. (Yozib oling: harakatlari uyg'un / mashq kerak)
-8. Kattalar oddiy ritmda chapak chaladi; bola shu ritmda yuradi yoki chapak chaladi. (Yozib oling: ritmni ushlab turdi / adashdi — bu ham musiqiy-ritmik, ham koordinatsiya belgisi)
-9. [B] "Sekin harakat" o'yini: iloji boricha SEKIN o'tirib, so'ng sekin o'rnidan tur. (O'z tanasini ataylab boshqara olishi — o'z-o'zini boshqarish belgisi ham)
+66. Har kuni yangi narsa bilishni xohlayman.
+67. Savollar berishni yaxshi ko‘raman.
+68. Biror mavzu qiziq bo‘lsa, ko‘proq ma’lumot izlayman.
+69. Muzey yoki yangi joylarga borishni yoqtiraman.
+70. Atrofimdagi narsalarni kuzataman.
 
-### G'ayrat va sog'liq (kattalardan so'raladi)
-10. Oddiy kunda bola qanchalik harakatchan — doim harakatda, vaqti-vaqti bilan faol yoki asosan xotirjammi?
-11. Sport uchun ahamiyatli sog'liq holatlari bormi (shifokor tavsiyasi, astma, ko'rish va hokazo)? Bu ma'lumotlardan faqat tavsiyalar oqilona bo'lishi uchun foydalaniladi; yangi sportni boshlashdan oldin shifokor bilan maslahatlashishni kattalarga eslating.
+## Natijalarni guruhlash
 
----
+Yo‘nalishning o‘rtacha bali — shu yo‘nalishdagi **javob berilgan**
+savollar balining arifmetik o‘rtachasi. Javobsiz savollar hisobga
+olinmaydi. Yo‘nalishda umuman javob bo‘lmasa, natija «ma’lumot yetarli
+emas» bo‘ladi.
 
-## Baholash yo'riqnomasi
+- 1.00–2.49 — hozircha kamroq qiziqish bildirildi
+- 2.50–3.49 — qiziqish aralash yoki vaziyatga bog'liq
+- 3.50–4.19 — qiziqish sezilarli
+- 4.20–5.00 — kuchli qiziqish bildirildi
 
-**Mantiq va tafakkur (daraja):** bolaning o'z sinf guruhi doirasida, taxminan — yarmidan kami to'g'ri = Shakllanmoqda; yarmi yoki ko'prog'i to'g'ri = Me'yorda; deyarli hammasi to'g'ri, tez yoki ijodiy yechilgan = Kuchli. Javob to'g'riligi bilan birga bola *qanday* fikrlashiga (usullari, qat'iyati, ovoz chiqarib tushuntirishi) ham teng ahamiyat bering.
-
-**Iqtidorlar xaritasi (Gardner):** sakkiz iqtidor — til-nutq, mantiqiy-matematik, fazoviy-vizual, musiqiy-ritmik, tana-harakat, shaxslararo, ichki-shaxsiy, tabiat. Har biriga faqat mashg'ulotda KUZATILGAN dalil yozing (bola nima qildi, nima dedi). Hisobotda uch xil ifoda ishlating: "yaqqol namoyon bo'ldi" / "belgilari bor" / "bu mashg'ulotda kam kuzatildi". Kuzatilmagan iqtidorni taxmin qilmang va yozmang.
-
-**Qiziqishlar kompasi (RIASEC):** eng ko'p takrorlangan 1–2 yo'nalishni bolacha nomi bilan ayting — Quruvchi (R), Tadqiqotchi (I), Ijodkor (A), Yordamchi (S), Tashkilotchi (E), Tartib ustasi (C) — va qaysi javoblar asos bo'lganini keltiring. Aniq moyillik ko'rinmasa, buni ochiq ayting; bu yoshda qiziqishlar tez o'zgarishini eslatib o'ting.
-
-**O'sish tafakkuri va o'z-o'zini boshqarish:** ball qo'yilmaydi — kuzatuv va iqtibos. Bolaga yorliq yopishtirmang ("qotib qolgan tafakkurli bola" demang): xulq belgisini tasvirlab, uni qanday rivojlantirish mumkinligini yozing (masalan, natijani emas, urinish va usulni maqtash).
-
-**Emotsional intellekt:** to'rt qism bo'yicha kuzatilgan dalilni yozing — o'zini bilish, o'z his-tuyg'usini boshqarish, hamdardlik, munosabat ko'nikmalari. Har qism uchun bolaning o'z javobi yoki mashg'ulotdagi aniq holat asos bo'lsin. Bu yoshda his-tuyg'uni boshqarish endi shakllanayotgan bo'ladi — buni kamchilik sifatida emas, o'sish nuqtasi sifatida yozing va bittadan amaliy taklif bering (masalan, jahl chiqqanda uch marta chuqur nafas olish, his-tuyg'uga nom berish). Tashxis qo'ymang; bola bir necha savolga javob bermagan bo'lsa, shu qismni baholamang.
-
-**O'rganish usuli:** bolani bitta turga bo'lmang. Faqat shu mashg'ulotda qaysi yo'l bilan tezroq va ishonchliroq ishlaganini yozing (eshitish / vizual-fazoviy / amaliy-harakatli), dalil bilan: qaysi topshiriqda shunday bo'ldi. Bitta afzallik aniq ko'rinmasa, "aralash" deb yozing — bu normal va bu yoshda eng ko'p uchraydigan holat. Tavsiyani doim ikki-uch usulni birlashtirgan holda bering.
-
-**Psixologiya / Tana va harakat (daraja uchun):** kuzatilgan xohish va xususiyatlarni umumlashtiring; o'rinli joylarda bolaning o'z so'zlaridan iqtibos keltiring.
-
-**Doim yozib boring:** mashg'ulot davomidagi diqqat, qiyinchilikka munosabat va bolaning ko'zi chaqnab ketgan narsalar — bular yo'l xaritasi uchun ko'pincha javoblarning o'zidan ham muhimroq.
+Bu chegaralar faqat qiziqish javoblarini guruhlash uchun. Ular
+tasdiqlangan psixometrik me’yorlar emas va bolaning qobiliyatini,
+aqlini yoki kelajakdagi kasbini o‘lchamaydi.

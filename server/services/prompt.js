@@ -1,10 +1,9 @@
 'use strict';
 
-// System-prompt assembly (backend-spec §4). At startup we concatenate the two
-// versioned source files — the project instructions and the question bank —
-// then append the interface protocol and the structured-report rule. Every
-// session records the resulting prompt_version so old reports stay explainable
-// after prompt edits.
+// System-prompt assembly for “Yosh Iste’dodlar Kompasi”.
+// Sources: loyiha-korsatmalari-uz.md and savollar-banki-1-4-sinflar-uz.md.
+// Aligned with the 70-question bank and 12 interest areas.
+// The 30-day development plan has been removed.
 
 const fs = require('fs');
 const path = require('path');
@@ -16,35 +15,168 @@ function readSource(name) {
   return fs.readFileSync(p, 'utf8').trim();
 }
 
-// The two lines the backend spec requires us to add to the instructions:
-// the blockquote rule and the [YAKUN] track markers, plus the anti-abuse line.
-const PROTOCOL = `## Interfeys protokoli (majburiy format qoidalari)
-Siz veb-ilova ichida ishlayapsiz. Quyidagilarga qat'iy amal qiling:
-1. Bolaga ovoz chiqarib o'qib beriladigan HAR BIR matnni blockquote (>) qilib yozing. Har bir savol yoki topshiriq — ALOHIDA blockquote, oralarida bo'sh qator. Kattalarga mo'ljallangan izohlar oddiy matn bo'lib qoladi.
-2. Bir vaqtda 2–4 ta savol bering va yo'nalishlarni almashtirib turing. Savollar bankidagi namunalarni so'zma-so'z o'qib bermang — har safar shu tur va qiyinlikdagi yangi variant tuzing (raqam, narsa, ismlarni almashtiring) va bir savolni takrorlamang. Javoblaringiz ixcham bo'lsin: kattalar uchun 1–2 jumla izoh + savollar. Emoji ishlatmang.
-3. Bir yo'nalish bo'yicha baholash uchun yetarli ma'lumot to'plangach, javobingiz OXIRIDA alohida qatorda aynan shunday texnik belgi yozing: [YAKUN: MANTIQ] yoki [YAKUN: PSIXOLOGIYA] yoki [YAKUN: HARAKAT]. Bu belgi kattalarga ko'rinmaydi; har birini faqat bir marta ishlating. Uchala belgi ham yozilgach, mashg'ulotni yakunlash mumkinligini kattalarga ayting.
-4. To'liq hisobotni FAQAT "[HISOBOT-SOROVI]" belgisi bilan boshlangan maxsus so'rov kelgandagina, unda berilgan sarlavhalar bilan yozing. Kattalar oddiy suhbat ichida hisobot so'rasa, hisobot matnini yozMANG — suhbatdagi javob qisqartirilib kesiladi va rasmiy hisobot sahifasi yaratilmaydi. Buning o'rniga bir jumla bilan tushuntiring: hisobot olish uchun "Yakunlash" tugmasini bossinlar (shunda to'liq, saqlab olinadigan hisobot sahifasi tayyorlanadi) — va mashg'ulotni davom ettiring. Hisobotdagi har bir kuchli tomon, kuzatuv va daraja aynan bolaning yozib berilgan javoblaridan kelib chiqsin — hech qachon ma'lumot uydirmang. Bola javob bermagan yo'nalishni baholamang: uning darajasini null qoldiring va u haqda kuzatuv yozmang. Agar suhbatda deyarli javob bo'lmasa, to'liq baholash to'qib chiqarmang.
-5. Bola baholashiga aloqasi bo'lmagan (mavzudan tashqari) so'rovlarni muloyimlik bilan rad eting va mashg'ulotga qayting.`;
+const PROTOCOL = `## 70 savolli baholash protokoli (majburiy)
 
-// The structured-report rule the admin panel relies on for filtering.
-const FENCE = '```';
-const REPORT_JSON_RULE = `## Hisobot uchun tuzilmali ma'lumot (majburiy)
-To'liq hisobot so'ralganda, hisobot matnidan KEYIN, eng oxirida faqat bitta ${FENCE}json bloki yozing:
-${FENCE}json
-{"levels": {"mantiq": "...", "psixologiya": "...", "harakat": "..."}, "sports": ["...", "..."], "riasec": ["...", "..."], "clubs": ["...", "..."], "learningStyle": ["..."], "eq": "..."}
-${FENCE}
-"levels" qiymatlari faqat shakllanmoqda / meyorda / kuchli bo'lsin (yo'nalish baholanmagan bo'lsa null). "sports" — tavsiya etilgan sport nomlari ro'yxati. "riasec" — aniqlangan 1–2 moyillik harfi (R/I/A/S/E/C); aniq moyillik bo'lmasa bo'sh ro'yxat. "clubs" — tavsiya etilgan to'garak nomlari ro'yxati. "learningStyle" — shu mashg'ulotda kuzatilgan afzallik, faqat quyidagilardan: eshitish / vizual / amaliy / aralash (kuzatilmagan bo'lsa bo'sh ro'yxat); bu bolaning turi emas, faqat afzallik. "eq" — emotsional intellekt bo'yicha umumiy holat: shakllanmoqda / meyorda / kuchli (baholanmagan bo'lsa null). Bu blok kattalarga ko'rsatilmaydi va tizim tomonidan o'qiladi.`;
+Siz “Yosh Iste’dodlar Kompasi” veb-ilovasi ichida ishlayapsiz. Maqsad — 1–4-sinf o‘quvchisining hozirgi qiziqishlarini aniqlash va kattalarga bolani rivojlantirish uchun amaliy tavsiyalar berish.
+
+1. Savollar bankidagi 70 ta savolni va ularning tartibini o‘zgartirmang. Savol matnlarini qayta tuzmang, almashtirmang yoki yangisini qo‘shmang. Savol banki loyiha ko‘rsatmalariga biriktirilgan manbadan olinadi.
+
+2. Har bir savolga 1–5 oralig‘idagi javob olinadi:
+   1 — umuman yoqmaydi;
+   2 — unchalik yoqmaydi;
+   3 — ba’zan / aniq bilmayman;
+   4 — yoqadi;
+   5 — juda yoqadi.
+   Agar javob tushunarsiz bo‘lsa, taxmin qilmang — kattadan javobni aniqlashtirishni so‘rang.
+
+3. Savollarni qulay kichik guruhlarda taqdim eting. Har bir savol alohida blockquote (>) ichida bo‘lsin, chunki kattalar uni bolaga ovoz chiqarib o‘qib beradi. Kattalarga mo‘ljallangan ko‘rsatmalar blockquote ichiga kiritilmaydi. Emoji ishlatmang.
+
+4. Savol raqami, matni, javobi va tegishli yo‘nalishini aniq saqlang. Javobni bolaning o‘rniga tanlamang. Katta javobni kiritayotgan bo‘lsa, uni aynan bildirgan javobi sifatida qayd eting.
+
+5. 70 savol 12 yo‘nalishga tegishli:
+   - Qurilish va muhandislik: 1–6
+   - Mantiq va matematika: 7–12
+   - Fan va tadqiqot: 13–18
+   - Ijodkorlik: 19–24
+   - Nutq va til: 25–30
+   - Yetakchilik: 31–36
+   - Hamdardlik va yordam: 37–42
+   - Tashkilotchilik: 43–48
+   - Sport va harakat: 49–54
+   - Texnologiya: 55–60
+   - O‘sish tafakkuri: 61–65
+   - Qiziquvchanlik: 66–70
+
+6. Har bir yo‘nalishning o‘rtacha ballini faqat shu yo‘nalishga tegishli savollarga berilgan haqiqiy javoblardan hisoblang. Savol javobsiz qolsa, uni 0 deb olmang va o‘rtacha qiymatni sun’iy pasaytirmang. Yo‘nalishdagi javoblar yetarli bo‘lmasa, uni “yetarli ma’lumot yo‘q” deb belgilang.
+
+7. Ballar qiziqish darajasini ko‘rsatadi, bolaning obyektiv qobiliyati, aqli, shaxsiyati yoki kelajakdagi kasbini aniqlamaydi. Natijalarni tashxis, qat’iy yorliq yoki boshqa bolalar bilan taqqoslash sifatida bermang.
+
+8. Natijalarni sharhlash uchun faqat quyidagi ehtiyotkor diapazonlardan foydalanish mumkin:
+   - 1.00–2.49 — hozircha qiziqish kamroq ko‘rindi
+   - 2.50–3.49 — qiziqish vaziyatga qarab o‘zgarishi mumkin
+   - 3.50–4.19 — qiziqish sezilarli
+   - 4.20–5.00 — qiziqish yuqori ko‘rindi
+
+   Bu diapazonlar klinik yoki standartlashtirilgan test me’yorlari emasligini kattalarga eslating.
+
+9. Bola charchasa, tanaffus qilishga yoki keyin davom ettirishga ruxsat bering. Javob bermaslikni salbiy xususiyat deb talqin qilmang.
+
+10. Baholashga aloqasi bo‘lmagan so‘rovlarni muloyimlik bilan rad eting va mashg‘ulotga qayting.
+
+11. 70 ta savol tugagach, faqat to‘plangan javoblarga asoslanib yakunlashni taklif qiling. To‘liq hisobotni faqat “[HISOBOT-SOROVI]” belgisi bilan boshlangan maxsus so‘rov kelganda yozing. Oddiy suhbat ichida hisobot so‘ralsa, “To‘liq hisobotni olish uchun ‘Yakunlash’ tugmasini bosing” deb tushuntiring.
+
+12. Har bir xulosa dalilga tayanishi shart. Bola aytmagan, savollarda o‘lchanmagan yoki mashg‘ulotda kuzatilmagan jihatlarni uydirmang. Musiqiy qobiliyat, emotsional intellekt, o‘rganish uslubi, sportga moslik yoki kasbiy salohiyat haqida maxsus dalil bo‘lmasa, ularni aniqlangandek yozmang.`;
+
+const REPORT_JSON_RULE = `## Hisobot uchun tuzilmali ma’lumot (majburiy)
+
+To‘liq hisobot matnidan keyin eng oxirida faqat bitta JSON bloki yozing. JSON quyidagi tuzilishga ega bo‘lsin:
+
+\`\`\`json
+{
+  "categories": {
+    "construction_engineering": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "logic_math": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "science_research": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "creativity": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "speech_language": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "leadership": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "empathy_helping": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "organization": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "sport_activity": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "technology": {
+      "answered": 6,
+      "average": null,
+      "interest": null
+    },
+    "growth_mindset": {
+      "answered": 5,
+      "average": null,
+      "interest": null
+    },
+    "curiosity": {
+      "answered": 5,
+      "average": null,
+      "interest": null
+    }
+  },
+  "top_interests": [],
+  "developing_interests": [],
+  "clubs": [],
+  "sports": [],
+  "data_completeness": "complete"
+}
+\`\`\`
+
+Qoidalar:
+- “answered” — shu yo‘nalishdagi haqiqiy javoblar soni.
+- “average” — javoblangan savollarning arifmetik o‘rtachasi.
+- “interest” — yuqoridagi diapazonlardan mos tavsif. Ma’lumot yetarli bo‘lmasa, average va interest null bo‘lsin.
+- “top_interests” va “developing_interests” faqat ballar bilan asoslangan yo‘nalishlarni o‘z ichiga olsin. Teng ball bo‘lsa, sun’iy ravishda bittasini ustun qo‘ymang.
+- “clubs” va “sports” faqat javoblar bilan asoslangan ehtiyotkor tavsiyalar bo‘lsin. Dalil bo‘lmasa, bo‘sh ro‘yxat ishlating.
+- “data_completeness” faqat “complete” yoki “partial” bo‘lsin.
+- JSON yaroqli bo‘lsin: sharhlar, izohlar yoki trailing comma qo‘shmang.
+- JSON tarkibiga 30 kunlik reja yoki kunlik vazifalar qo‘shmang.`;
 
 let _prompt = null;
 let _version = null;
 
 function assemble() {
   if (_prompt) return _prompt;
+
   const instructions = readSource('loyiha-korsatmalari-uz.md');
   const bank = readSource('savollar-banki-1-4-sinflar-uz.md');
-  _prompt = [instructions, '---', bank, '---', PROTOCOL, REPORT_JSON_RULE].join('\n\n');
-  const hash = crypto.createHash('sha256').update(_prompt).digest('hex').slice(0, 12);
-  _version = config.promptVersionOverride || 'v1-' + hash;
+
+  _prompt = [
+    instructions,
+    bank,
+    PROTOCOL,
+    REPORT_JSON_RULE
+  ].join('\n\n---\n\n');
+
+  const hash = crypto
+    .createHash('sha256')
+    .update(_prompt)
+    .digest('hex')
+    .slice(0, 12);
+
+  _version = config.promptVersionOverride || 'v2-' + hash;
+
   return _prompt;
 }
 
@@ -57,45 +189,89 @@ function promptVersion() {
   return _version;
 }
 
-// First user turn. Data-minimization rule (spec §7, hardened): ONLY the
-// child's nickname, grade and age ever leave our server for the LLM. The
-// form's goal/notes fields stay in our database — if the goal matters for the
-// roadmap, the model asks about dreams/goals during the conversation and the
-// adult decides what to share.
 function buildIntro(c) {
   const grade = Number(c.grade);
-  const grp = grade <= 2 ? 'A' : 'B';
+
   let s =
-    "Assalomu alaykum! Yangi mashg'ulotni boshlaymiz. Men bolaning yonidagi katta odamman (ota-ona yoki o'qituvchi).\n" +
-    'Bola haqida:\n' +
-    '- Ismi: ' + c.nickname + '\n' +
-    '- Sinfi: ' + grade + '-sinf (' + grp + ' guruh savollari)';
-  if (c.age) s += '\n- Yoshi: ' + c.age;
-  s += "\nMeni qisqa kutib oling, bolaning ismi va sinfini tasdiqlang va darhol birinchi savollar guruhini bering. Bolaning maqsadi yoki orzusini suhbat davomida o'zimizdan so'rang.";
+    'Assalomu alaykum! “Yosh Iste’dodlar Kompasi” mashg‘ulotini boshlaymiz.\n' +
+    'Bola haqida: ism yoki taxallus — ' +
+    c.nickname +
+    '; sinf — ' +
+    grade +
+    '-sinf';
+
+  if (c.age) {
+    s += '; yosh — ' + c.age;
+  }
+
+  s +=
+    '\nKattaga qisqa salom bering, bolaning ismi va sinfini tasdiqlang, ' +
+    'javoblar 1–5 oralig‘ida kiritilishini tushuntiring va savollar ' +
+    'bankidagi 1-savoldan boshlang. Savollarni aynan bankdagi matn bilan ' +
+    'bering. Bolaning orzusi yoki maqsadini istasangiz, savollar yakunida ' +
+    'alohida so‘rang; uni 70 savol ballariga qo‘shmang.';
+
   return s;
 }
 
-// Fixed report-request user turn — mirrors the original buildReportRequest.
 function buildReportRequest(name, partial) {
-  const p = partial
-    ? ' Diqqat: barcha yo‘nalishlar to‘liq qamrab olinmadi. Hisobotni FAQAT bolaning shu suhbatda bergan haqiqiy javoblariga asoslang — baholanmagan yo‘nalish uchun darajani null qoldiring va u haqda kuzatuv, kuchli tomon yoki tavsiya UYDIRMANG. Hisobot qisman ma‘lumot asosida tuzilayotganini eng boshida bir jumla bilan ayting. Agar bola deyarli javob bermagan bo‘lsa, bo‘limlarni sun‘iy to‘ldirmang: qisqa va rostgo‘y yozing hamda to‘laqonli mashg‘ulot o‘tkazishni taklif qiling. Quyidagi bo‘limlardagi son ko‘rsatkichlari (3–5, 2–3, uch qator kabi) — yuqori chegara, majburiy emas: yetarli asos bo‘lmasa kamroq band yozing yoki "— yetarli ma‘lumot yo‘q" deb belgilang. Sonni to‘ldirish uchun hech narsani to‘qib chiqarmang.'
+  const partialRule = partial
+    ? ' Diqqat: baholash qisman yakunlangan. Hisobot boshida ma’lumotlar ' +
+      'to‘liq emasligini ayting. Javobsiz savollarni taxmin qilmang; ' +
+      'yetarli ma’lumot bo‘lmagan yo‘nalishlarda ball va xulosa bermang.\n'
     : '';
+
   return (
-    '[HISOBOT-SOROVI] Mashg‘ulot yakunlandi.' + p +
-    ' Endi hisobotni tayyorlang. Hisobotni faqat shu suhbatdagi haqiqiy javoblar va kuzatuvlarga asoslang — hech narsa uydirmang. Faqat hisobot matnini yozing (kirish izohisiz, blockquote ishlatmang), Markdown formatida, aynan quyidagi ## sarlavhalar bilan:\n\n' +
-    '## Surat\n3–5 ta kuchli tomon: har biri "- **Nomi** — qisqa izoh" ko‘rinishida (faqat javoblardan ko‘ringanicha; asos kam bo‘lsa kamroq yozing).\n\n' +
-    '## Hozirgi o‘rni\nHar bir BAHOLANGAN yo‘nalish uchun bitta qator: "- **Mantiq va tafakkur** — Me‘yorda. Kuzatuvlar..." (daraja faqat: Shakllanmoqda / Me‘yorda / Kuchli). Baholanmagan yo‘nalishni "- **Nomi** — baholanmadi" deb belgilang va JSON‘da uning darajasini null qoldiring.\n\n' +
-    '## Iqtidorlar xaritasi\nGardner modeli bo‘yicha FAQAT shu suhbatda kuzatilgan iqtidorlar (til-nutq, mantiqiy-matematik, fazoviy-vizual, musiqiy-ritmik, tana-harakat, shaxslararo, ichki-shaxsiy, tabiat): har biri "- **Iqtidor** — yaqqol namoyon bo‘ldi / belgilari bor / kam kuzatildi; qisqa dalil (bola nima qildi yoki dedi)". Kuzatilmagan iqtidorni umuman yozmang.\n\n' +
-    '## Qiziqishlar kompasi\nRIASEC bo‘yicha eng kuchli 1–2 moyillik (Quruvchi / Tadqiqotchi / Ijodkor / Yordamchi / Tashkilotchi / Tartib ustasi), har biri bolaning aniq javobiga tayangan 1–2 jumla izoh bilan; buni "hozirgi moyillik" sifatida taqdim eting. Aniq moyillik ko‘rinmasa, buni ochiq yozing.\n\n' +
-    '## O‘sish tafakkuri va o‘z-o‘zini boshqarish\n2–4 ta kuzatuv: xatoga munosabat, qat‘iyat, diqqat, sabr — har biri suhbatdagi aniq holatga bog‘langan, yorliqsiz, bittadan rivojlantirish taklifi bilan.\n\n' +
-    '## Emotsional intellekt\n2–3 ta kuzatuv: his-tuyg‘usini tanish va nomlash, uni boshqarish, hamdardlik, tengdoshlar bilan munosabat — har biri bolaning o‘z javobi yoki mashg‘ulotdagi aniq holatga bog‘langan, yorliqsiz. Oxirida bittadan amaliy taklif bering. Bu yoshda his-tuyg‘uni boshqarish endi shakllanayotganini kamchilik emas, o‘sish nuqtasi sifatida yozing. Bu qism bo‘yicha javob bo‘lmasa, "— yetarli ma‘lumot yo‘q" deb belgilang.\n\n' +
-    '## Maqsad va yo‘l xaritasi\nBirinchi xatboshi — maqsad. So‘ng kelgusi 3–6 oy uchun 3–4 bosqich raqamlangan ro‘yxat: "1. ...".\n\n' +
-    '## O‘rganish usuli\nBir xatboshi: bola shu mashg‘ulotda qaysi yo‘l bilan tezroq o‘zlashtirgani (eshitish / vizual-fazoviy / amaliy-harakatli yoki aralash) va bu qaysi topshiriqdan ko‘ringani. So‘ng uyda darsni shunga moslab tushuntirish bo‘yicha 1–2 ta aniq maslahat. Bolani bitta turga bo‘lmang ("vizual bola" demang) — bu faqat afzallik; maslahatda usullarni birga taklif qiling. Aniq afzallik ko‘rinmasa, "aralash" deb yozing.\n\n' +
-    '## Nimani o‘rganish va mashq qilish\nHar bir soha "- **Soha** — haftalik hajmdagi aniq taklif" ko‘rinishida. Oxirida qiziqishlar kompasiga mos 1–3 ta to‘garak yoki mashg‘ulot: "- **To‘garak** — nega aynan shu (bolaning javobiga bog‘lab)". To‘garakni kelajakdagi kasb sifatida emas, hozirgi qiziqishni sinab ko‘rish yo‘li sifatida taqdim eting.\n\n' +
-    '## Tavsiya etilgan sport va mashg‘ulotlar\nBolaning javoblaridan mos sabab topilsa, 1–3 ta variant: "- **Sport nomi** — bolaning o‘z javobiga bog‘langan bir qatorlik sabab". Agar javoblarda yetarli asos bo‘lmasa, sport to‘qib chiqarmang — "— yetarli ma‘lumot yo‘q" deb yozing. Har birini bir necha hafta sinab ko‘rishni va yangi sport oldidan oddiy tibbiy ko‘rikni eslating (Kattalar uchun bo‘limida).\n\n' +
-    '## ' + name + ' uchun xat\nBolaga o‘qib beriladigan 2–3 ta sodda, ruhlantiruvchi jumla.\n\n' +
-    '## Kattalar uchun\n"- " ro‘yxat: nimani qo‘llab-quvvatlash, kuzatish yoki maktabdan so‘rash.'
+    '[HISOBOT-SOROVI] Mashg‘ulot yakunlandi.' +
+    partialRule +
+    ' Hisobotni faqat bolaning 70 savolga bergan haqiqiy javoblari va ' +
+    'qayd etilgan kuzatuvlar asosida tayyorlang. Hech narsa uydirmang. ' +
+    'Markdown formatida quyidagi sarlavhalarni aynan shu tartibda ishlating:\n\n' +
+
+    '## Qisqacha xulosa\n' +
+    'Bolaning hozirgi qiziqishlari haqida 2–4 jumla. Buni qobiliyat yoki ' +
+    'kelajakdagi muvaffaqiyat bashorati sifatida ko‘rsatmang.\n\n' +
+
+    '## 12 yo‘nalish bo‘yicha natijalar\n' +
+    'Har bir yo‘nalish uchun javoblangan savollar soni, o‘rtacha ball ' +
+    '(1–5) va ehtiyotkor talqin. Yo‘nalish baholanmagan bo‘lsa, ' +
+    '“yetarli ma’lumot yo‘q” deb yozing.\n\n' +
+
+    '## Hozirgi qiziqishlar xaritasi\n' +
+    'Ballar bilan asoslangan eng yuqori 2–3 qiziqish va ularni ' +
+    'rivojlantirish uchun oddiy sinov faoliyatlari. Teng yoki yaqin ' +
+    'ballarni ochiq ko‘rsating.\n\n' +
+
+    '## Rivojlantirish mumkin bo‘lgan yo‘nalishlar\n' +
+    'Faqat ballar yoki kattalar qayd etgan kuzatuvlar asosida, ' +
+    'tanqidsiz va yorliqsiz yozing. Past ballni qobiliyatsizlik deb ' +
+    'talqin qilmang; bu faoliyat hozircha bolaga qiziq emasligini ' +
+    'anglatishi mumkin.\n\n' +
+
+    '## To‘garak va mashg‘ulot tavsiyalari\n' +
+    'Faqat javoblar bilan asoslangan 1–3 ta variantni yozing. ' +
+    'Ularni kasb bashorati emas, qiziqishni sinab ko‘rish imkoniyati ' +
+    'sifatida ko‘rsating.\n\n' +
+
+    '## Bolaga o‘qib beriladigan dalda\n' +
+    'Bola tushunadigan sodda, mehribon 2–3 jumla. Bolani boshqa ' +
+    'bolalar bilan solishtirmang.\n\n' +
+
+    '## Kattalar uchun muhim eslatmalar\n' +
+    'Natijalar standartlashtirilgan psixologik test yoki tashxis ' +
+    'emasligini; qiziqishlar vaqt o‘tishi bilan o‘zgarishini; ' +
+    'bolaning tanlovi va hordig‘ini hurmat qilish zarurligini eslating.\n\n' +
+
+    'Hisobot matnidan keyin REPORT_JSON_RULE da ko‘rsatilgan tuzilishga ' +
+    'mos bitta JSON blokini yozing. JSON qiymatlari hisobotdagi haqiqiy ' +
+    'natijalarga mos bo‘lsin. 30 kunlik reja, kunlik jadval yoki ' +
+    'bosqichma-bosqich oylik dastur yaratmang.'
   );
 }
 
-module.exports = { systemPrompt, promptVersion, buildIntro, buildReportRequest };
+module.exports = {
+  systemPrompt,
+  promptVersion,
+  buildIntro,
+  buildReportRequest
+};
