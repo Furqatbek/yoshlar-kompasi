@@ -35,48 +35,128 @@ git checkout claude/70-savol-qiziqishlar-inventari
 `.env` sits next to `docker-compose.yml` and is gitignored — it never leaves
 your machine.
 
+Compose supplies a default for nearly every setting, so a short `.env` boots.
+The block below is the **complete** local set anyway, because three of the
+defaults are wrong for a Mac on plain HTTP and you would rather see them than
+discover them.
+
 ```bash
 cat > .env <<'EOF'
-# --- database (local container, these values are fine as they are) -----------
+# ─── database (local container; these values are fine as they are) ──────────
 POSTGRES_USER=yik
 POSTGRES_PASSWORD=yik
 POSTGRES_DB=yik
 
-# --- app --------------------------------------------------------------------
+# ─── app ────────────────────────────────────────────────────────────────────
 APP_PORT=8080
 PUBLIC_BASE_URL=http://localhost:8080
 
-# --- admin panel ------------------------------------------------------------
+# Compose sets NODE_ENV=production, which makes COOKIE_SECURE default to true.
+# A Secure cookie over plain http:// is refused by Safari, so admin login would
+# appear to work and bounce you straight back to the login screen. Off locally.
+COOKIE_SECURE=false
+
+# ─── admin panel (no defaults — compose warns if these are blank) ───────────
 ADMIN_EMAIL=admin@markaz.uz
 ADMIN_PASSWORD=change-this-now
+# JWT_SECRET is appended below by openssl.
 
-# --- first run: no Telegram bot, no payments --------------------------------
+# ─── first run: no Telegram bot, no payments ────────────────────────────────
 # AUTH_REQUIRED defaults to ON and then demands a real bot, which is a slow way
-# to start. Off means the form is open immediately; reports print to the log
-# instead of being delivered.
+# to start. Off means the form is open immediately.
 AUTH_REQUIRED=false
+AUTH_REQUIRE_PHONE=true
 DELIVERY_PROVIDER=console
 PAYMENTS_ENABLED=false
+REPORT_PRICE_UZS=49000
 
-# --- the model --------------------------------------------------------------
+# ─── the model ──────────────────────────────────────────────────────────────
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=sk-or-REPLACE-ME
 OPENROUTER_MODEL=deepseek/deepseek-chat-v3.1:free
+# Used only when LLM_PROVIDER=anthropic:
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-sonnet-4-6
+# Attribution shown on your OpenRouter dashboard; cosmetic.
+OPENROUTER_SITE_NAME=Yoshlar Kompasi
+
+# ─── limits (the default of 5 sittings a day will block you while testing) ───
+RL_SESSIONS_PER_DAY=100
+RL_MESSAGES_PER_MIN=60
+RL_ADMIN_LOGIN_PER_MIN=20
+MAX_TURNS=60
+MAX_MESSAGE_CHARS=2000
+MIN_ANSWERS_FOR_REPORT=1
+
+# ─── model budget ───────────────────────────────────────────────────────────
+CONVERSATION_MAX_TOKENS=1500
+REPORT_MAX_TOKENS=4500
+REPORT_TIMEOUT_MS=180000
+# Only used to price the admin cost dashboard; set to your model's real rates,
+# or 0 and 0 when running a free model so the dashboard does not invent a bill.
+PRICE_INPUT_PER_MTOK=0
+PRICE_OUTPUT_PER_MTOK=0
+
+# ─── data retention ─────────────────────────────────────────────────────────
+RETENTION_MONTHS=24
+ANALYTICS_RETENTION_DAYS=180
+BACKUP_KEEP_DAYS=14
+CONSENT_TEXT_VERSION=uz-2026-07
+
+# ─── reminders (off; they need a bot, and they message real people) ─────────
+REMINDERS_ENABLED=false
 EOF
 ```
 
-Then set two real values:
+Then set the two real values:
 
 ```bash
-# a proper secret, not a guessable one
 echo "JWT_SECRET=$(openssl rand -base64 48)" >> .env
-
-# edit ADMIN_PASSWORD and OPENROUTER_API_KEY by hand
-open -e .env
+open -e .env        # edit ADMIN_PASSWORD and OPENROUTER_API_KEY
 ```
 
 Get a free OpenRouter key at `openrouter.ai/keys`. The key costs nothing and
 the `:free` model slug costs nothing to call.
+
+### The three defaults that are wrong for local HTTP
+
+| Setting | Default | Why it bites | Local value |
+|---|---|---|---|
+| `COOKIE_SECURE` | `true` (because `NODE_ENV=production`) | Safari refuses a Secure cookie over `http://` — admin login bounces back with no error | `false` |
+| `AUTH_REQUIRED` | `true` | the app refuses to boot without a real Telegram bot | `false` at first |
+| `RL_SESSIONS_PER_DAY` | `5` | you will hit it on your first afternoon of testing | `100` |
+
+### Everything else, and what it does
+
+Left out of the block above because the default is correct, or because it only
+applies once you go live:
+
+| Setting | Default | Notes |
+|---|---|---|
+| `NODE_ENV` | — | compose hardcodes `production`; do not override |
+| `PORT` | — | compose hardcodes `8080` inside the container; map it with `APP_PORT` |
+| `DATABASE_URL` | — | compose builds it from the `POSTGRES_*` values |
+| `TELEGRAM_BOT_TOKEN` | empty | required once `AUTH_REQUIRED=true` |
+| `TELEGRAM_BOT_USERNAME` | empty | required once `AUTH_REQUIRED=true`, no `@` |
+| `TELEGRAM_WEBHOOK_SECRET` | empty | required with the bot; an unset secret means an unauthenticated webhook |
+| `AUTH_NONCE_TTL_MINUTES` | `15` | how long a login deep link stays valid |
+| `AUTH_TOKEN_TTL_DAYS` | `90` | how long a parent stays logged in |
+| `PAYME_MERCHANT_ID` / `_KEY` | empty | required once `PAYMENTS_ENABLED=true` |
+| `PAYME_CHECKOUT_URL` | `https://checkout.paycom.uz` | change only for the sandbox |
+| `OPENROUTER_SITE_URL` | empty | optional attribution |
+| `BILLING_ALERT_MIN_USD` | `5` | cron warns below this credit balance |
+| `REMIND_ABANDONED_HOURS` | `24` | and `REMIND_UNPAID_HOURS`, `REMIND_NEVER_STARTED_HOURS` |
+| `REMIND_GIVE_UP_DAYS` | `14` | stop chasing after this long |
+| `REMIND_MAX_PER_WEEK` | `2` | per parent |
+| `REMIND_QUIET_FROM` / `_TO` | `21` / `9` | no messages at night |
+| `REMIND_TZ_OFFSET` | `5` | Tashkent, for the quiet hours |
+| `REMIND_MAX_PER_RUN` | `200` | batch ceiling per cron pass |
+| `DOMAIN` | `localhost` | nginx only, and nginx does not start locally |
+
+`.env.example` in the repo root is the full annotated reference, and
+`test/unit/compose-env.test.js` asserts that every setting documented there is
+actually passed through to the container that reads it — so this list cannot
+quietly drift out of date.
 
 ## 4. Start
 
