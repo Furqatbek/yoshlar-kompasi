@@ -47,9 +47,9 @@ const QUESTIONS_PAYLOAD = {
   ],
   answers: {},
   scale: [
-    { value: 1, label: 'Umuman yoqmaydi' }, { value: 2, label: 'Unchalik yoqmaydi' },
-    { value: 3, label: 'Ba\u2019zan yoki aniq bilmayman' }, { value: 4, label: 'Yoqadi' },
-    { value: 5, label: 'Juda yoqadi' },
+    { value: 1, label: 'Yo\u2018q, bu men emas' }, { value: 2, label: 'Kamdan-kam' },
+    { value: 3, label: 'Ba\u2019zan' }, { value: 4, label: 'Ko\u2018pincha' },
+    { value: 5, label: 'Ha, bu aynan men' },
   ],
   progress: { answered: 0, seen: 0, total: 70 },
   done: false,

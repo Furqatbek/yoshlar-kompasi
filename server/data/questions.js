@@ -144,13 +144,24 @@ const SECTIONS = [
   },
 ];
 
-// The 1-5 scale, with the words a parent reads out. Index 0 is unanswered.
+// The 1-5 scale, with the words a parent reads out.
+//
+// It asks "is this you?", not "do you like it?". Every one of the seventy items
+// is a first-person self-description, and 21 of them are about what a child
+// DOES or CAN DO rather than what they enjoy — "Buyumlarim qayerda ekanini
+// yaxshi bilaman", "O'z fikrimni tushuntirib bera olaman", the whole organising
+// block and all of growth mindset. A liking scale turns those into nonsense:
+// "do you like knowing where your things are?" has no answer. Agreement reads
+// correctly for all seventy.
+//
+// Worded as frequency rather than abstract agreement because a six-year-old can
+// answer "often" and cannot reliably answer "somewhat agree".
 const SCALE = [
-  { value: 1, label: 'Umuman yoqmaydi' },
-  { value: 2, label: 'Unchalik yoqmaydi' },
-  { value: 3, label: 'Ba’zan yoki aniq bilmayman' },
-  { value: 4, label: 'Yoqadi' },
-  { value: 5, label: 'Juda yoqadi' },
+  { value: 1, label: 'Yo‘q, bu men emas' },
+  { value: 2, label: 'Kamdan-kam' },
+  { value: 3, label: 'Ba’zan' },
+  { value: 4, label: 'Ko‘pincha' },
+  { value: 5, label: 'Ha, bu aynan men' },
 ];
 
 // Interpretation bands. These group INTEREST answers; they are not validated

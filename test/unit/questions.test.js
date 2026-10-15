@@ -152,6 +152,28 @@ test('the scale is 1..5 and every point has words a parent can read out', () => 
   for (const s of SCALE) assert.ok(s.label && s.label.length > 3, JSON.stringify(s));
 });
 
+// The scale has to be able to answer the questions. It shipped as a LIKING
+// scale ("umuman yoqmaydi" … "juda yoqadi") while 21 of the 70 statements are
+// about what a child does or can do rather than what they enjoy — so a third of
+// the inventory read as nonsense: "do you like knowing where your things are?"
+// has no answer. Caught by a person on the first run, not by any test here.
+test('the scale answers "is this you?", not "do you like it?"', () => {
+  const liking = /yoq(adi|maydi)|yoqtir/i;
+  for (const s of SCALE) {
+    assert.ok(!liking.test(s.label),
+      'a liking label cannot answer a statement about ability: ' + JSON.stringify(s));
+  }
+});
+
+test('  which matters because a third of the items are not about liking', () => {
+  const aboutLiking = /yaxshi ko‘raman|yoqtiraman|menga yoqadi|menga qiziq|qiziqaman|xohlayman|istayman|qiziq tuyuladi/;
+  const notLiking = ALL.filter((q) => !aboutLiking.test(q.text));
+  assert.ok(notLiking.length >= 15,
+    'expected many ability/behaviour statements, found ' + notLiking.length);
+  // Spot-check the one a real user hit first.
+  assert.ok(notLiking.some((q) => q.n === 47), 'question 47 is an ability statement');
+});
+
 test('the bands cover 1.00 to 5.00 with no gap or overlap', () => {
   assert.strictEqual(BANDS.length, 4);
   assert.deepStrictEqual(BANDS.map((b) => b.max), [2.49, 3.49, 4.19, 5.01]);

@@ -6,11 +6,11 @@ Savollar quyidagi tartibda, 12 ta yo‘nalish bo‘yicha beriladi.
 
 Har bir savolga 1–5 oralig‘ida javob olinadi:
 
-- **1** — Umuman yoqmaydi
-- **2** — Unchalik yoqmaydi
-- **3** — Ba’zan yoki aniq bilmayman
-- **4** — Yoqadi
-- **5** — Juda yoqadi
+- **1** — Yo‘q, bu men emas
+- **2** — Kamdan-kam
+- **3** — Ba’zan
+- **4** — Ko‘pincha
+- **5** — Ha, bu aynan men
 
 Bola javob berishni xohlamasa yoki savolni tushunmasa, savolni o‘tkazib
 yuborish mumkin. O‘tkazib yuborilgan savol nol deb hisoblanmaydi.

@@ -42,6 +42,14 @@ const GREETING = [
   'Javobini yozing.',
 ].join('\n');
 
+// An ordinary conversational turn. The app serves the questions and records the
+// answers itself now, so a reply never claims an answer — one that did would be
+// inventing them.
+const TURN = () => [
+  'Savollarni ilovaning o‘zi ko‘rsatadi.',
+  'Bola javoblarini belgilab boring; yakunda hisobot tayyorlanadi.',
+].join('\n');
+
 const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', (c) => (body += c));

@@ -1348,7 +1348,7 @@ class Component extends DCLogic {
     report: null, reportLoading: false, reportNotFound: false, deliveryLink: '', sessLoading: false,
     qBank: null, qReport: null, qError: '', qDrafts: {},
     // The inventory, served as a form rather than a conversation.
-    qList: [], qAnswers: {}, qIdx: 0, qLoading: false, qFetchError: '', qSaving: false,
+    qList: [], qAnswers: {}, qIdx: 0, qScale: [], qLoading: false, qFetchError: '', qSaving: false,
     leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null,
     // Telegram authorization (required before any assessment can start).
     authed: false, authChecked: false, authParent: null, authMarketing: false,
@@ -1877,7 +1877,7 @@ class Component extends DCLogic {
         reportPartial: false, sending: false,
         // Clear any previous sitting's questions so the new screen cannot show
         // the last child's position for a frame.
-        qList: [], qAnswers: {}, qIdx: 0, qFetchError: '',
+        qList: [], qAnswers: {}, qIdx: 0, qScale: [], qFetchError: '',
       }, () => { location.hash = '#/mashgulot/' + d.session_token; });
       // The questions themselves. Without this the parent lands on the session
       // screen with nothing to answer — loadSession fetches them on a resume,
@@ -1958,7 +1958,7 @@ class Component extends DCLogic {
       let idx = list.findIndex((q) => !(String(q.n) in answers));
       if (idx < 0) idx = list.length;
       this.setState({
-        qList: list, qAnswers: answers, qIdx: idx,
+        qList: list, qAnswers: answers, qIdx: idx, qScale: d.scale || [],
         qLoading: false, progress: this._prog(d.progress),
       });
     } catch (e) {
@@ -2584,10 +2584,11 @@ class Component extends DCLogic {
       ...(() => {
         const list = S.qList || [];
         const cur = list[S.qIdx] || null;
-        const SCALE_UI = [
-          [1, 'Umuman yoqmaydi'], [2, 'Unchalik yoqmaydi'],
-          [3, "Ba'zan yoki aniq bilmayman"], [4, 'Yoqadi'], [5, 'Juda yoqadi'],
-        ];
+        // The scale comes from the server with the questions. It used to be
+        // duplicated here, which is exactly how a screen ends up offering
+        // different words from the ones the bank documents.
+        const SCALE_UI = (S.qScale && S.qScale.length ? S.qScale : [])
+          .map((x) => [x.value, x.label]);
         const chosen = cur ? S.qAnswers[String(cur.n)] : undefined;
         return {
           qLoading: S.qLoading,
