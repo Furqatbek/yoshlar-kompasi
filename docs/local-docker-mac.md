@@ -242,6 +242,8 @@ and the log names the missing setting. The common ones:
 | `PUBLIC_BASE_URL` | compose sets `NODE_ENV=production`, which requires it |
 | `OPENROUTER_API_KEY (required when LLM_PROVIDER=openrouter)` | paste a real key |
 | port 8080 already allocated | `APP_PORT=8090` in `.env` |
+| `The "ADMIN_EMAIL" variable is not set` | `.env` is missing it, or you are not in the folder that holds `docker-compose.yml`. Check with `pwd` and `grep ADMIN_EMAIL .env` |
+| `pull access denied for yoshlar-kompasi-app` | fixed in the compose file; `git pull` if you cloned before this. It meant the `cron` service had no build block and Docker tried to fetch a local-only image name from the registry |
 
 **Apple Silicon:** both images are multi-arch, so nothing special is needed. If
 Docker ever complains about platform, `docker compose build --pull` usually

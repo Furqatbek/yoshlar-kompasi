@@ -90,6 +90,14 @@ services:
   # credit check. Same image as the app (plus pg_dump); watch it with
   # `docker compose logs cron`.
   cron:
+    # Same image as the app, and it must say so with its own build block: with
+    # only `image:`, a first run has nothing to resolve that name to and Docker
+    # tries to PULL it from the registry — "pull access denied for
+    # yoshlar-kompasi-app" on every clean machine. The build is deduplicated
+    # against the app's, so this costs nothing after the first one.
+    build:
+      context: .
+      dockerfile: server/Dockerfile
     image: yoshlar-kompasi-app
     restart: unless-stopped
     depends_on:
