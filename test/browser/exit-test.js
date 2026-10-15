@@ -32,8 +32,27 @@ const SESSION_PAYLOAD = {
   child: { nickname: 'Ali', grade: 2, age: 7, goal: '', notes: '' },
   messages: [{ role: 'user', content: 'intro', meta: true }, GREETING],
   status: 'active',
-  progress: { mantiq: false, psixologiya: false, harakat: false },
+  progress: { answered: 0, seen: 0, total: 70 },
   done: false, turn_count: 1, report: null,
+};
+
+// The sitting is a form now, so the screen shows a question rather than a
+// greeting. The mock has to serve the inventory the same way the app does.
+const FIRST_Q = 'LEGO yoki konstruktor yig\u2018ishni yaxshi ko\u2018raman.';
+const QUESTIONS_PAYLOAD = {
+  questions: [
+    { n: 1, text: FIRST_Q, section: 'construction_engineering', section_title: 'Konstruktorlik va muhandislik' },
+    { n: 2, text: 'Biror narsa buzilib qolsa, uni qanday tuzatishni o\u2018ylab ko\u2018raman.',
+      section: 'construction_engineering', section_title: 'Konstruktorlik va muhandislik' },
+  ],
+  answers: {},
+  scale: [
+    { value: 1, label: 'Umuman yoqmaydi' }, { value: 2, label: 'Unchalik yoqmaydi' },
+    { value: 3, label: 'Ba\u2019zan yoki aniq bilmayman' }, { value: 4, label: 'Yoqadi' },
+    { value: 5, label: 'Juda yoqadi' },
+  ],
+  progress: { answered: 0, seen: 0, total: 70 },
+  done: false,
 };
 
 (async () => {
@@ -45,6 +64,9 @@ const SESSION_PAYLOAD = {
   await page.route('**/api/sessions', (route) => route.fulfill({
     status: 201, contentType: 'application/json',
     body: JSON.stringify({ session_id: 'sid1', session_token: TOKEN, child: SESSION_PAYLOAD.child, status: 'active', messages: SESSION_PAYLOAD.messages, progress: SESSION_PAYLOAD.progress, done: false }),
+  }));
+  await page.route('**/api/sessions/' + TOKEN + '/questions', (route) => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify(QUESTIONS_PAYLOAD),
   }));
   await page.route('**/api/sessions/' + TOKEN, (route) => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify(SESSION_PAYLOAD),
@@ -61,7 +83,7 @@ const SESSION_PAYLOAD = {
   await page.waitForTimeout(300);
   await page.click('button:has-text("Mashg\'ulotni boshlash")');
   await page.waitForTimeout(800);
-  ok('session screen shows greeting', (await page.locator('body').innerText()).includes('birinchi savol'));
+  ok('session screen shows the first question', (await page.locator('body').innerText()).includes('LEGO yoki konstruktor'));
 
   // Try to finish with zero answers -> lowEngage dialog with an exit option.
   await page.click('button:has-text("Yakunlash")');
@@ -82,7 +104,7 @@ const SESSION_PAYLOAD = {
   await page.click('button:has-text("Davom etish")');
   await page.waitForTimeout(700);
   ok('back in session route', (await page.evaluate(() => location.hash)).includes('/mashgulot/' + TOKEN));
-  ok('greeting visible again', (await page.locator('body').innerText()).includes('birinchi savol'));
+  ok('the question is there again', (await page.locator('body').innerText()).includes('LEGO yoki konstruktor'));
 
   await b.close(); srv.close();
   console.log('\n==== ' + pass + ' passed, ' + fail + ' failed ====');

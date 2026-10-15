@@ -12,18 +12,27 @@ const { installAuth } = require('./auth-helper');
 (async () => {
   // Sessions are gated on Telegram authorization; log in first.
   await installAuth(BASE, { chatId: 811000003 });
-  // 1. Create session. The DEFAULT stub emits [YAKUN] markers on the greeting,
-  //    so all tracks read "done" while there are STILL zero real answers — the
-  //    exact model-controlled bypass the gate must resist.
+  // 1. Create session.
+  //
+  //    This test was written against a bypass that no longer exists: the model
+  //    used to emit [YAKUN] markers, so it could mark every track done with
+  //    zero real answers and the gate had to resist its own assistant. The app
+  //    now serves the inventory and records the answers itself, so the model
+  //    has no way to claim progress — the bypass is closed by construction
+  //    rather than defended against.
+  //
+  //    The gate still matters, for a blunter reason: a parent who opens a
+  //    sitting and asks for a report straight away must not get one, because
+  //    there is nothing to write it from.
   let r = await j('/api/sessions', { method: 'POST', headers: H, body: JSON.stringify({ consent: true, nickname: 'Ali', grade: 2, age: 7 }) });
   ok('create session -> 201', r.status === 201, 'status=' + r.status);
   const stok = r.data.session_token;
-  ok('  tracks marked done by greeting, but 0 real answers', r.data.done === true, JSON.stringify(r.data.progress));
+  ok('  a fresh sitting reports no progress, whatever the model said',
+    r.data.done === false && r.data.progress.seen === 0, JSON.stringify(r.data.progress));
 
-  // 2. Report WITHOUT any answers -> blocked, EVEN THOUGH tracks are "done"
-  //    (proves the anyTrackDone bypass is closed).
+  // 2. Report with nothing answered -> blocked.
   r = await j('/api/sessions/' + stok + '/report', { method: 'POST', headers: H, body: JSON.stringify({}) });
-  ok('report with 0 answers -> 400 (bypass closed)', r.status === 400, 'status=' + r.status);
+  ok('report with 0 answers -> 400', r.status === 400, 'status=' + r.status);
   ok('  code = insufficient_engagement', r.data && r.data.code === 'insufficient_engagement', JSON.stringify(r.data));
 
   // 3. Confirm no report leaked into the session.

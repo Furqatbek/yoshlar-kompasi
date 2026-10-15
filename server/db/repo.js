@@ -112,6 +112,16 @@ async function saveAnswers(sessionId, answers, skipped) {
   });
 }
 
+// Every row, skips included — what the UI needs to restore a part-finished
+// sitting exactly as the adult left it.
+async function getAnswerRows(sessionId) {
+  const { rows } = await query(
+    'SELECT question_n, value FROM answers WHERE session_id = $1 ORDER BY question_n ASC',
+    [sessionId]
+  );
+  return rows;
+}
+
 async function getAnswers(sessionId) {
   const { rows } = await query(
     'SELECT question_n, value FROM answers WHERE session_id = $1 AND value IS NOT NULL ORDER BY question_n ASC',
@@ -824,7 +834,7 @@ async function optOutReminders(chatId) {
 }
 
 module.exports = {
-  saveAnswers, getAnswers,
+  saveAnswers, getAnswers, getAnswerRows,
   createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,

@@ -543,104 +543,60 @@ input, textarea, button, select { font-family: var(--font-body); }
     </div>
   </header>
 
-  <main style="flex: 1;">
-    <div style="max-width: 880px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8); display: flex; flex-direction: column; gap: var(--space-6);">
-      <sc-if value="{{ sessionLoading }}" hint-placeholder-val="{{ false }}">
-        <div style="display: flex; gap: 5px; align-items: center; padding: var(--space-4) 0;">
-          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0s;"></span>
-          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.2s;"></span>
-          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.4s;"></span>
-          <span class="text-muted" style="margin-left: 8px;">Yuklanmoqda…</span>
+  <main style="flex: 1; display: flex; flex-direction: column;">
+    <div style="max-width: 680px; width: 100%; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8); flex: 1; display: flex; flex-direction: column; justify-content: center;">
+
+      <sc-if value="{{ qLoading }}" hint-placeholder-val="{{ false }}">
+        <p class="text-muted" style="text-align: center;">Yuklanmoqda…</p>
+      </sc-if>
+
+      <sc-if value="{{ qError }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align: center;">
+          <p style="color: var(--color-accent-2); margin-bottom: var(--space-4);">{{ qError }}</p>
+          <button type="button" class="btn btn-secondary" onClick="{{ qRetry }}">Qayta urinish</button>
         </div>
       </sc-if>
-      <sc-if value="{{ sessionFailed }}" hint-placeholder-val="{{ false }}">
-        <div style="border: 1px solid var(--color-accent-300); background: var(--color-accent-100); padding: var(--space-6);">
-          <h4 style="margin-bottom: var(--space-2);">Birinchi savollar tayyorlanmadi</h4>
-          <p style="color: var(--color-accent-700); font-weight: 600; margin-bottom: var(--space-2);">{{ apiError }}</p>
-          <p class="text-muted" style="margin-bottom: var(--space-4); max-width: 60ch;">Sun'iy intellekt bilan bog'lanishda muammo bo'ldi. Bir oz kuting va qayta urinib ko'ring. (Agar takrorlansa, markazga xabar bering.)</p>
-          <button type="button" class="btn btn-primary" onClick="{{ retry }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Qayta urinish</button>
+
+      <!-- One statement at a time. The adult reads it out, the child answers,
+           the adult taps. Nothing to type, nothing to keep track of. -->
+      <sc-if value="{{ qHasCurrent }}" hint-placeholder-val="{{ true }}">
+        <p class="text-muted" style="text-align: center; font-size: 13px; margin: 0 0 var(--space-2);">{{ qSectionTitle }}</p>
+        <p style="text-align: center; font-size: 12px; color: var(--color-neutral-600); margin: 0 0 var(--space-5); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;">Bolaga ovoz chiqarib o'qing</p>
+
+        <div style="background: var(--color-neutral-100); border: 1px solid var(--color-divider); border-radius: var(--radius-lg); box-shadow: 0 1px 2px rgba(70,50,30,.06), 0 14px 32px -18px rgba(90,60,30,.22); padding: clamp(24px, 5vw, 40px); margin-bottom: var(--space-5);">
+          <p style="margin: 0; font-family: var(--font-heading); font-weight: 600; font-size: clamp(21px, 3.4vw, 30px); line-height: 1.3; text-align: center; text-wrap: pretty;">{{ qText }}</p>
+        </div>
+
+        <!-- Five choices, biggest for the extremes, so a tap is quick and the
+             scale reads as a scale rather than five identical boxes. -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <sc-for list="{{ qChoices }}" as="c" hint-placeholder-count="5">
+            <button type="button" onClick="{{ c.pick }}" class="{{ c.cls }}"
+                    style="display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 56px; padding: 0 var(--space-4); cursor: pointer; border-radius: var(--radius-md); font-family: var(--font-body); text-align: left; background: {{ c.bg }}; border: 1px solid {{ c.border }}; color: var(--color-text);"
+                    style-hover="border-color: var(--color-accent); background: var(--color-accent-100);">
+              <span style="flex: 0 0 34px; height: 34px; border-radius: 50%; background: {{ c.dotBg }}; border: 1px solid {{ c.dotBorder }}; display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-weight: 700; font-size: 15px; color: {{ c.dotColor }};">{{ c.value }}</span>
+              <span style="font-size: 16px; font-weight: 500;">{{ c.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-5);">
+          <button type="button" class="btn btn-ghost" onClick="{{ qBack }}" disabled="{{ qBackDisabled }}" style="cursor: pointer;">← Orqaga</button>
+          <span class="text-muted" style="font-size: 13px;">{{ qCounter }}</span>
+          <button type="button" class="btn btn-ghost" onClick="{{ qSkip }}" style="cursor: pointer;">O'tkazib yuborish →</button>
         </div>
       </sc-if>
-      <sc-if value="{{ sessionEmpty }}" hint-placeholder-val="{{ false }}">
-        <div style="border: 1px solid var(--color-divider); padding: var(--space-6);">
-          <h4 style="margin-bottom: var(--space-2);">Mashg'ulot topilmadi</h4>
-          <p class="text-muted">Havola eskirgan yoki mashg'ulot boshqa qurilmada boshlangan. Yangi mashg'ulot uchun qisqa formani to'ldiring.</p>
-          <a class="btn btn-primary" href="#/boshlash" style="text-decoration: none;">Tayyorgarlikka o'tish</a>
-        </div>
-      </sc-if>
-      <sc-for list="{{ chat }}" as="msg" hint-placeholder-count="2">
-        <div style="display: flex; flex-direction: column;">
-          <sc-if value="{{ msg.u }}" hint-placeholder-val="{{ false }}">
-            <div style="align-self: flex-end; max-width: min(560px, 88%); background: var(--color-neutral-200); border: 1px solid var(--color-divider); padding: var(--space-3) var(--space-4);">
-              <div class="text-muted" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px;">Javob</div>
-              <div style="white-space: pre-wrap;">{{ msg.text }}</div>
-            </div>
-            <sc-if value="{{ msg.failed }}" hint-placeholder-val="{{ false }}">
-              <div style="align-self: flex-end; display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); flex-wrap: wrap;">
-                <span style="color: var(--color-accent-700); font-size: 13px; font-weight: 600;">Xabar yuborilmadi. {{ apiError }}</span>
-                <button type="button" class="btn btn-secondary" onClick="{{ retry }}" style="font-size: 12px; padding: 4px 10px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Qayta yuborish</button>
-              </div>
-            </sc-if>
-          </sc-if>
-          <sc-if value="{{ msg.a }}" hint-placeholder-val="{{ false }}">
-            <div style="display: flex; flex-direction: column; gap: var(--space-3); max-width: 720px;">
-              <sc-for list="{{ msg.blocks }}" as="b" hint-placeholder-count="1">
-                <div>
-                  <sc-if value="{{ b.q }}" hint-placeholder-val="{{ false }}">
-                    <div style="background: var(--color-accent-100); border: 1px solid var(--color-accent-300); padding: var(--space-4);">
-                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-2); color: var(--color-accent-700);">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><path d="M16 9a5 5 0 0 1 0 6"></path><path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path></svg>
-                        <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;">Bolaga o'qib bering</span>
-                      </div>
-                      <div style="font-size: 19px; line-height: 1.5; white-space: pre-wrap;">{{ b.text }}</div>
-                    </div>
-                  </sc-if>
-                  <sc-if value="{{ b.adult }}" hint-placeholder-val="{{ false }}">
-                    <div class="text-muted" style="white-space: pre-wrap; max-width: 65ch;">{{ b.text }}</div>
-                  </sc-if>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-        </div>
-      </sc-for>
-      <sc-if value="{{ sending }}" hint-placeholder-val="{{ false }}">
-        <div style="display: flex; gap: 5px; align-items: center; padding: var(--space-2) 0;">
-          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0s;"></span>
-          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.2s;"></span>
-          <span style="width: 8px; height: 8px; background: var(--color-neutral-600); animation: yikBlink 1.2s infinite 0.4s;"></span>
+
+      <!-- Every question addressed. -->
+      <sc-if value="{{ qAllDone }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align: center;">
+          <p style="font-family: var(--font-heading); font-weight: 600; font-size: clamp(24px, 4vw, 34px); margin: 0 0 var(--space-3);">Hammasi tayyor!</p>
+          <p class="text-muted" style="max-width: 44ch; margin: 0 auto var(--space-6);">{{ qDoneNote }}</p>
+          <button type="button" class="btn btn-primary" onClick="{{ askFinish }}" style="font-size: 17px; padding: 14px 28px;">Hisobotni olish</button>
         </div>
       </sc-if>
     </div>
   </main>
-
-  <div class="no-print" style="position: sticky; bottom: 0; background: var(--color-bg); border-top: 1px solid var(--color-divider);">
-    <div style="max-width: 880px; margin: 0 auto; padding: var(--space-3) var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);">
-      <!-- The 1-5 scale. Tapping a point appends it to the draft rather than
-           sending, so a batch of several questions is answered in one go — the
-           model asks five or six at a time, and one round-trip per question
-           would make a 70-item sitting unbearable on a phone. -->
-      <div style="display: flex; gap: 6px; align-items: stretch;">
-        <sc-for list="{{ scale }}" as="sc" hint-placeholder-count="5">
-          <button type="button" onClick="{{ sc.pick }}" title="{{ sc.label }}"
-                  style="flex: 1; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; background: var(--color-neutral-100); border: 1px solid var(--color-divider); border-radius: var(--radius-sm); font-family: var(--font-body); padding: 4px 2px;"
-                  style-hover="border-color: var(--color-accent); background: var(--color-accent-100);">
-            <span style="font-family: var(--font-heading); font-weight: 700; font-size: 17px; color: var(--color-accent-700);">{{ sc.value }}</span>
-            <span style="font-size: 9px; line-height: 1.15; text-align: center; color: var(--color-neutral-700);">{{ sc.short }}</span>
-          </button>
-        </sc-for>
-      </div>
-      <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;">
-        <button type="button" class="tag tag-outline" onClick="{{ chipSkip }}" style="cursor: pointer;">O'tkazib yuborish</button>
-        <button type="button" class="tag tag-outline" onClick="{{ chipRepeat }}" style="cursor: pointer;">Savolni qayta o'qing</button>
-        <button type="button" class="tag tag-outline" onClick="{{ pauseNow }}" style="cursor: pointer;">Tanaffus</button>
-      </div>
-      <div style="display: flex; gap: var(--space-2);">
-        <input class="input" style="flex: 1; font-size: 16px;" placeholder="Javoblar: 1, 4, 5…" value="{{ draftVal }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}">
-        <button type="button" class="btn btn-primary" onClick="{{ sendNow }}" disabled="{{ sendDisabled }}" style="padding: 10px 16px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path><path d="M22 2 11 13"></path></svg>Yuborish</button>
-      </div>
-    </div>
-  </div>
 
   <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
     <div class="dialog-backdrop" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-text) 55%, transparent);">
@@ -1391,6 +1347,8 @@ class Component extends DCLogic {
     // server-fetched, route-scoped data
     report: null, reportLoading: false, reportNotFound: false, deliveryLink: '', sessLoading: false,
     qBank: null, qReport: null, qError: '', qDrafts: {},
+    // The inventory, served as a form rather than a conversation.
+    qList: [], qAnswers: {}, qIdx: 0, qLoading: false, qFetchError: '', qSaving: false,
     leads: [], leadsLoading: false, lead: null, leadLoading: false, leadMissing: false, stats: null,
     // Telegram authorization (required before any assessment can start).
     authed: false, authChecked: false, authParent: null, authMarketing: false,
@@ -1791,6 +1749,9 @@ class Component extends DCLogic {
         resumeName: (d.status === 'active' || d.status === 'paused') ? (d.child.nickname || 'Bola') : ''
       });
       this.saveHandle();
+      // The questions and whatever has already been answered, so a resumed
+      // sitting opens on the question they stopped at rather than the first.
+      await this.loadInventory(token);
     } catch (e) {
       // Only forget the session on a definitive expiry/not-found — keep it on a
       // transient network/5xx blip so resume still works after a hiccup.
@@ -1913,8 +1874,15 @@ class Component extends DCLogic {
         messages: d.messages || [], status: 'active', paused: false, apiError: d.api_error || '',
         resumeName: '', draft: '', token: d.session_token, shareToken: '',
         gate: false, delivered: false, gateError: '', progress: this._prog(d.progress),
-        reportPartial: false, sending: false
+        reportPartial: false, sending: false,
+        // Clear any previous sitting's questions so the new screen cannot show
+        // the last child's position for a frame.
+        qList: [], qAnswers: {}, qIdx: 0, qFetchError: '',
       }, () => { location.hash = '#/mashgulot/' + d.session_token; });
+      // The questions themselves. Without this the parent lands on the session
+      // screen with nothing to answer — loadSession fetches them on a resume,
+      // but starting fresh never went through loadSession.
+      this.loadInventory(d.session_token);
     } catch (e) {
       this.setState({ sending: false, formError: this._errMsg(e) });
     }
@@ -1976,6 +1944,60 @@ class Component extends DCLogic {
   }
 
   // ---- admin: the question bank -------------------------------------------
+  // ---- the inventory ------------------------------------------------------
+  async loadInventory(token) {
+    this.setState({ qLoading: true, qFetchError: '' });
+    try {
+      const d = await this.api('/api/sessions/' + encodeURIComponent(token) + '/questions', {
+        headers: { 'x-session-token': token },
+      });
+      const answers = d.answers || {};
+      // Resume where they stopped: the first question with no row at all.
+      // A skipped question counts as addressed, so it is not revisited.
+      const list = d.questions || [];
+      let idx = list.findIndex((q) => !(String(q.n) in answers));
+      if (idx < 0) idx = list.length;
+      this.setState({
+        qList: list, qAnswers: answers, qIdx: idx,
+        qLoading: false, progress: this._prog(d.progress),
+      });
+    } catch (e) {
+      this.setState({ qLoading: false, qFetchError: "Savollarni yuklab bo'lmadi." });
+    }
+  }
+
+  // Record one answer and move on. The request is fired without blocking the
+  // next question: a parent tapping through seventy statements should never
+  // wait for a round-trip, and a failure is recoverable because the answer is
+  // still held in state and re-sent with the next one.
+  async answerCurrent(value) {
+    const S = this.state;
+    const q = S.qList[S.qIdx];
+    if (!q || S.qSaving) return;
+    const next = { ...S.qAnswers, [String(q.n)]: value };
+    const seen = Object.keys(next).length;
+    this.setState({
+      qAnswers: next,
+      qIdx: Math.min(S.qIdx + 1, S.qList.length),
+      progress: { ...S.progress, seen, answered: Object.values(next).filter((v) => v !== null).length },
+    });
+    try {
+      const d = await this.api('/api/sessions/' + encodeURIComponent(S.token) + '/answers', {
+        method: 'POST',
+        headers: { 'x-session-token': S.token },
+        body: { answers: [{ n: q.n, value }] },
+      });
+      this.setState({ progress: this._prog(d.progress) });
+    } catch (e) {
+      // Keep the answer on screen; it is re-sent with the next batch.
+      this.setState({ qFetchError: '' });
+    }
+  }
+
+  goBackQuestion() {
+    if (this.state.qIdx > 0) this.setState({ qIdx: this.state.qIdx - 1 });
+  }
+
   async loadQuestions() {
     try {
       const [d, r] = await Promise.all([
@@ -2366,11 +2388,6 @@ class Component extends DCLogic {
     ];
     const atQuestion = Math.min(prog.seen + 1, 70);
     const sectionNow = (SECTION_BOUNDS.find(([end]) => atQuestion <= end) || [0, ''])[1];
-    const SCALE_UI = [
-      [1, 'Umuman yoqmaydi', 'umuman'], [2, 'Unchalik yoqmaydi', 'unchalik'],
-      [3, "Ba'zan yoki aniq bilmayman", "ba'zan"], [4, 'Yoqadi', 'yoqadi'],
-      [5, 'Juda yoqadi', 'juda'],
-    ];
     const gradeOpts = [1, 2, 3, 4].map(n => ({
       label: n + '-sinf',
       cls: S.grade === n ? 'btn btn-primary' : 'btn btn-secondary',
@@ -2563,26 +2580,52 @@ class Component extends DCLogic {
       starting: S.sending, startLabel: S.sending ? 'Tayyorlanmoqda…' : "Mashg'ulotni boshlash",
       submitForm: () => this.submitForm(), startSession: () => this.startSession(),
       childName: S.name.trim() || 'Bola', gradeLabel: S.grade ? S.grade + '-sinf' : '',
+      // ---- the inventory, as a form ----------------------------------
+      ...(() => {
+        const list = S.qList || [];
+        const cur = list[S.qIdx] || null;
+        const SCALE_UI = [
+          [1, 'Umuman yoqmaydi'], [2, 'Unchalik yoqmaydi'],
+          [3, "Ba'zan yoki aniq bilmayman"], [4, 'Yoqadi'], [5, 'Juda yoqadi'],
+        ];
+        const chosen = cur ? S.qAnswers[String(cur.n)] : undefined;
+        return {
+          qLoading: S.qLoading,
+          qError: S.qFetchError || '',
+          qRetry: () => this.loadInventory(S.token),
+          qHasCurrent: !!cur && !S.qLoading && !S.qFetchError,
+          qAllDone: !cur && list.length > 0 && !S.qLoading && !S.qFetchError,
+          qText: cur ? cur.text : '',
+          qSectionTitle: cur ? cur.section_title : '',
+          qCounter: cur ? ((S.qIdx + 1) + ' / ' + list.length) : '',
+          qBack: () => this.goBackQuestion(),
+          qBackDisabled: S.qIdx === 0,
+          qSkip: () => this.answerCurrent(null),
+          qDoneNote: prog.answered < prog.seen
+            ? ("Barcha savollar ko'rib chiqildi. " + (prog.seen - prog.answered)
+               + " ta savol o'tkazib yuborilgan — ular hisobga olinmaydi.")
+            : 'Barcha savollarga javob berildi.',
+          qChoices: SCALE_UI.map(([value, label]) => {
+            const on = chosen === value;
+            return {
+              value: String(value), label,
+              bg: on ? 'var(--color-accent-100)' : 'var(--color-neutral-100)',
+              border: on ? 'var(--color-accent)' : 'var(--color-divider)',
+              dotBg: on ? 'var(--color-accent)' : 'var(--color-surface)',
+              dotBorder: on ? 'var(--color-accent)' : 'var(--color-divider)',
+              dotColor: on ? 'var(--color-neutral-100)' : 'var(--color-accent-700)',
+              cls: 'q-choice',
+              pick: () => this.answerCurrent(value),
+            };
+          }),
+        };
+      })(),
       progLabel: prog.seen + ' / ' + prog.total,
       progSection: sectionNow,
       progPct: Math.round((prog.seen / prog.total) * 100) + '%',
       // Tapping a point appends it to the draft: the model asks five or six
       // questions at a time, so one round-trip per answer would make a
       // seventy-item sitting unbearable on a phone.
-      scale: SCALE_UI.map(([value, label, short]) => ({
-        value: String(value), label, short,
-        pick: () => this.setState({ draft: (S.draft ? S.draft.replace(/[\s,]+$/, '') + ', ' : '') + value }),
-      })),
-      sessionEmpty: !chat.length && !S.apiError && !S.sessLoading && !S.sending,
-      sessionFailed: !chat.length && !!S.apiError,
-      sessionLoading: !chat.length && S.sessLoading,
-      chat, sending: S.sending, apiError: S.apiError,
-      draftVal: S.draft, onDraft: e => this.setState({ draft: e.target.value }),
-      onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
-      sendNow: () => this.send(),
-      sendDisabled: S.sending || S.generating || S.paused || S.gate || S.lowEngage || !!S.apiError,
-      chipSkip: () => this.send("O'tkazib yuborish"),
-      chipRepeat: () => this.send('Savolni qayta o\'qing'),
       pauseNow: () => this.setState({ paused: true, status: 'paused' }),
       resumeNow: () => this.setState({ paused: false, status: 'active' }),
       retry: () => this.retry(),

@@ -29,32 +29,9 @@ const REPORT = [
   '```',
 ].join('\n');
 
-// Every reply records the batch it just collected.
-//
-// Stateless on purpose: the stub serves every session in the run, so a counter
-// that walked 1..70 once would hand the first driver a full inventory and every
-// later one an empty line. Saving answers is an upsert, so repeating the same
-// batch is harmless. STUB_ANSWERS_PER_TURN=n covers the partial case.
-function answerLine(count) {
-  const pairs = [];
-  for (let n = 1; n <= Math.min(count, 70); n += 1) {
-    pairs.push(n + '=' + (n % 5 === 0 ? 'x' : ((n % 5) + 1)));
-  }
-  return pairs.length ? '[JAVOBLAR: ' + pairs.join(', ') + ']' : '';
-}
+// The app serves the questions and records the answers itself, so a reply that
+// claimed answers would be inventing them. The stub stays out of it.
 
-const TURN = () => [
-  'Rahmat! Ali bilan davom etamiz. Quyidagilarni ovoz chiqarib o‘qing:',
-  '',
-  '> LEGO yoki konstruktor yig‘ishni yaxshi ko‘raman.',
-  '',
-  '> Jumboqlar yechishni yaxshi ko‘raman.',
-  '',
-  'Javoblarini 1–5 oralig‘ida yozing.',
-  answerLine(Number(process.env.STUB_ANSWERS_PER_TURN || 70)),
-].join('\n');
-
-// A greeting has collected nothing yet, so it must NOT emit an answer line.
 const REALISTIC = process.env.STUB_MODE === 'realistic';
 const GREETING = [
   'Assalomu alaykum! Ali bilan mashg‘ulotni boshlaymiz.',

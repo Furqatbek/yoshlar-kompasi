@@ -29,7 +29,7 @@ Siz “Yosh Iste’dodlar Kompasi” veb-ilovasi ichida ishlayapsiz. Maqsad — 
    5 — juda yoqadi.
    Agar javob tushunarsiz bo‘lsa, taxmin qilmang — kattadan javobni aniqlashtirishni so‘rang.
 
-3. Savollarni qulay kichik guruhlarda taqdim eting. Har bir savol alohida blockquote (>) ichida bo‘lsin, chunki kattalar uni bolaga ovoz chiqarib o‘qib beradi. Kattalarga mo‘ljallangan ko‘rsatmalar blockquote ichiga kiritilmaydi. Emoji ishlatmang.
+3. Savollarni siz bermaysiz. Ilova 70 ta savolni o‘zi ko‘rsatadi va 1–5 javoblarni o‘zi yozib oladi; sizning vazifangiz — yig‘ilgan javoblar asosida hisobot yozish. Emoji ishlatmang.
 
 4. Savol raqami, matni, javobi va tegishli yo‘nalishini aniq saqlang. Javobni bolaning o‘rniga tanlamang. Katta javobni kiritayotgan bo‘lsa, uni aynan bildirgan javobi sifatida qayd eting.
 
@@ -68,12 +68,6 @@ Siz “Yosh Iste’dodlar Kompasi” veb-ilovasi ichida ishlayapsiz. Maqsad — 
 11. 70 ta savol tugagach, faqat to‘plangan javoblarga asoslanib yakunlashni taklif qiling. To‘liq hisobotni faqat “[HISOBOT-SOROVI]” belgisi bilan boshlangan maxsus so‘rov kelganda yozing. Oddiy suhbat ichida hisobot so‘ralsa, “To‘liq hisobotni olish uchun ‘Yakunlash’ tugmasini bosing” deb tushuntiring.
 
 12. Har bir xulosa dalilga tayanishi shart. Bola aytmagan, savollarda o‘lchanmagan yoki mashg‘ulotda kuzatilmagan jihatlarni uydirmang. Musiqiy qobiliyat, emotsional intellekt, o‘rganish uslubi, sportga moslik yoki kasbiy salohiyat haqida maxsus dalil bo‘lmasa, ularni aniqlangandek yozmang.
-
-13. Har bir savol guruhi javoblarini qayd etgandan so‘ng, javobingiz OXIRIDA alohida qatorda aynan shu texnik belgini yozing:
-
-   [JAVOBLAR: 1=4, 2=5, 3=x, 4=2]
-
-   Bunda raqam — savol raqami, qiymat — bolaning 1–5 javobi, x — o‘tkazib yuborilgan savol. Faqat shu guruhda haqiqatan javob olingan savollarni yozing; javob olinmagan savolni umuman kiritmang va qiymatni taxmin qilmang. Bu belgi kattalarga ko‘rinmaydi — uni tizim o‘qiydi va o‘rtacha ballarni o‘zi hisoblaydi. Siz hisoblamang.
 `;
 
 const REPORT_JSON_RULE = `## Hisobot uchun tuzilmali ma’lumot (majburiy)
@@ -242,7 +236,11 @@ function buildIntro(c) {
   return s;
 }
 
-function buildReportRequest(name, partial) {
+// `scored` is services/scoring.js output. It is embedded verbatim because the
+// inventory is a form: there is no conversation for the model to read results
+// out of, and letting it recompute them from raw answers is how a skipped
+// question becomes a zero.
+function buildReportRequest(name, partial, scored) {
   const partialRule = partial
     ? ' Diqqat: baholash qisman yakunlangan. Hisobot boshida ma’lumotlar ' +
       'to‘liq emasligini ayting. Javobsiz savollarni taxmin qilmang; ' +
@@ -260,12 +258,28 @@ function buildReportRequest(name, partial) {
     .map((sec) => '## ' + sec.heading + '\n' + sec.instruction + '\n')
     .join('\n');
 
+  let results = '';
+  if (scored && scored.categories) {
+    const lines = Object.entries(scored.categories).map(([key, c]) => {
+      const title = c.title || key;
+      if (c.average == null) return '- ' + title + ': yetarli ma\u2019lumot yo\u2018q (' + c.answered + '/' + c.of + ' javob)';
+      return '- ' + title + ': o\u2018rtacha ' + c.average.toFixed(2) + ' (' + c.answered + '/' + c.of
+        + ' javob) — ' + (c.label || '');
+    });
+    results =
+      '\nHisoblangan natijalar (tizim hisobladi — qayta hisoblamang, o\u2018zgartirmang):\n'
+      + lines.join('\n')
+      + '\n\nJami javob: ' + scored.answered + '/' + scored.total
+      + '; to\u2018liqlik: ' + scored.data_completeness + '.\n';
+  }
+
   return (
     '[HISOBOT-SOROVI] Mashg‘ulot yakunlandi.' +
     partialRule +
     ' Hisobotni faqat bolaning 70 savolga bergan haqiqiy javoblari va ' +
     'qayd etilgan kuzatuvlar asosida tayyorlang. Hech narsa uydirmang. ' +
-    'Markdown formatida quyidagi sarlavhalarni aynan shu tartibda va aynan shu ' +
+    results +
+    '\nMarkdown formatida quyidagi sarlavhalarni aynan shu tartibda va aynan shu ' +
     'matn bilan ishlating:\n\n' +
     body +
     '\nHisobot matnidan keyin REPORT_JSON_RULE da ko‘rsatilgan tuzilishga ' +

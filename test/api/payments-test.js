@@ -49,6 +49,15 @@ const { authorize } = require('./auth-helper');
   const stok = sess.data.session_token;
   await j('POST', '/api/sessions/' + stok + '/messages', { content: 'Sardor: kvadrat' },
     { 'x-session-token': stok });
+  // Answer the inventory the way the browser does, so the report is scored from
+  // real rows. Every fifth question is skipped, which is what makes the
+  // "a skip is not a zero" assertion further down mean something.
+  const qs = (await j('GET', '/api/sessions/' + stok + '/questions', undefined,
+    { 'x-session-token': stok })).data.questions;
+  await j('POST', '/api/sessions/' + stok + '/answers',
+    { answers: qs.map((x) => ({ n: x.n, value: x.n % 5 === 0 ? null : ((x.n % 5) + 1) })) },
+    { 'x-session-token': stok });
+
   const rep = await j('POST', '/api/sessions/' + stok + '/report', {}, { 'x-session-token': stok });
   ok('a report is produced', rep.status === 200 && !!rep.data.share_token, 'status=' + rep.status);
   const share = rep.data.share_token;

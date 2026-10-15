@@ -8,7 +8,11 @@ const repo = require('../db/repo');
 const prompt = require('../services/prompt');
 const claude = require('../services/claude');
 const delivery = require('../services/delivery');
-const { parseAnswerMarkers, stripAnswerMarkers, parseReport } = require('../services/reportParse');
+// stripAnswerMarkers stays as a guard: the model is no longer asked for an
+// answer line, and a hallucinated one must never reach a reader — nor be
+// recorded, which is why nothing parses it any more. The app is the only thing
+// that writes answers.
+const { stripAnswerMarkers, parseReport } = require('../services/reportParse');
 const scoring = require('../services/scoring');
 const { sessionAuth } = require('../middleware/auth');
 const { rateLimit, clientIp } = require('../middleware/rateLimit');
@@ -67,19 +71,16 @@ function allDone(session) {
   return Number(session.seen_count || 0) >= _total;
 }
 
-// Record whatever the model says it just captured, and hand back the session
-// with its refreshed count. A reply with no marker leaves the count alone.
-async function captureAnswers(sessionId, text, fallback) {
-  const { answers, skipped } = parseAnswerMarkers(text);
-  if (!answers.length && !skipped.length) return fallback;
-  try {
-    return (await repo.saveAnswers(sessionId, answers, skipped)) || fallback;
-  } catch (err) {
-    // A bad batch must not cost the adult their turn — the reply is already
-    // written and the questions can be re-answered.
-    console.error('[answers] session=' + sessionId + ' save failed: ' + err.message);
-    return fallback;
-  }
+function progressOf(session) {
+  const answered = Number(session.answered_count || 0);
+  const seen = Number(session.seen_count || 0);
+  return { answered, seen, total: _total, pct: Math.min(100, Math.round((seen / _total) * 100)) };
+}
+// The inventory is finished when every question has been put to the child —
+// counting the ones they passed on. A child who skips fourteen questions must
+// still be able to reach the end; measuring by answers alone would strand them.
+function allDone(session) {
+  return Number(session.seen_count || 0) >= _total;
 }
 
 // POST /api/sessions — create child + session, greet + first batch.
@@ -148,10 +149,9 @@ router.post(
         maxTokens: config.llm.conversationMaxTokens, messages: history,
       });
       await repo.addMessage(session.id, 'assistant', stripAnswerMarkers(out.text), false);
-      let updated = await repo.applyTurn(session.id, {
+      const updated = await repo.applyTurn(session.id, {
         inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: true,
       });
-      updated = await captureAnswers(session.id, out.text, updated);
       const messages = await repo.getMessages(session.id);
       return res.status(201).json({ ...base, messages, progress: progressOf(updated), done: allDone(updated) });
     } catch (err) {
@@ -229,10 +229,9 @@ router.post(
       maxTokens: config.llm.conversationMaxTokens, messages: history,
     });
     await repo.addMessage(session.id, 'assistant', stripAnswerMarkers(out.text), false);
-    let updated = await repo.applyTurn(session.id, {
+    const updated = await repo.applyTurn(session.id, {
       inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: true,
     });
-    updated = await captureAnswers(session.id, out.text, updated);
     res.json({
       reply: stripAnswerMarkers(out.text), progress: progressOf(updated), done: allDone(updated),
       turn_count: updated.turn_count, cap_reached: false,
@@ -319,8 +318,13 @@ router.post(
     // deliberately do NOT accept a completed [YAKUN] direction as a substitute,
     // since the model controls those markers and could emit one with no answers,
     // bypassing the gate. A legitimately-assessed direction always has answers.
+    // The gate counts ANSWERS, not chat turns. The inventory is a form now, so
+    // a finished sitting can have no user messages at all — counting messages
+    // would refuse every real report while passing a conversation that
+    // answered nothing.
     const msgs = await repo.getMessages(session.id);
-    const realAnswers = msgs.filter((m) => m.role === 'user' && !m.meta).length;
+    const realAnswers = Number(session.answered_count || 0)
+      || msgs.filter((m) => m.role === 'user' && !m.meta).length;
     if (realAnswers < config.caps.minAnswersForReport) {
       throw badRequest(
         'Hisobot uchun avval bolaning savollarga bergan javobini yozing — hisobot aynan shu javoblardan tuziladi.',
@@ -329,9 +333,17 @@ router.post(
     }
 
     // Append the report-request meta turn once (retry-safe).
+    // Score first: the report request carries the results, because with the
+    // inventory served as a form there is no transcript for the model to read
+    // them out of. It writes prose about numbers it is given, and is told not
+    // to recompute them.
+    const liveBankForReq = await require('../services/questionBank').load().catch(() => null);
+    const scoredForReq = scoring.score(await repo.getAnswers(session.id), scoring.shapeOf(liveBankForReq));
+
     const last = msgs[msgs.length - 1];
     if (!(last && last.role === 'user' && last.meta)) {
-      await repo.addMessage(session.id, 'user', prompt.buildReportRequest(child.nickname, partial), true);
+      await repo.addMessage(session.id, 'user',
+        prompt.buildReportRequest(child.nickname, partial, scoredForReq), true);
     }
 
     const history = await repo.getMessages(session.id);
@@ -414,6 +426,87 @@ router.post(
     }
 
     respond(created, deliveryInfo ? { channel: deliveryInfo.channel, status: deliveryInfo.status, link: deliveryInfo.link || null } : null);
+  })
+);
+
+// ---------------------------------------------------------------------------
+// The inventory itself.
+//
+// The questions are served straight from the bank and the answers are posted
+// back. The model is not in this loop at all: it has seventy fixed statements
+// to read out and a 1-5 answer to record, which is a form, not a conversation.
+// Keeping the model out of it removes a dozen LLM calls per sitting, removes the
+// [JAVOBLAR:] contract it could fail silently, and lets the adult tap an answer
+// instead of typing "1, 4, 5" and hoping the order was right.
+// ---------------------------------------------------------------------------
+
+// GET /api/sessions/:token/questions — the whole inventory plus whatever has
+// been answered so far, so a part-finished sitting restores exactly.
+router.get(
+  '/:id/questions',
+  sessionAuth,
+  asyncHandler(async (req, res) => {
+    const session = req.session;
+    const bank = await require('../services/questionBank').load();
+    const rows = await repo.getAnswerRows(session.id);
+    const answered = {};
+    for (const r of rows) answered[r.question_n] = r.value;  // null = skipped
+
+    const questions = [];
+    for (const sec of bank.sections) {
+      for (const q of sec.items) {
+        if (!q.active) continue;
+        questions.push({ n: q.n, text: q.text, section: sec.key, section_title: sec.title });
+      }
+    }
+    res.json({
+      questions,
+      answers: answered,
+      scale: require('../data/questions').SCALE,
+      progress: progressOf(session),
+      done: allDone(session),
+    });
+  })
+);
+
+// POST /api/sessions/:token/answers — record a batch.
+//   { answers: [ { n: 12, value: 4 }, { n: 13, value: null } ] }
+// value null means skipped: addressed, never scored.
+router.post(
+  '/:id/answers',
+  sessionAuth,
+  asyncHandler(async (req, res) => {
+    const session = req.session;
+    if (session.status === 'finished') throw badRequest('Mashg\u2018ulot yakunlangan', 'session_finished');
+
+    const list = Array.isArray((req.body || {}).answers) ? req.body.answers : [];
+    if (!list.length) throw badRequest('Javob yuborilmadi');
+    if (list.length > 80) throw badRequest('Juda ko\u2018p javob');
+
+    const answers = [];
+    const skipped = [];
+    for (const a of list) {
+      const n = Number(a && a.n);
+      if (!Number.isInteger(n) || n < 1) continue;
+      const v = a.value === null || a.value === undefined ? null : Number(a.value);
+      // Anything that is not 1-5 and not an explicit skip is dropped rather
+      // than coerced: a wrong value here is a wrong number in a report.
+      if (v === null) skipped.push(n);
+      else if (Number.isInteger(v) && v >= 1 && v <= 5) answers.push({ question_n: n, value: v });
+    }
+    if (!answers.length && !skipped.length) throw badRequest('Javoblar noto\u2018g\u2018ri');
+
+    const updated = (await repo.saveAnswers(session.id, answers, skipped)) || session;
+
+    // Funnel: the child actually answered something. Recorded once.
+    if (answers.length && Number(session.answered_count || 0) === 0) {
+      await repo.recordEvent({
+        visitorId: visitorIdOf(req), stage: 'first_answer',
+        parentId: null, sessionId: session.id,
+      }).catch(() => {});
+    }
+
+    res.json({ progress: progressOf(updated), done: allDone(updated) });
   })
 );
 

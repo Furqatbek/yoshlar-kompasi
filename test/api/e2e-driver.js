@@ -29,15 +29,60 @@ const { installAuth } = require('./auth-helper');
   const visible = (r.data.messages || []).filter((m) => !m.meta);
   ok('  greeting returned (non-meta assistant msg)', visible.some((m) => m.role === 'assistant'));
   ok('  intro user turn is meta (hidden)', (r.data.messages || []).some((m) => m.role === 'user' && m.meta));
-  // The stub skips every fifth question, so the sitting reaches the end of the
-  // inventory with fewer answers than questions — which is the point: a skip
-  // counts as addressed, never as a zero.
-  ok('  progress counts real answers, and skips still reach the end',
-    r.data.done === true && r.data.progress.seen === 70
-    && r.data.progress.answered === 56 && r.data.progress.total === 70,
-    JSON.stringify(r.data.progress));
+  ok('  a fresh sitting has answered nothing',
+    r.data.progress.seen === 0 && r.data.progress.total === 70, JSON.stringify(r.data.progress));
 
   const auth = { 'content-type': 'application/json', 'x-session-token': stok };
+
+  // 1b. The inventory, served as a form. The model is not in this loop: the app
+  // hands over the questions and takes the answers back, which is what the
+  // browser does too.
+  let q = await j('/api/sessions/' + stok + '/questions', { headers: auth });
+  ok('GET /questions -> 200', q.status === 200, 'status=' + q.status);
+  ok('  all seventy, in order', (q.data.questions || []).length === 70
+    && q.data.questions[0].n === 1 && q.data.questions[69].n === 70,
+    String((q.data.questions || []).length));
+  ok('  the first one is the approved text verbatim',
+    q.data.questions[0].text === 'LEGO yoki konstruktor yig‘ishni yaxshi ko‘raman.',
+    q.data.questions[0].text);
+  ok('  each carries the area it belongs to', q.data.questions[0].section === 'construction_engineering');
+  ok('  and the 1-5 scale with words', (q.data.scale || []).length === 5 && !!q.data.scale[0].label);
+  ok('  nothing answered yet', Object.keys(q.data.answers || {}).length === 0);
+
+  // The session token in the PATH is the credential here, as it is for every
+  // other session route — 256 bits, looked up by a unique index. So the check
+  // that matters is that a token which is not ours resolves to nothing.
+  const wrongQ = await j('/api/sessions/not-a-real-token/questions');
+  ok('  a token that is not ours gets nothing', wrongQ.status === 404, 'status=' + wrongQ.status);
+
+  // Answer the lot: every fifth question skipped, so a skip is exercised and
+  // the sitting still reaches the end.
+  const batch = q.data.questions.map((x) => ({ n: x.n, value: x.n % 5 === 0 ? null : ((x.n % 5) + 1) }));
+  const firstTwo = await j('/api/sessions/' + stok + '/answers', {
+    method: 'POST', headers: auth, body: JSON.stringify({ answers: batch.slice(0, 2) }),
+  });
+  ok('POST /answers -> 200', firstTwo.status === 200, 'status=' + firstTwo.status);
+  ok('  progress moves with the answers', firstTwo.data.progress.seen === 2
+    && firstTwo.data.progress.answered === 2, JSON.stringify(firstTwo.data.progress));
+
+  const junk = await j('/api/sessions/' + stok + '/answers', {
+    method: 'POST', headers: auth, body: JSON.stringify({ answers: [{ n: 3, value: 9 }] }),
+  });
+  ok('  a value outside 1-5 is refused, not clamped', junk.status === 400, 'status=' + junk.status);
+
+  const rest = await j('/api/sessions/' + stok + '/answers', {
+    method: 'POST', headers: auth, body: JSON.stringify({ answers: batch }),
+  });
+  ok('  the rest go in, and re-sending the first two does not double-count',
+    rest.data.progress.seen === 70 && rest.data.progress.answered === 56,
+    JSON.stringify(rest.data.progress));
+  ok('  which marks the inventory done', rest.data.done === true);
+
+  q = await j('/api/sessions/' + stok + '/questions', { headers: auth });
+  ok('  a resumed sitting gets its answers back', Object.keys(q.data.answers).length === 70);
+  ok('  with the skips recorded as null, not as zero',
+    q.data.answers['5'] === null && q.data.answers['1'] === 2,
+    JSON.stringify({ five: q.data.answers['5'], one: q.data.answers['1'] }));
 
   // 2. Auth negative: wrong token -> 401
   r = await j('/api/sessions/badtoken-does-not-exist/messages', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ content: 'salom' }) });
