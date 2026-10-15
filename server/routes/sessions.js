@@ -97,6 +97,9 @@ router.post(
     const age = v.optAge(b.age);
     const goal = v.optStr(b.goal, 300);
     const notes = v.optStr(b.notes, 500);
+    // Who is running the sitting. Anything we do not recognise is stored as
+    // nothing rather than guessed — it feeds reporting, not the assessment.
+    const administeredBy = ['parent', 'teacher'].includes(b.administered_by) ? b.administered_by : null;
 
     const model = claude.activeModel();
     const promptVersion = prompt.promptVersion();
@@ -105,7 +108,7 @@ router.post(
     // waiting for a contact gate to claim it later.
     const { child, session } = await repo.createChildAndSession({
       nickname, grade, age, goal, notes, model, promptVersion, sessionToken: token,
-      parentId: parent ? parent.id : null,
+      parentId: parent ? parent.id : null, administeredBy,
     });
 
     // Funnel: the assessment actually began. Recorded here rather than trusted

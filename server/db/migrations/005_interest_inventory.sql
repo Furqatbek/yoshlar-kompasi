@@ -46,3 +46,9 @@ ALTER TABLE reports ADD COLUMN IF NOT EXISTS data_completeness TEXT;
 --                    where the child skipped fourteen can still reach the end
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS answered_count SMALLINT NOT NULL DEFAULT 0;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS seen_count     SMALLINT NOT NULL DEFAULT 0;
+
+-- Who ran the sitting. The thread asks for it on the pre-test form, and it is
+-- the one field that tells a parent's sitting from a teacher's — which is what
+-- the teacher pricing question needs an answer to before it can be settled.
+ALTER TABLE children ADD COLUMN IF NOT EXISTS administered_by TEXT
+  CHECK (administered_by IS NULL OR administered_by IN ('parent', 'teacher'));

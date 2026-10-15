@@ -10,13 +10,13 @@ const { query, withTransaction } = require('./pool');
 // parentId is required under the Telegram-first flow (the adult logs in before
 // the assessment). It stays a parameter rather than a hard NOT NULL so rows
 // created by the older contact-gate flow remain readable.
-async function createChildAndSession({ nickname, grade, age, goal, notes, model, promptVersion, sessionToken, parentId = null }) {
+async function createChildAndSession({ nickname, grade, age, goal, notes, model, promptVersion, sessionToken, parentId = null, administeredBy = null }) {
   return withTransaction(async (client) => {
     const child = (
       await client.query(
-        `INSERT INTO children (nickname, grade, age, goal, notes, parent_id)
-         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-        [nickname, grade, age, goal, notes, parentId]
+        `INSERT INTO children (nickname, grade, age, goal, notes, parent_id, administered_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+        [nickname, grade, age, goal, notes, parentId, administeredBy]
       )
     ).rows[0];
     const session = (

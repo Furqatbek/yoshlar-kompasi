@@ -463,7 +463,15 @@ input, textarea, button, select { font-family: var(--font-body); }
             <button type="button" class="{{ g.cls }}" onClick="{{ g.pick }}" style="padding: 14px 8px; font-size: 16px; justify-content: flex-start;">{{ g.label }}</button>
           </sc-for>
         </div>
-        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">1–2-sinf — A guruh savollari (~6–8 yosh), 3–4-sinf — B guruh (~8–11 yosh)</span>
+        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Savollar barcha sinflar uchun bir xil — sinf faqat hisobotda ko'rsatiladi</span>
+      </div>
+      <div class="field">
+        <label>Mashg'ulotni kim o'tkazyapti?</label>
+        <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+          <sc-for list="{{ roles }}" as="r" hint-placeholder-count="2">
+            <button type="button" onClick="{{ r.pick }}" class="{{ r.cls }}" style="cursor: pointer; min-height: 44px; padding: 0 18px;">{{ r.label }}</button>
+          </sc-for>
+        </div>
       </div>
       <div class="field" style="max-width: 200px;">
         <label for="yik-age">Yoshi (ixtiyoriy)</label>
@@ -520,10 +528,14 @@ input, textarea, button, select { font-family: var(--font-body); }
         <div style="font-family: var(--font-heading); font-weight: 700; font-size: 16px; line-height: 1.1;">{{ childName }}</div>
         <div class="text-muted" style="font-size: 12px;">{{ gradeLabel }}</div>
       </div>
-      <div style="display: flex; gap: var(--space-1); flex-wrap: wrap;">
-        <span class="{{ chipMantiq }}">Mantiq</span>
-        <span class="{{ chipPsix }}">Psixologiya</span>
-        <span class="{{ chipHarakat }}">Harakat</span>
+      <div style="min-width: 150px; flex: 1; max-width: 320px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+          <span class="text-muted" style="font-size: 12px;">{{ progSection }}</span>
+          <span style="font-size: 12px; font-weight: 600;">{{ progLabel }}</span>
+        </div>
+        <div style="height: 6px; border-radius: 3px; background: var(--color-surface); margin-top: 5px; overflow: hidden;">
+          <div style="height: 100%; border-radius: 3px; background: var(--color-accent); width: {{ progPct }}; transition: width .5s ease;"></div>
+        </div>
       </div>
       <span style="flex: 1;"></span>
       <button type="button" class="btn btn-ghost" onClick="{{ pauseNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>Tanaffus</button>
@@ -604,14 +616,27 @@ input, textarea, button, select { font-family: var(--font-body); }
 
   <div class="no-print" style="position: sticky; bottom: 0; background: var(--color-bg); border-top: 1px solid var(--color-divider);">
     <div style="max-width: 880px; margin: 0 auto; padding: var(--space-3) var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);">
+      <!-- The 1-5 scale. Tapping a point appends it to the draft rather than
+           sending, so a batch of several questions is answered in one go — the
+           model asks five or six at a time, and one round-trip per question
+           would make a 70-item sitting unbearable on a phone. -->
+      <div style="display: flex; gap: 6px; align-items: stretch;">
+        <sc-for list="{{ scale }}" as="sc" hint-placeholder-count="5">
+          <button type="button" onClick="{{ sc.pick }}" title="{{ sc.label }}"
+                  style="flex: 1; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; background: var(--color-neutral-100); border: 1px solid var(--color-divider); border-radius: var(--radius-sm); font-family: var(--font-body); padding: 4px 2px;"
+                  style-hover="border-color: var(--color-accent); background: var(--color-accent-100);">
+            <span style="font-family: var(--font-heading); font-weight: 700; font-size: 17px; color: var(--color-accent-700);">{{ sc.value }}</span>
+            <span style="font-size: 9px; line-height: 1.15; text-align: center; color: var(--color-neutral-700);">{{ sc.short }}</span>
+          </button>
+        </sc-for>
+      </div>
       <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;">
-        <button type="button" class="tag tag-outline" onClick="{{ chipCant }}" style="cursor: pointer;">Javob berolmadi</button>
         <button type="button" class="tag tag-outline" onClick="{{ chipSkip }}" style="cursor: pointer;">O'tkazib yuborish</button>
-        <button type="button" class="tag tag-outline" onClick="{{ chipEasier }}" style="cursor: pointer;">Soddaroq savol bering</button>
+        <button type="button" class="tag tag-outline" onClick="{{ chipRepeat }}" style="cursor: pointer;">Savolni qayta o'qing</button>
         <button type="button" class="tag tag-outline" onClick="{{ pauseNow }}" style="cursor: pointer;">Tanaffus</button>
       </div>
       <div style="display: flex; gap: var(--space-2);">
-        <input class="input" style="flex: 1; font-size: 16px;" placeholder="Bolaning javobini yozing…" value="{{ draftVal }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}">
+        <input class="input" style="flex: 1; font-size: 16px;" placeholder="Javoblar: 1, 4, 5…" value="{{ draftVal }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}">
         <button type="button" class="btn btn-primary" onClick="{{ sendNow }}" disabled="{{ sendDisabled }}" style="padding: 10px 16px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path><path d="M22 2 11 13"></path></svg>Yuborish</button>
       </div>
     </div>
@@ -742,7 +767,7 @@ input, textarea, button, select { font-family: var(--font-body); }
 
         <sc-if value="{{ strengthsHas }}" hint-placeholder-val="{{ false }}">
           <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
-          <h3 style="margin-bottom: var(--space-3);">Surat</h3>
+          <h3 style="margin-bottom: var(--space-3);">Qisqacha xulosa</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-3);">
             <sc-for list="{{ strengths }}" as="it" hint-placeholder-count="3">
               <div class="rep-item" style="border-top: 1px solid var(--color-text); padding-top: var(--space-2);">
@@ -753,18 +778,35 @@ input, textarea, button, select { font-family: var(--font-body); }
           </div>
         </sc-if>
 
-        <sc-if value="{{ levelsHas }}" hint-placeholder-val="{{ false }}">
-          <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
-          <h3 style="margin-bottom: var(--space-3);">Hozirgi o'rni</h3>
-          <div style="display: flex; flex-direction: column;">
-            <sc-for list="{{ levels }}" as="lv" hint-placeholder-count="3">
-              <div class="rep-item" style="display: grid; grid-template-columns: minmax(150px, 220px) auto 1fr; gap: var(--space-3); align-items: start; border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
-                <div style="font-family: var(--font-heading); font-weight: 700;">{{ lv.name }}</div>
-                <span class="{{ lv.cls }}" style="justify-self: start;">{{ lv.level }}</span>
-                <div class="text-muted" style="font-size: 14px;">{{ lv.text }}</div>
+        <!-- The twelve areas, drawn from the scored data rather than read back
+             out of the prose. Each row carries how many of its questions were
+             answered, so a bar built on two answers cannot pass for one built
+             on six. -->
+        <sc-if value="{{ catsHas }}" hint-placeholder-val="{{ false }}">
+          <div style="height: 1px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
+          <h3 style="margin-bottom: var(--space-1);">12 yo'nalish bo'yicha natijalar</h3>
+          <p class="text-muted no-print" style="font-size: 13px; max-width: 62ch; margin-bottom: var(--space-4);">
+            Ball — bolaning shu yo'nalishdagi javoblarining o'rtachasi (1–5). Bu qiziqish darajasi,
+            qobiliyat bahosi emas, va tasdiqlangan psixologik me'yor emas.
+          </p>
+          <div class="rep-chart" style="display: flex; flex-direction: column;">
+            <sc-for list="{{ cats }}" as="c" hint-placeholder-count="12">
+              <div class="rep-item" style="display: grid; grid-template-columns: minmax(140px, 200px) 1fr auto; gap: var(--space-3); align-items: center; border-top: 1px solid var(--color-divider); padding: 10px 0;">
+                <div style="font-size: 14px; font-weight: 600;">{{ c.title }}</div>
+                <div style="display: grid; align-items: center;">
+                  <div style="grid-area: 1 / 1; height: 10px; border-radius: 5px; background: var(--color-surface);"></div>
+                  <div class="rep-bar" style="grid-area: 1 / 1; height: 10px; border-radius: 5px; background: {{ c.color }}; width: {{ c.width }};"></div>
+                </div>
+                <div style="text-align: right; min-width: 92px;">
+                  <div style="font-family: var(--font-heading); font-weight: 700; font-size: 15px;">{{ c.score }}</div>
+                  <div class="text-muted" style="font-size: 11px;">{{ c.answered }}</div>
+                </div>
               </div>
             </sc-for>
           </div>
+          <sc-if value="{{ catsPartial }}" hint-placeholder-val="{{ false }}">
+            <p class="text-muted" style="font-size: 13px; margin-top: var(--space-3); max-width: 62ch;">{{ catsPartialNote }}</p>
+          </sc-if>
         </sc-if>
 
         <sc-if value="{{ miHas }}" hint-placeholder-val="{{ false }}">
@@ -782,13 +824,13 @@ input, textarea, button, select { font-family: var(--font-body); }
 
         <sc-if value="{{ compassHas }}" hint-placeholder-val="{{ false }}">
           <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
-          <h3 style="margin-bottom: var(--space-3);">Qiziqishlar kompasi</h3>
+          <h3 style="margin-bottom: var(--space-3);">Hozirgi qiziqishlar xaritasi</h3>
           <sc-for list="{{ compass }}" as="cp" hint-placeholder-count="1"><p style="max-width: 65ch;">{{ cp.t }}</p></sc-for>
         </sc-if>
 
         <sc-if value="{{ mindsetHas }}" hint-placeholder-val="{{ false }}">
           <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
-          <h3 style="margin-bottom: var(--space-3);">O'sish tafakkuri va o'z-o'zini boshqarish</h3>
+          <h3 style="margin-bottom: var(--space-3);">Rivojlantirish mumkin bo'lgan yo'nalishlar</h3>
           <div style="display: flex; flex-direction: column; gap: var(--space-2);">
             <sc-for list="{{ mindset }}" as="it" hint-placeholder-count="3">
               <div class="rep-item" style="display: flex; gap: 10px;"><span class="rep-dot" style="width: 8px; height: 8px; background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: 50%; box-sizing: border-box; flex: 0 0 8px; margin-top: 7px;"></span><span style="max-width: 65ch;">{{ it.t }}</span></div>
@@ -812,7 +854,7 @@ input, textarea, button, select { font-family: var(--font-body); }
 
         <sc-if value="{{ learnHas }}" hint-placeholder-val="{{ false }}">
           <div style="height: 2px; background: var(--color-divider); margin: var(--space-6) 0 var(--space-4);"></div>
-          <h3 style="margin-bottom: var(--space-3);">Nimani o'rganish va mashq qilish</h3>
+          <h3 style="margin-bottom: var(--space-3);">To'garak va mashg'ulot tavsiyalari</h3>
           <div style="display: flex; flex-direction: column;">
             <sc-for list="{{ learn }}" as="it" hint-placeholder-count="3">
               <div class="rep-item" style="border-top: 1px solid var(--color-divider); padding: var(--space-3) 0;">
@@ -1270,9 +1312,9 @@ input, textarea, button, select { font-family: var(--font-body); }
 class Component extends DCLogic {
   state = {
     route: (typeof location !== 'undefined' && location.hash ? location.hash.replace(/^#/, '') : '/') || '/',
-    name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
+    name: '', grade: 0, age: '', goal: '', notes: '', role: 'parent', consent: false, formError: '', prepared: false,
     messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, lowEngage: false, generating: false,
-    status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
+    status: 'setup', progress: { answered: 0, seen: 0, total: 70 },
     token: '', shareToken: '', reportPartial: false, resumeName: '',
     gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false, copied: false,
     admAuthed: false, admEmail: '', admPass: '', admError: '',
@@ -1320,7 +1362,16 @@ class Component extends DCLogic {
     });
   }
   _errMsg(e) { if (e && e.data && e.data.error) return e.data.error; if (e && e.message) return e.message; return 'Tarmoq xatosi'; }
-  _prog(p) { return { MANTIQ: !!(p && p.mantiq), PSIXOLOGIYA: !!(p && p.psixologiya), HARAKAT: !!(p && p.harakat) }; }
+  // Progress through the 70 questions. `seen` counts skips too — a child who
+  // passes on a question has still been taken through it — while `answered` is
+  // the number the adult is shown.
+  _prog(p) {
+    return {
+      answered: Number((p && p.answered) || 0),
+      seen: Number((p && p.seen) || 0),
+      total: Number((p && p.total) || 70),
+    };
+  }
 
   // --- session handle persistence (server holds the data) ---------------
   // The session token is the single identifier: it is the /mashgulot/:token URL
@@ -1767,7 +1818,8 @@ class Component extends DCLogic {
     this.setState({ formError: '', sending: true });
     try {
       const d = await this.api('/api/sessions', { method: 'POST', body: {
-        nickname: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim(), consent: true
+        nickname: S.name.trim(), grade: S.grade, age: S.age, goal: S.goal.trim(), notes: S.notes.trim(),
+        administered_by: S.role, consent: true
       } });
       this._stok = d.session_token; this._loadedSession = d.session_token; this._loadedReportToken = null; this._lastN = 0;
       this.saveHandle();
@@ -1830,8 +1882,10 @@ class Component extends DCLogic {
     // outright if nothing has been answered yet. Mirrors the server gate, which
     // counts real (non-meta) answers only (not model-emitted [YAKUN] markers).
     if (this._realAnswers() === 0) return this.setState({ lowEngage: true });
+    // Finishing early is allowed and honest about it: the report says how much
+    // of the inventory it rests on. Only a completed sitting skips the warning.
     const p = this.state.progress;
-    if (p.MANTIQ && p.PSIXOLOGIYA && p.HARAKAT) this.setState({ gate: true, gateError: '' });
+    if (p.seen >= p.total) this.setState({ gate: true, gateError: '' });
     else this.setState({ finishConfirm: true });
   }
 
@@ -1892,7 +1946,13 @@ class Component extends DCLogic {
       const d = await this.api('/api/reports/' + encodeURIComponent(token));
       this._loadedReportToken = token;
       this.setState({
-        report: { md: d.content_md, name: d.nickname, grade: d.grade, date: this.fmtDate(d.date), partial: !!d.partial },
+        report: {
+          md: d.content_md, name: d.nickname, grade: d.grade, date: this.fmtDate(d.date),
+          partial: !!d.partial,
+          categories: d.categories || null,
+          topInterests: d.top_interests || [],
+          completeness: d.data_completeness || null,
+        },
         reportLoading: false, reportNotFound: false,
         // When locked the server sends only the free sections, so the rest of
         // the screen renders empty on its own; this drives the paywall card.
@@ -2023,9 +2083,9 @@ class Component extends DCLogic {
   resetAll() {
     this.clearHandle(); this._stok = null; this._loadedSession = null; this._lastN = 0; this._loadedReportToken = null; this._busy = false;
     this.setState({
-      name: '', grade: 0, age: '', goal: '', notes: '', consent: false, formError: '', prepared: false,
+      name: '', grade: 0, age: '', goal: '', notes: '', role: 'parent', consent: false, formError: '', prepared: false,
       messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, lowEngage: false, generating: false,
-      status: 'setup', progress: { MANTIQ: false, PSIXOLOGIYA: false, HARAKAT: false },
+      status: 'setup', progress: { answered: 0, seen: 0, total: 70 },
       token: '', shareToken: '', reportPartial: false, resumeName: '',
       gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false,
       report: null, reportNotFound: false, deliveryLink: ''
@@ -2074,8 +2134,13 @@ class Component extends DCLogic {
       const title = (nl < 0 ? parts[i] : parts[i].slice(0, nl)).trim();
       const body = nl < 0 ? '' : parts[i].slice(nl + 1).trim();
       const t = title.toLowerCase();
-      if (t.indexOf('surat') >= 0) out.strengths = this.items(body).map(s => this.boldSplit(s));
-      else if (t.indexOf('hozirgi') >= 0) {
+      // Headings come from prompt.js. 'surat' and the other legacy keys stay
+      // so a report written under the previous instrument still renders.
+      if (t.indexOf('qisqacha xulosa') >= 0 || t.indexOf('surat') >= 0) {
+        out.strengths = this.items(body).map(s => this.boldSplit(s));
+        if (!out.strengths.length) out.intro = [out.intro, this.mdClean(body).trim()].filter(Boolean).join('\n\n');
+      }
+      else if (t.indexOf('natijalar') >= 0 || t.indexOf('hozirgi o') >= 0) {
         out.levels = this.items(body).map(s => {
           const lvm = s.match(/Shakllanmoqda|Me.{0,2}yorda|Kuchli/i);
           const lv = lvm ? lvm[0] : '';
@@ -2093,8 +2158,8 @@ class Component extends DCLogic {
       // xaritasi" also contains 'xarita' and would be swallowed (then clobbered
       // by the real roadmap section), silently dropping the whole MI map.
       else if (t.indexOf('iqtidor') >= 0) out.mi = this.items(body).map(s => this.boldSplit(s));
-      else if (t.indexOf('kompas') >= 0) out.compass = String(body).split(/\n{2,}/).map(p => this.mdClean(p).trim()).filter(Boolean).map(tt => ({ t: tt }));
-      else if (t.indexOf('tafakkur') >= 0 || t.indexOf('boshqarish') >= 0) out.mindset = this.items(body).map(s => ({ t: this.mdClean(s).trim() })).filter(x => x.t);
+      else if (t.indexOf('qiziqishlar xaritasi') >= 0 || t.indexOf('kompas') >= 0) out.compass = String(body).split(/\n{2,}/).map(p => this.mdClean(p).trim()).filter(Boolean).map(tt => ({ t: tt }));
+      else if (t.indexOf('rivojlantirish mumkin') >= 0 || t.indexOf('tafakkur') >= 0 || t.indexOf('boshqarish') >= 0) out.mindset = this.items(body).map(s => ({ t: this.mdClean(s).trim() })).filter(x => x.t);
       else if (t.indexOf('maqsad') >= 0 || t.indexOf('xarita') >= 0) {
         const its = []; const paras = [];
         String(body).split('\n').forEach(l => {
@@ -2104,9 +2169,9 @@ class Component extends DCLogic {
         out.goal = paras.join(' ');
         out.milestones = its.map((tt, ix) => ({ n: ix + 1, t: tt }));
       }
-      else if (t.indexOf('rganish') >= 0 || t.indexOf('mashq') >= 0) out.learn = this.items(body).map(s => this.boldSplit(s));
+      else if (t.indexOf('garak') >= 0 || t.indexOf('rganish') >= 0 || t.indexOf('mashq') >= 0) out.learn = this.items(body).map(s => this.boldSplit(s));
       else if (t.indexOf('sport') >= 0) out.sports = this.items(body).map((s, ix) => { const b = this.boldSplit(s); return { n: ix + 1, main: b.main, sub: b.sub || b.main }; });
-      else if (t.indexOf('xat') >= 0) out.letter = String(body).split(/\n+/).map(l => this.mdClean(l.replace(/^\s*>\s?/, '')).trim()).filter(Boolean).map(tt => ({ t: tt }));
+      else if (t.indexOf('dalda') >= 0 || t.indexOf('xat') >= 0) out.letter = String(body).split(/\n+/).map(l => this.mdClean(l.replace(/^\s*>\s?/, '')).trim()).filter(Boolean).map(tt => ({ t: tt }));
       else if (t.indexOf('katta') >= 0) out.adults = this.items(body).map(s => ({ t: this.mdClean(s).trim() }));
       else out.extra.push({ title: this.mdClean(title).trim(), paras: String(body).split(/\n{2,}/).map(p => this.mdClean(p).trim()).filter(Boolean).map(tt => ({ t: tt })) });
     }
@@ -2139,7 +2204,22 @@ class Component extends DCLogic {
       if (m.role === 'user') chat.push({ u: true, a: false, text: this.mdClean(m.content), failed: !!S.apiError && i === lastIdx, blocks: [] });
       else chat.push({ u: false, a: true, text: '', failed: false, blocks: this.parseBlocks(m.content) });
     });
-    const chipCls = k => S.progress[k] ? 'tag tag-accent' : 'tag tag-outline';
+    const prog = S.progress || { answered: 0, seen: 0, total: 70 };
+    // Which block of the inventory the adult is in, so the header says
+    // "Ijodkorlik" rather than only a number.
+    const SECTION_BOUNDS = [
+      [6, 'Konstruktorlik'], [12, 'Mantiq va matematika'], [18, 'Fan va tadqiqot'],
+      [24, 'Ijodkorlik'], [30, 'Nutq va til'], [36, 'Liderlik'], [42, 'Empatiya'],
+      [48, 'Tashkiliy qobiliyat'], [54, 'Sport va faollik'], [60, 'Texnologiya'],
+      [65, 'Rivojlanish fikrlashi'], [70, 'Qiziquvchanlik'],
+    ];
+    const atQuestion = Math.min(prog.seen + 1, 70);
+    const sectionNow = (SECTION_BOUNDS.find(([end]) => atQuestion <= end) || [0, ''])[1];
+    const SCALE_UI = [
+      [1, 'Umuman yoqmaydi', 'umuman'], [2, 'Unchalik yoqmaydi', 'unchalik'],
+      [3, "Ba'zan yoki aniq bilmayman", "ba'zan"], [4, 'Yoqadi', 'yoqadi'],
+      [5, 'Juda yoqadi', 'juda'],
+    ];
     const gradeOpts = [1, 2, 3, 4].map(n => ({
       label: n + '-sinf',
       cls: S.grade === n ? 'btn btn-primary' : 'btn btn-secondary',
@@ -2283,12 +2363,26 @@ class Component extends DCLogic {
       notesVal: S.notes, onNotes: e => this.setState({ notes: e.target.value }),
       // Unchecking the consent box re-locks step 2 — starting requires the
       // assertion to hold NOW, not to have held once.
+      roles: [['parent', 'Ota-ona'], ['teacher', "O'qituvchi"]].map(([key, label]) => ({
+        key, label,
+        cls: S.role === key ? 'btn btn-primary' : 'btn btn-secondary',
+        pick: () => this.setState({ role: key }),
+      })),
       consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '', prepared: e.target.checked ? S.prepared : false }),
       gradeOpts, formError: S.formError, prepared: S.prepared, notPrepared: !S.prepared,
       starting: S.sending, startLabel: S.sending ? 'Tayyorlanmoqda…' : "Mashg'ulotni boshlash",
       submitForm: () => this.submitForm(), startSession: () => this.startSession(),
       childName: S.name.trim() || 'Bola', gradeLabel: S.grade ? S.grade + '-sinf' : '',
-      chipMantiq: chipCls('MANTIQ'), chipPsix: chipCls('PSIXOLOGIYA'), chipHarakat: chipCls('HARAKAT'),
+      progLabel: prog.seen + ' / ' + prog.total,
+      progSection: sectionNow,
+      progPct: Math.round((prog.seen / prog.total) * 100) + '%',
+      // Tapping a point appends it to the draft: the model asks five or six
+      // questions at a time, so one round-trip per answer would make a
+      // seventy-item sitting unbearable on a phone.
+      scale: SCALE_UI.map(([value, label, short]) => ({
+        value: String(value), label, short,
+        pick: () => this.setState({ draft: (S.draft ? S.draft.replace(/[\s,]+$/, '') + ', ' : '') + value }),
+      })),
       sessionEmpty: !chat.length && !S.apiError && !S.sessLoading && !S.sending,
       sessionFailed: !chat.length && !!S.apiError,
       sessionLoading: !chat.length && S.sessLoading,
@@ -2297,9 +2391,8 @@ class Component extends DCLogic {
       onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
       sendNow: () => this.send(),
       sendDisabled: S.sending || S.generating || S.paused || S.gate || S.lowEngage || !!S.apiError,
-      chipCant: () => this.send('Javob berolmadi'),
       chipSkip: () => this.send("O'tkazib yuborish"),
-      chipEasier: () => this.send('Soddaroq savol bering'),
+      chipRepeat: () => this.send('Savolni qayta o\'qing'),
       pauseNow: () => this.setState({ paused: true, status: 'paused' }),
       resumeNow: () => this.setState({ paused: false, status: 'active' }),
       retry: () => this.retry(),
@@ -2329,6 +2422,44 @@ class Component extends DCLogic {
       copyLabel: S.copied ? 'Nusxalandi' : 'Havolani nusxalash',
       repIntro: rep.intro, strengths: rep.strengths, strengthsHas: rep.strengths.length > 0,
       levels: rep.levels, levelsHas: rep.levels.length > 0,
+      ...(() => {
+        // The twelve areas, straight from the scored columns. An area with no
+        // average is shown as "ma'lumot yetarli emas" with an empty bar rather
+        // than hidden: a parent should see that a question block was missed,
+        // not silently get an eleven-area report.
+        const BAND_COLOR = {
+          strong: 'var(--color-accent)', notable: 'var(--color-accent-500)',
+          mixed: 'var(--color-accent-300)', low: 'var(--color-neutral-400)',
+        };
+        const cats = S.report && S.report.categories;
+        if (!cats) return { cats: [], catsHas: false, catsPartial: false, catsPartialNote: '' };
+        const ORDER = ['construction_engineering', 'logic_math', 'science_research', 'creativity',
+          'speech_language', 'leadership', 'empathy_helping', 'organization', 'sport_activity',
+          'technology', 'growth_mindset', 'curiosity'];
+        const keys = ORDER.filter((k) => cats[k]).concat(Object.keys(cats).filter((k) => !ORDER.includes(k)));
+        const rows = keys.map((k) => {
+          const c = cats[k] || {};
+          const avg = c.average;
+          return {
+            key: k,
+            title: c.title || k,
+            score: avg == null ? '—' : Number(avg).toFixed(2),
+            answered: avg == null ? "ma'lumot yetarli emas" : (c.answered + '/' + (c.of || 6) + ' javob'),
+            width: avg == null ? '0%' : Math.round(((avg - 1) / 4) * 100) + '%',
+            color: BAND_COLOR[c.interest] || 'var(--color-neutral-400)',
+          };
+        });
+        const missing = rows.filter((r) => r.score === '—').length;
+        return {
+          cats: rows,
+          catsHas: rows.length > 0,
+          catsPartial: missing > 0 || (S.report && S.report.completeness === 'partial'),
+          catsPartialNote: missing > 0
+            ? ('Bu hisobot to\'liq emas: ' + missing + ' yo\'nalishda yetarli javob yig\'ilmadi. '
+               + 'Mashg\'ulotni oxirigacha o\'tkazsangiz, hisobot to\'ladi.')
+            : 'Bu hisobot savollarning bir qismiga berilgan javoblardan tuzilgan.',
+        };
+      })(),
       mi: rep.mi, miHas: rep.mi.length > 0,
       compass: rep.compass, compassHas: rep.compass.length > 0,
       mindset: rep.mindset, mindsetHas: rep.mindset.length > 0,
