@@ -90,17 +90,17 @@ input, textarea, button, select { font-family: var(--font-body); }
     <main style="flex: 1 1 auto; min-width: 0;">
 
       <section data-screen-label="01 Hero" style="padding: clamp(40px, 8vw, 104px) 0 clamp(48px, 7vw, 88px);">
-        <p style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: var(--color-accent);">1–4-sinf · kattalar va bola birga</p>
-        <h1 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: clamp(34px, 5.2vw, 60px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 24px; max-width: 16ch; text-wrap: pretty;">Yarim soat — va siz bola haqida biladigan narsangiz o'zgaradi.</h1>
-        <p style="font-size: clamp(17px, 1.5vw, 19px); line-height: 1.6; color: var(--color-text); max-width: 46ch; margin: 0 0 32px; text-wrap: pretty;">Savollarni siz ovoz chiqarib o'qiysiz, bola javob beradi, siz yozasiz. Telefon qo'lingizdan chiqmaydi. Oxirida — bolaning o'z javoblaridan yozilgan hisobot.</p>
+        <p style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: var(--color-accent);">1–4-sinf · 70 ta savol · kattalar va bola birga</p>
+        <h1 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: clamp(34px, 5.2vw, 60px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 24px; max-width: 16ch; text-wrap: pretty;">Farzandingizning qiziqishlarini kashf eting.</h1>
+        <p style="font-size: clamp(17px, 1.5vw, 19px); line-height: 1.6; color: var(--color-text); max-width: 46ch; margin: 0 0 32px; text-wrap: pretty;">70 ta sodda savol — siz ovoz chiqarib o'qiysiz, bola 1 dan 5 gacha javob beradi. Oxirida 12 yo'nalish bo'yicha qiziqishlar xaritasi va nimadan boshlash bo'yicha aniq tavsiyalar.</p>
         <div data-hero-cta="1" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
           <a href="#boshlash" style="background: var(--color-accent); color: var(--color-neutral-100); text-decoration: none; font-weight: 600; font-size: 17px; padding: 0 28px; min-height: 52px; border-radius: 6px; display: flex; align-items: center;" style-hover="background: var(--color-accent-600); color: var(--color-neutral-100);">Boshlash</a>
           <p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-neutral-700); max-width: 44ch;">{{ tgNote }}</p>
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 0;">
           <span style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--color-divider); border-radius: 999px; color: var(--color-neutral-700);">Mashg'ulot bepul</span>
-          <span style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--color-divider); border-radius: 999px; color: var(--color-neutral-700);">~30–40 daqiqa</span>
-          <span style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--color-divider); border-radius: 999px; color: var(--color-neutral-700);">Faqat bolaning ismi</span>
+          <span style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--color-divider); border-radius: 999px; color: var(--color-neutral-700);">~20–30 daqiqa</span>
+          <span style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--color-divider); border-radius: 999px; color: var(--color-neutral-700);">Faqat ism va sinf</span>
           <sc-if value="{{ needsLogin }}" hint-placeholder-val="{{ true }}"><span style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--color-divider); border-radius: 999px; color: var(--color-neutral-700);">Telegram orqali kirish</span></sc-if>
         </div>
         <a href="#oqituvchilar" style="display: inline-flex; align-items: center; min-height: 44px; margin-top: 16px; font-size: 15px;">O'qituvchimisiz? →</a>
@@ -145,7 +145,7 @@ input, textarea, button, select { font-family: var(--font-body); }
       </section>
 
       <section data-screen-label="03 Shift" style="padding: clamp(48px, 7vw, 88px) 0; border-top: 1px solid var(--color-divider);">
-        <h2 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: clamp(28px, 3.8vw, 44px); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 16px; max-width: 18ch; text-wrap: pretty;">Bitta baho emas — yetti tomondan qarash</h2>
+        <h2 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: clamp(28px, 3.8vw, 44px); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 16px; max-width: 18ch; text-wrap: pretty;">Bitta baho emas — o'n ikki tomondan qarash</h2>
         <p style="font-size: 17px; line-height: 1.6; color: var(--color-neutral-700); margin: 0 0 36px; max-width: 48ch; text-wrap: pretty;">Baho nima bilishini ko'rsatadi. Bola qanday o'ylashini, nimaga qiziqishini va qanday o'rganishini — ko'rsatmaydi.</p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px;">
           <div style="border: 1px solid var(--color-divider); border-radius: 6px; padding: 20px;">
@@ -162,14 +162,14 @@ input, textarea, button, select { font-family: var(--font-body); }
                 <div style="aspect-ratio: 1; border-radius: 6px; background: {{ c.bg }}; border: 1px solid var(--color-accent); transition: background .8s ease;"></div>
               </sc-for>
             </div>
-            <p style="margin: 14px 0 0; font-size: 15px; line-height: 1.5; color: var(--color-text);">Yetti yo'nalish — har biri bolaning o'z javoblaridan.</p>
+            <p style="margin: 14px 0 0; font-size: 15px; line-height: 1.5; color: var(--color-text);">O'n ikki yo'nalish — har biri bolaning o'z javoblaridan.</p>
           </div>
         </div>
       </section>
 
       <section data-screen-label="04 Seven lenses" style="padding: clamp(48px, 7vw, 88px) 0; border-top: 1px solid var(--color-divider);">
         <h2 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: clamp(28px, 3.8vw, 44px); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 12px; max-width: 20ch; text-wrap: pretty;">Mashg'ulot nimaga qaraydi</h2>
-        <p style="font-size: 17px; line-height: 1.6; color: var(--color-neutral-700); margin: 0 0 32px; max-width: 48ch;">Har bir yo'nalish hisobotga bir qator yozadi. {{ lensHint }}</p>
+        <p style="font-size: 17px; line-height: 1.6; color: var(--color-neutral-700); margin: 0 0 32px; max-width: 48ch;">Har bir yo'nalish 5–6 ta savoldan iborat va hisobotga o'z bali bilan tushadi. {{ lensHint }}</p>
         <div style="display: flex; flex-direction: column;">
           <sc-for list="{{ lenses }}" as="l" hint-placeholder-count="7">
             <div data-slot="{{ l.slot }}" style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 16px; border-top: 1px solid var(--color-divider); padding: 22px 0;">
@@ -185,16 +185,16 @@ input, textarea, button, select { font-family: var(--font-body); }
       </section>
 
       <section data-screen-label="05 Report" data-teaser="1" style="padding: clamp(48px, 7vw, 88px) 0; border-top: 1px solid var(--color-divider);">
-        <h2 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: clamp(28px, 3.8vw, 44px); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 12px; max-width: 20ch; text-wrap: pretty;">Hisobot — o'n qism, bola haqida</h2>
+        <h2 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: clamp(28px, 3.8vw, 44px); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 12px; max-width: 20ch; text-wrap: pretty;">Hisobot — qiziqishlar xaritasi, bola haqida</h2>
         <p style="font-size: 17px; line-height: 1.6; color: var(--color-neutral-700); margin: 0 0 28px; max-width: 48ch; text-wrap: pretty;">Faqat mashg'ulotdagi haqiqiy javoblardan tuziladi. Bola javob bermagan bo'lsa, hisobot buni ochiq aytadi.</p>
 
-        <div data-slot="8" style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 16px; border-top: 1px solid var(--color-divider); padding: 20px 0;">
-          <span style="font-family: Literata, Georgia, serif; font-size: 22px; color: {{ n8 }}; transition: color .8s;">08</span>
-          <div><h3 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 4px;">3–6 oylik reja</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; color: var(--color-neutral-700);">Haftasiga nima qilish — kichik, aniq qadamlar.</p></div>
+        <div data-slot="6" style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 16px; border-top: 1px solid var(--color-divider); padding: 20px 0;">
+          <span style="font-family: Literata, Georgia, serif; font-size: 22px; color: {{ n8 }}; transition: color .8s;">06</span>
+          <div><h3 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 4px;">Rivojlantirish mumkin bo'lgan yo'nalishlar</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; color: var(--color-neutral-700);">Past ball — qobiliyatsizlik emas. Hozircha qiziq emasligini bildiradi.</p></div>
         </div>
-        <div data-slot="9" style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 16px; border-top: 1px solid var(--color-divider); border-bottom: 1px solid var(--color-divider); padding: 20px 0; margin-bottom: 28px;">
-          <span style="font-family: Literata, Georgia, serif; font-size: 22px; color: {{ n9 }}; transition: color .8s;">09</span>
-          <div><h3 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 4px;">Sport va to'garaklar</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; color: var(--color-neutral-700);">Nega aynan shular — bola aytgan narsaga bog'lab.</p></div>
+        <div data-slot="7" style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 16px; border-top: 1px solid var(--color-divider); border-bottom: 1px solid var(--color-divider); padding: 20px 0; margin-bottom: 28px;">
+          <span style="font-family: Literata, Georgia, serif; font-size: 22px; color: {{ n9 }}; transition: color .8s;">07</span>
+          <div><h3 style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 4px;">To'garak va mashg'ulot tavsiyalari</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; color: var(--color-neutral-700);">Nega aynan shular — bolaning javoblariga bog'lab.</p></div>
         </div>
 
         <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
@@ -214,7 +214,7 @@ input, textarea, button, select { font-family: var(--font-body); }
                       <sc-if value="{{ s.isLevels }}" hint-placeholder-val="{{ false }}">
                         <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
                           <sc-for list="{{ levels }}" as="lv" hint-placeholder-count="3">
-                            <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--color-neutral-700);"><span>{{ lv.name }}</span><span style="display: flex; gap: 4px; align-items: center;"><sc-for list="{{ lv.dots }}" as="d" hint-placeholder-count="3"><span style="width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--color-accent); background: {{ d.bg }};"></span></sc-for><span style="margin-left: 6px; min-width: 84px;">{{ lv.word }}</span></span></div>
+                            <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--color-neutral-700);"><span>{{ lv.name }}</span><span style="display: flex; gap: 8px; align-items: center;"><span style="width: 54px; height: 6px; border-radius: 3px; background: var(--color-surface); display: inline-block; position: relative; overflow: hidden;"><span style="position: absolute; inset: 0 auto 0 0; width: {{ lv.width }}; background: {{ lv.barColor }}; border-radius: 3px;"></span></span><span style="font-weight: 600;">{{ lv.score }}</span><span style="min-width: 84px;">{{ lv.word }}</span></span></div>
                           </sc-for>
                         </div>
                       </sc-if>
@@ -229,11 +229,11 @@ input, textarea, button, select { font-family: var(--font-body); }
 
         <div style="background: var(--color-accent-100); border-radius: 6px; padding: 20px; max-width: 560px; margin-bottom: 28px;">
           <sc-if value="{{ isPaid }}" hint-placeholder-val="{{ true }}">
-            <p style="margin: 0 0 6px; font-family: Literata, Georgia, serif; font-size: 20px; font-weight: 600; color: var(--color-text);">01 va 10 — bepul. Qolgan sakkiz qism — {{ priceLabel }}, bir marta.</p>
+            <p style="margin: 0 0 6px; font-family: Literata, Georgia, serif; font-size: 20px; font-weight: 600; color: var(--color-text);">01 va 08 — bepul. Qolgan olti qism — {{ priceLabel }}, bir marta.</p>
             <p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--color-text);">Mashg'ulot ham bepul. To'lov Payme orqali, karta ma'lumotlari bizga kelmaydi. Havola doimiy.</p>
           </sc-if>
           <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
-            <p style="margin: 0 0 6px; font-family: Literata, Georgia, serif; font-size: 20px; font-weight: 600;">Hisobot to'liq bepul — barcha o'n qism.</p>
+            <p style="margin: 0 0 6px; font-family: Literata, Georgia, serif; font-size: 20px; font-weight: 600;">Hisobot to'liq bepul — barcha qismlari.</p>
             <p style="margin: 0; font-size: 15px; line-height: 1.55;">Mashg'ulot ham, hisobot ham — to'lovsiz.</p>
           </sc-if>
         </div>
@@ -262,7 +262,7 @@ input, textarea, button, select { font-family: var(--font-body); }
                     <sc-if value="{{ s.isLevels }}" hint-placeholder-val="{{ false }}">
                       <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
                         <sc-for list="{{ levels }}" as="lv" hint-placeholder-count="3">
-                          <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--color-neutral-700);"><span>{{ lv.name }}</span><span style="display: flex; gap: 4px; align-items: center;"><sc-for list="{{ lv.dots }}" as="d" hint-placeholder-count="3"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--color-accent); background: {{ d.bg }};"></span></sc-for><span style="margin-left: 6px; min-width: 78px;">{{ lv.word }}</span></span></div>
+                          <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--color-neutral-700);"><span>{{ lv.name }}</span><span style="display: flex; gap: 8px; align-items: center;"><span style="width: 54px; height: 6px; border-radius: 3px; background: var(--color-surface); display: inline-block; position: relative; overflow: hidden;"><span style="position: absolute; inset: 0 auto 0 0; width: {{ lv.width }}; background: {{ lv.barColor }}; border-radius: 3px;"></span></span><span style="font-weight: 600;">{{ lv.score }}</span><span style="min-width: 78px;">{{ lv.word }}</span></span></div>
                         </sc-for>
                       </div>
                     </sc-if>
@@ -277,9 +277,9 @@ input, textarea, button, select { font-family: var(--font-body); }
     </sc-if>
   </div>
 
-  <section data-screen-label="06 Letter" data-letter="1" data-slot="10" style="background: var(--color-accent-2); color: var(--color-neutral-100); padding: clamp(88px, 16vw, 200px) clamp(16px, 4vw, 40px);">
+  <section data-screen-label="06 Letter" data-letter="1" data-slot="8" style="background: var(--color-accent-2); color: var(--color-neutral-100); padding: clamp(88px, 16vw, 200px) clamp(16px, 4vw, 40px);">
     <div style="max-width: 880px; margin: 0 auto;">
-      <p style="margin: 0 0 28px; font-size: 14px; font-weight: 600; color: var(--color-accent-2-100);">10 · Bolaga xat — ovoz chiqarib o'qish uchun</p>
+      <p style="margin: 0 0 28px; font-size: 14px; font-weight: 600; color: var(--color-accent-2-100);">08 · Bolaga dalda — ovoz chiqarib o'qish uchun</p>
       <p style="margin: 0 0 40px; font-family: Literata, Georgia, serif; font-style: italic; font-weight: 400; font-size: clamp(30px, 5vw, 60px); line-height: 1.22; letter-spacing: -0.01em; text-wrap: pretty; display: flex; flex-wrap: wrap; column-gap: 0.26em;">
         <sc-for list="{{ letterWords }}" as="w" hint-placeholder-count="14"><span style="opacity: {{ w.op }}; transition: opacity .9s ease;">{{ w.t }}</span></sc-for>
       </p>
@@ -1463,29 +1463,36 @@ class Component extends DCLogic {
   // descends: each section they pass adds one real line. Ten rows, ten
   // triggers. It turns scroll depth into the pitch rather than a container for
   // it — which is the whole reason the page is long.
+  // The sample report sheet. Seven parts now, matching what the report
+  // actually contains since the instrument changed.
   LND_SLOTS = [
-    ['Kuchli tomonlar', 'Qonuniyatlarni tez ilg\'aydi · xatodan keyin yana urinadi'],
-    ['Hozirgi o\'rni', 'O\'z sinf guruhi uchun odatiy holatga nisbatan:'],
-    ['Iqtidorlar xaritasi', 'Mantiq va hisob — yaqqol; tasavvur va shakl — belgilari bor'],
-    ['Qiziqishlar kompasi', 'Hozircha tadqiqotchiga moyil — «nega?» deb so\'rashni yaxshi ko\'radi'],
-    ['Xatoga munosabat', 'Xato qilganda to\'xtamaydi — boshqa yo\'lni sinaydi'],
-    ['His-tuyg\'ular', '«Biroz asabiylashdim» — his-tuyg\'usini nomlay oladi'],
-    ['O\'rganish usuli', 'Qo\'li bilan qilib ko\'rganda tezroq tushundi'],
-    ['3–6 oylik reja', 'Haftasiga 3 kun — 2 tadan qonuniyat topshirig\'i'],
-    ['Sport va to\'garaklar', 'Futbol · shaxmat to\'garagi'],
-    ['Ali uchun xat', '«Ali, sen qiyin savollardan qo\'rqmaysan…»'],
+    ['Qisqacha xulosa', 'Hozir yasash va tekshirishga qiziqadi — javoblaridan ko\'rinib turibdi'],
+    ['Konstruktorlik va muhandislik', '4.50 — kuchli qiziqish bildirildi'],
+    ['Mantiq va matematika', '4.00 — qiziqish sezilarli'],
+    ['Qolgan to\'qqiz yo\'nalish', 'Har biri o\'z bali va javoblar soni bilan'],
+    ['Hozirgi qiziqishlar xaritasi', 'Eng yuqori 2–3 qiziqish — sinab ko\'rish uchun faoliyatlar bilan'],
+    ['Rivojlantirish mumkin bo\'lgan yo\'nalishlar', 'Past ball — qobiliyatsizlik emas, hozircha qiziq emas'],
+    ['To\'garak va mashg\'ulot tavsiyalari', 'Robototexnika · shaxmat — javoblarga bog\'lab'],
+    ['Aliga dalda', '«Ali, sen qiyin savollardan qo\'rqmaysan…»'],
   ];
+  // The twelve areas the seventy questions cover.
   LND_LENSES = [
-    ['Kuchli tomonlar', 'Unda eng yaxshi chiqadigan uch jihat — har biri o\'z javobidan misol bilan.'],
-    ['Hozirgi o\'rni', 'Tafakkur, qiziqishlar va harakat — har biri o\'z sinf guruhi uchun odatiy holatga nisbatan. Boshqa bolalar bilan emas.'],
-    ['Iqtidorlar xaritasi', 'So\'z, mantiq va son, tasavvur va shakl, musiqa, harakat, odamlar bilan til topish, o\'zini tushunish, tabiatni kuzatish. Faqat ko\'rilgani yoziladi.'],
-    ['Qiziqishlar kompasi', 'Quruvchi, tadqiqotchi, ijodkor, yordamchi, tashkilotchi — hozirgi moyillik, taqdir emas.'],
-    ['Xatoga munosabat', 'Nimadir chiqmasa nima qiladi: qayta urinadimi, sabr va diqqat qanday. Aniq lahzalar bilan, yorliqsiz.'],
-    ['His-tuyg\'ular', 'Tuyg\'ularini taniy va nomlay oladimi, boshqalarni tushunadimi. Bu yoshda shakllanmoqda — o\'sish nuqtasi sifatida yoziladi.'],
-    ['O\'rganish usuli', 'Eshitganda, ko\'rganda yoki qilib ko\'rganda tezroq tushundimi. Mashg\'ulot davomida kuzatiladi. Bu afzallik, tur emas.'],
+    ['Konstruktorlik va muhandislik', 'Yasash, tuzatish, narsalar qanday ishlashini bilish.'],
+    ['Mantiq va matematika', 'Jumboq, son, o\'xshashlik va farq topish.'],
+    ['Fan va tadqiqotchilik', 'Tajriba, tabiat, kosmos, «nega?» degan savol.'],
+    ['Ijodkorlik', 'Rasm, hikoya, rang, tasavvur, o\'ziga xoslik.'],
+    ['Nutq va til', 'Kitob, hikoya aytish, fikrni tushuntirish.'],
+    ['Liderlik', 'Guruhni boshqarish, qoidani tushuntirish, mas\'uliyat.'],
+    ['Empatiya va yordam berish', 'Boshqaning kayfiyatini sezish, yordam berish, o\'rgatish.'],
+    ['Tashkiliy qobiliyat', 'Tartib, reja, vazifani vaqtida bajarish.'],
+    ['Sport va faollik', 'Harakat, jamoaviy o\'yin, yangi sport turlari.'],
+    ['Texnologiya', 'Kompyuter, robot, Scratch, texnika.'],
+    ['Rivojlanish fikrlashi', 'Xatodan o\'rganish, qiyin vazifaga munosabat, qayta urinish.'],
+    ['Qiziquvchanlik', 'Yangi narsa bilish, savol berish, kuzatish.'],
   ];
-  LND_LEVELS = [['Mantiq va tafakkur', 3], ['Psixologiya va qiziqishlar', 2], ['Tana va harakat', 2]];
-  LND_WORDS = ['Shakllanmoqda', 'Me\'yorda', 'Kuchli'];
+  // The sample bars on the landing: area name, score out of 5.
+  LND_LEVELS = [['Konstruktorlik', 4.5], ['Mantiq va matematika', 4.0], ['Tashkiliy qobiliyat', 1.8]];
+  LND_WORDS = ['kuchli qiziqish', 'qiziqish sezilarli', 'hozircha kamroq'];
   LND_LETTER = '«Ali, sen qiyin savollardan qo\'rqmaysan — bu katta kuch! Har kuni ozgina mashq qilsang, yanada kuchli bo\'lasan.»';
 
   // Motion is off for anyone who asked for less of it, and for devices that
@@ -1546,7 +1553,7 @@ class Component extends DCLogic {
     const priceLabel = S.cfgPrice ? Number(S.cfgPrice).toLocaleString('en-US').replace(/,/g, ' ') + ' so\u2018m' : '';
     const G = 'var(--color-accent)', MUTED = 'var(--color-neutral-500)';
     const slots = this.LND_SLOTS.map(([label, text], i) => {
-      const n = i + 1, on = i < filled, free = !paid || n === 1 || n === 10;
+      const n = i + 1, on = i < filled, free = !paid || n === 1 || n === this.LND_SLOTS.length;
       return {
         n: String(n).padStart(2, '0'), label, text,
         op: on ? 1 : 0, tf: on ? 'none' : 'translateY(4px)', barOp: on ? 0 : 1, barW: (58 + (i * 17) % 36) + '%',
@@ -1556,12 +1563,20 @@ class Component extends DCLogic {
         tagColor: free ? G : 'var(--color-neutral-700)', tagBg: paid ? (free ? 'var(--color-accent-100)' : 'var(--color-neutral-200)') : 'transparent',
       };
     });
-    const levels = this.LND_LEVELS.map(([name, k]) => ({
-      name, word: this.LND_WORDS[k - 1],
-      dots: [0, 1, 2].map((j) => ({ bg: j < k ? G : 'transparent' })),
+    // Sample bars: the real report shows a score out of 5, so the landing does
+    // too rather than inventing a different visual language for the same thing.
+    const levels = this.LND_LEVELS.map(([name, avg], i) => ({
+      name, word: this.LND_WORDS[i] || '',
+      score: Number(avg).toFixed(2),
+      width: Math.round(((avg - 1) / 4) * 100) + '%',
+      barColor: avg >= 4.2 ? G : (avg >= 3.5 ? 'var(--color-accent-500)'
+        : (avg >= 2.5 ? 'var(--color-accent-300)' : 'var(--color-neutral-400)')),
     }));
+    // Twelve areas against eight sheet rows, so the sample line comes from the
+    // area itself rather than from whatever row happens to share its index.
     const lenses = this.LND_LENSES.map(([title, desc], i) => ({
-      slot: i + 1, n: String(i + 1).padStart(2, '0'), title, desc, sample: this.LND_SLOTS[i][1] + (i === 1 ? ' mantiq — kuchli, qolgan ikkisi — me\'yorda' : ''),
+      slot: Math.min(i + 1, this.LND_SLOTS.length), n: String(i + 1).padStart(2, '0'), title, desc,
+      sample: desc,
       numColor: i < filled ? G : 'var(--color-text)',
     }));
     const lensCells = this.LND_LENSES.map((_, i) => ({ bg: i < filled ? G : 'transparent' }));
@@ -1570,7 +1585,7 @@ class Component extends DCLogic {
     const lit = still ? words.length : S.lndLit;
     const tg = S.cfgLoaded && S.cfgAuthRequired;
     const faq = [
-      paid ? { q: 'Qancha turadi?', a: 'Mashg\'ulot bepul. Hisobotning 01 (kuchli tomonlar) va 10 (bolaga xat) qismlari bepul. Qolgan sakkiz qism — ' + priceLabel + ', bir marta, Payme orqali. Havola doimiy.' }
+      paid ? { q: 'Qancha turadi?', a: 'Mashg\'ulot bepul. Hisobotning 01 (qisqacha xulosa) va 08 (bolaga dalda) qismlari bepul. Qolgan olti qism — ' + priceLabel + ', bir marta, Payme orqali. Havola doimiy.' }
              : { q: 'Qancha turadi?', a: 'Hech narsa. Mashg\'ulot ham, hisobotning barcha o\'n qismi ham bepul.' },
       { q: 'Qaysi yoshdagi bolalar uchun?', a: '1–4-sinf, taxminan 6–11 yosh. Savollar 1–2 va 3–4-sinf guruhlariga moslashadi.' },
       { q: 'Sun\'iy intellekt bolamga baho beradimi?', a: 'Yo\'q. U savol beradi va bola aytgan narsalarni tartibga soladi. Ball, raqam yoki tashxis yo\'q. Bola javob bermasa, hisobot tuzilmaydi.' },
@@ -1590,14 +1605,14 @@ class Component extends DCLogic {
       wide: S.lndWide, narrow: !S.lndWide, priceLabel,
       slots, levels, lenses, lensCells, barCells, faq,
       letterWords: words.map((t, i) => ({ t, op: i < lit ? 1 : 0.32 })),
-      n8: filled >= 8 ? G : 'var(--color-text)', n9: filled >= 9 ? G : 'var(--color-text)',
-      filledLabel: filled + ' / 10', filledShort: filled + '/10',
+      n8: filled >= 6 ? G : 'var(--color-text)', n9: filled >= 7 ? G : 'var(--color-text)',
+      filledLabel: filled + ' / ' + this.LND_SLOTS.length, filledShort: filled + '/' + this.LND_SLOTS.length,
       lensHint: S.lndWide ? 'Yon tomondagi varaq o\'qiganingiz sari to\'ladi.' : 'Pastdagi chiziq hisobot qanchalik to\'lganini ko\'rsatadi.',
-      sheetFoot: paid ? ('Bepul: 01 va 10. Qolgan sakkiz qism — ' + priceLabel + ', bir marta.') : 'Hisobot to\'liq bepul — barcha o\'n qism.',
+      sheetFoot: paid ? ('Bepul: 01 va 08. Qolgan olti qism — ' + priceLabel + ', bir marta.') : 'Hisobot to\'liq bepul — barcha o\'n qism.',
       tgNote: tg ? 'Keyingi qadam: Telegramda bitta «Start». Hisobot o\'sha chatga keladi.' : 'Ro\'yxatdan o\'tish yo\'q — darhol boshlanadi.',
       tgNoteShort: tg ? 'Keyingi qadam — Telegramda bitta «Start».' : 'Ro\'yxatdan o\'tish yo\'q.',
       seeText: 'Telegramdagi ismingizni — hisobotni yuborish uchun.' + ((S.cfgLoaded && S.cfgAskPhone) ? ' Raqamingizni, agar ulashsangiz.' : '') + ' Xabarlaringiz, kontaktlaringiz va parolingizni emas.',
-      closeNote: (paid ? 'Mashg\'ulot bepul · ~30–40 daqiqa · to\'liq hisobot ' + priceLabel : 'Bepul · ~30–40 daqiqa') + (tg ? ' · Keyingi qadam: Telegramda «Start»' : ' · Ro\'yxatdan o\'tish yo\'q'),
+      closeNote: (paid ? 'Mashg\'ulot bepul · ~20–30 daqiqa · to\'liq hisobot ' + priceLabel : 'Bepul · ~20–30 daqiqa') + (tg ? ' · Keyingi qadam: Telegramda «Start»' : ' · Ro\'yxatdan o\'tish yo\'q'),
       showBar: !S.lndWide, barProgress: !still,
       barY: barOn ? 'none' : 'translateY(110%)', barPE: barOn ? 'auto' : 'none',
       pagePad: S.lndWide ? '0' : '72px',

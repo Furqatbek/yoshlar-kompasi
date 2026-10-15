@@ -23,6 +23,7 @@ const ROOT = path.join(__dirname, '..', '..', 'server', 'public');
 const API = process.env.API_PAID || 'http://127.0.0.1:8091';
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 const GROWTH = 'rgb(31, 111, 92)'; // --color-accent
+const SHEET_ROWS = 8;              // LND_SLOTS in Kompas.dc.html
 
 let pass = 0, fail = 0;
 const ok = (n, c, x) => { c ? pass++ : fail++; console.log((c ? '  ok  - ' : '  FAIL- ') + n + (x ? '   ' + x : '')); };
@@ -46,10 +47,10 @@ const srv = http.createServer(async (req, res) => {
 });
 
 const BASE = 'http://127.0.0.1:8112';
-// "N / 10" on the sheet header, "N/10" on the mobile bar.
+// "N / 8" on the sheet header, "N/8" on the mobile bar.
 const filled = async (page) => {
   const t = await page.locator('body').innerText();
-  const m = /(\d+)\s*\/\s*10/.exec(t);
+  const m = new RegExp('(\\d+)\\s*/\\s*' + SHEET_ROWS).exec(t);
   return m ? Number(m[1]) : null;
 };
 const scrollTo = async (page, frac) => {
@@ -109,7 +110,7 @@ const bottomBars = (page) => page.evaluate(() => [...document.querySelectorAll('
   ok('scrolling back up does NOT empty it', (await filled(m.page)) === later, 'filled=' + await filled(m.page));
 
   await scrollTo(m.page, 0.95);
-  ok('the sheet completes by the end', (await filled(m.page)) === 10, 'filled=' + await filled(m.page));
+  ok('the sheet completes by the end', (await filled(m.page)) === SHEET_ROWS, 'filled=' + await filled(m.page));
 
   // ---- the mobile bar: progress + CTA, and only one of it --------------
   await scrollTo(m.page, 0.95);
@@ -119,7 +120,7 @@ const bottomBars = (page) => page.evaluate(() => [...document.querySelectorAll('
   ok('  exactly one bottom bar exists', mBars.length === 1, 'bars=' + mBars.length
     + ' ' + JSON.stringify(mBars.map((b) => b.text.slice(0, 40))));
   const barText = (mBars.find((b) => b.onscreen) || {}).text || '';
-  ok('  it carries the sheet progress', /\d+\s*\/\s*10/.test(barText), JSON.stringify(barText));
+  ok('  it carries the sheet progress', new RegExp('\\d+\\s*/\\s*' + SHEET_ROWS).test(barText), JSON.stringify(barText));
   ok('  and the CTA', /Boshlash/.test(barText), JSON.stringify(barText));
   // "must never cover text": the page reserves space for the bar rather than
   // letting it float over the last section.
@@ -139,7 +140,7 @@ const bottomBars = (page) => page.evaluate(() => [...document.querySelectorAll('
 
   // ---- desktop: the sticky sheet ---------------------------------------
   const d = await open({ viewport: { width: 1440, height: 900 } });
-  ok('desktop shows the sticky sheet', await d.page.locator('text=/\\d+ \\/ 10/').count() > 0);
+  ok('desktop shows the sticky sheet', await d.page.locator('text=/\\d+ \\/ ' + SHEET_ROWS + '/').count() > 0);
   ok('  and no bottom bar at all', (await bottomBars(d.page)).length === 0);
   await scrollTo(d.page, 0.4);
   ok('  which fills on scroll', (await filled(d.page)) > 0, 'filled=' + await filled(d.page));
@@ -162,12 +163,15 @@ const bottomBars = (page) => page.evaluate(() => [...document.querySelectorAll('
     };
   }, GROWTH);
   const rs = await sheet(r.page);
-  ok('reduced motion shows the sheet already complete', rs.rows === 10 && rs.lit === 10, JSON.stringify(rs));
+  // Eight rows since the sample sheet follows the report, which has seven
+  // sections plus the summary.
+  ok('reduced motion shows the sheet already complete',
+    rs.rows === SHEET_ROWS && rs.lit === SHEET_ROWS, JSON.stringify(rs));
   const rBars = await bottomBars(r.page);
   ok('  the plain CTA bar is there from the start, no scrolling needed',
     rBars.length === 1 && rBars[0].onscreen, JSON.stringify(rBars));
   ok('  with the CTA but no progress readout',
-    /Boshlash/.test(rBars[0].text) && !/\d+\s*\/\s*10/.test(rBars[0].text), JSON.stringify(rBars[0].text));
+    /Boshlash/.test(rBars[0].text) && !new RegExp('\\d+\\s*/\\s*' + SHEET_ROWS).test(rBars[0].text), JSON.stringify(rBars[0].text));
   await scrollTo(r.page, 0.4);
   ok('  and scrolling changes nothing', JSON.stringify(await sheet(r.page)) === JSON.stringify(rs));
   ok('  the letter is fully legible, not faded', await r.page.evaluate(() => {

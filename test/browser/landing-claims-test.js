@@ -87,13 +87,26 @@ function serve(api, port) {
     // asked" stopped being true of the ADULT once the login arrived.
     ok(`[${label}] does not claim only a name is asked`,
       !/Faqat ism so.raladi/i.test(v.text));
-    // The prompt assesses these; the page used to mention none of them.
-    ok(`[${label}] shows the talents map`, /Iqtidorlar xaritasi/i.test(v.text));
-    ok(`[${label}] shows the learning style`, /O.rganish usuli/i.test(v.text));
-    // Named plainly ("his-tuyg'ular") rather than as jargon; either carries it.
-    ok(`[${label}] shows emotional intelligence`,
-      /(His-tuyg.ular|Emotsional intellekt)/i.test(v.text));
+    // What the inventory actually covers.
+    ok(`[${label}] says how many questions there are`, /\b70\b/.test(v.text));
+    ok(`[${label}] says how many areas they cover`,
+      /o.n ikki|12 yo.nalish/i.test(v.text));
+    ok(`[${label}] names the 1-5 scale the child answers on`,
+      /1\s*(dan|–|-)\s*5/i.test(v.text));
     ok(`[${label}] mentions clubs, not just sport`, /to.garak/i.test(v.text));
+
+    // And what it does NOT. These three were measured by the previous
+    // assessment and are not measured by this one, so advertising them would
+    // sell something the report cannot deliver. The landing lost them in the
+    // same change that lost the instrument; this keeps them lost.
+    ok(`[${label}] does not still advertise the talents map`,
+      !/Iqtidorlar xaritasi/i.test(v.text));
+    ok(`[${label}] does not still advertise a learning style`,
+      !/O.rganish usuli/i.test(v.text));
+    ok(`[${label}] does not still advertise emotional intelligence`,
+      !/(His-tuyg.ular|Emotsional intellekt)/i.test(v.text));
+    ok(`[${label}] does not claim questions adapt to the class group`,
+      !/A guruh|B guruh/i.test(v.text));
   }
 
   // The money question, read from its own FAQ row rather than the whole page,
@@ -113,8 +126,8 @@ function serve(api, port) {
     /Mashg.ulot bepul/i.test(paid.text));
   ok('[paid] the price is stated up front', /49 000 so/.test(paid.text), null);
   ok('[paid] what is free vs paid is explained before the sample',
-    /01 va 10/.test(paid.text) && /Qolgan sakkiz qism/i.test(paid.text)
-    && paid.before(/01 va 10/, /Hisobot namunasi/i));
+    /01 va 08/.test(paid.text) && /Qolgan olti qism/i.test(paid.text)
+    && paid.before(/01 va 08/, /Hisobot namunasi/i));
   ok('[paid] every sample row is marked free or paid',
     /bepul/i.test(paid.text) && /to.lovdan keyin/i.test(paid.text));
   ok('[paid] the FAQ answers the price question with the price',

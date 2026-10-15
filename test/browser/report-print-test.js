@@ -105,7 +105,8 @@ async function paidReport() {
   await page.waitForTimeout(2600);
 
   const seen = await page.locator('body').innerText();
-  ok('the report is unlocked for the test', /Tavsiya etilgan sport/i.test(seen) && !/to.lash/i.test(seen),
+  ok('the report is unlocked for the test',
+    /To.garak va mashg.ulot tavsiyalari/i.test(seen) && !/so.m — to.lash/i.test(seen),
     seen.slice(0, 60).replace(/\n/g, ' '));
 
   // Everything below is read under print media, which is what the PDF is.
