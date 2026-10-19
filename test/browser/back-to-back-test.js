@@ -68,7 +68,8 @@ const QUESTIONS = {
   const page = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   await stubLogin(page);
 
-  // Each start gets its own session, as the server would give it.
+  // Each start gets its own session, as the server would give it — questions
+  // included, which is how the real response comes back.
   const created = [];
   let starts = 0;
   await page.route('**/api/sessions', (route) => {
@@ -85,12 +86,19 @@ const QUESTIONS = {
         // is called, so there is nothing for the adult to read here.
         messages: [{ role: 'user', content: 'child context', meta: true }],
         progress: { answered: 0, seen: 0, total: 70 }, done: false,
+        inventory: QUESTIONS,
       }),
     });
   });
-  await page.route(/\/api\/sessions\/tok_child_\d+\/questions/, (route) => route.fulfill({
-    status: 200, contentType: 'application/json', body: JSON.stringify(QUESTIONS),
-  }));
+  // Kept for the resume path, and counted: starting a sitting must NOT come
+  // here. The questions arrive with the session, so a request landing on this
+  // route means the first question is waiting on a second round trip again —
+  // about a second of staring at a pressed button on mobile data.
+  let questionFetches = 0;
+  await page.route(/\/api\/sessions\/tok_child_\d+\/questions/, (route) => {
+    questionFetches++;
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(QUESTIONS) });
+  });
   await page.route(/\/api\/sessions\/tok_child_\d+$/, (route) => {
     const tok = route.request().url().split('/').pop();
     const c = created.find((x) => x.token === tok) || {};
@@ -120,6 +128,9 @@ const QUESTIONS = {
   await startSitting('Ali', '2-sinf');
   ok('first sitting reaches the questions', (await page.locator('body').innerText()).includes('LEGO yoki konstruktor'));
   ok('  under the first child\'s name', (await page.locator('body').innerText()).includes('Ali'));
+  ok('  in one round trip, not two', questionFetches === 0,
+    'the inventory came back with the session, so nothing should have fetched it; got '
+      + questionFetches + ' request(s)');
 
   // Answer one, then walk away to start the next child.
   await page.click('button:has-text("Ko‘pincha")');

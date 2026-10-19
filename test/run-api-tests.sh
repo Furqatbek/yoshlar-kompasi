@@ -60,6 +60,9 @@ node test/unit/bot-replies.test.js
 echo "==== unit: compose passes every setting through ===="
 node test/unit/compose-env.test.js
 
+echo "==== unit: the type is ours and complete ===="
+node test/unit/fonts.test.js
+
 echo "==== migrate + seed ===="
 (cd server && npm run migrate && npm run seed)
 
@@ -85,6 +88,8 @@ node test/api/e2e-driver.js
 # a failure message.
 echo "==== api: one model call per sitting ===="
 STUB_URL=http://127.0.0.1:5602 node test/api/one-call-test.js
+echo "==== api: what a cold visit downloads ===="
+node test/api/payload-test.js
 echo "==== api: idempotency + cross-device resume ===="
 node test/api/e2e-extra.js
 echo "==== api: right-to-erasure cascade ===="

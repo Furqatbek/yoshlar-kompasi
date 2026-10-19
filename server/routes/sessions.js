@@ -140,6 +140,11 @@ router.post(
       messages: await repo.getMessages(session.id),
       progress: progressOf(session),
       done: false,
+      // The first question, in the same response. The client used to create the
+      // session and then fetch the inventory, which is two serial round trips
+      // before anything is on screen — about a second of staring at a button on
+      // mobile data, for data we already have in hand here.
+      inventory: await inventoryFor(session),
     });
   })
 );
@@ -420,33 +425,38 @@ router.post(
 // instead of typing "1, 4, 5" and hoping the order was right.
 // ---------------------------------------------------------------------------
 
-// GET /api/sessions/:token/questions — the whole inventory plus whatever has
-// been answered so far, so a part-finished sitting restores exactly.
+// The inventory plus whatever has been answered so far, so a part-finished
+// sitting restores exactly. Shared, because creating a session hands this back
+// in the same response: two serial requests to put the first question on screen
+// is one round trip too many on a connection where a round trip is 400ms, and a
+// second copy of the shape would be a second thing to keep in step.
+async function inventoryFor(session) {
+  const bank = await require('../services/questionBank').load();
+  const rows = await repo.getAnswerRows(session.id);
+  const answered = {};
+  for (const r of rows) answered[r.question_n] = r.value;  // null = skipped
+
+  const questions = [];
+  for (const sec of bank.sections) {
+    for (const q of sec.items) {
+      if (!q.active) continue;
+      questions.push({ n: q.n, text: q.text, section: sec.key, section_title: sec.title });
+    }
+  }
+  return {
+    questions,
+    answers: answered,
+    scale: require('../data/questions').SCALE,
+    progress: progressOf(session),
+    done: allDone(session),
+  };
+}
+
+// GET /api/sessions/:token/questions
 router.get(
   '/:id/questions',
   sessionAuth,
-  asyncHandler(async (req, res) => {
-    const session = req.session;
-    const bank = await require('../services/questionBank').load();
-    const rows = await repo.getAnswerRows(session.id);
-    const answered = {};
-    for (const r of rows) answered[r.question_n] = r.value;  // null = skipped
-
-    const questions = [];
-    for (const sec of bank.sections) {
-      for (const q of sec.items) {
-        if (!q.active) continue;
-        questions.push({ n: q.n, text: q.text, section: sec.key, section_title: sec.title });
-      }
-    }
-    res.json({
-      questions,
-      answers: answered,
-      scale: require('../data/questions').SCALE,
-      progress: progressOf(session),
-      done: allDone(session),
-    });
-  })
+  asyncHandler(async (req, res) => res.json(await inventoryFor(req.session)))
 );
 
 // POST /api/sessions/:token/answers — record a batch.

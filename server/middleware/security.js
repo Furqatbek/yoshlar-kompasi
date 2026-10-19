@@ -20,8 +20,12 @@ function securityHeaders(req, res, next) {
       [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com data:",
+        // The type is served from here now, so Google's two origins come out of
+        // the policy as well as out of the critical path. A product about
+        // other people's children should not be announcing each visitor to a
+        // third party for the sake of a typeface.
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self' data:",
         "img-src 'self' data:",
         "connect-src 'self'",
         "frame-ancestors 'self'",

@@ -28,8 +28,19 @@ server {
 
   client_max_body_size 1m;
 
+  # The app compresses its own responses (gzip and brotli), which is what
+  # actually ships them small — including to anyone running the container
+  # without this proxy in front. nginx leaves an already-encoded response
+  # alone, so this block is a fallback for the case where app-side compression
+  # is ever switched off.
+  #
+  # It was previously a no-op twice over: `gzip_proxied` defaults to off, so
+  # nginx never compressed anything coming from a backend, and text/html was
+  # not in the list — and the 200 KB app shell is text/html. Everything here is
+  # proxied, so between them the whole site went out uncompressed.
   gzip on;
-  gzip_types text/css application/javascript application/json image/svg+xml;
+  gzip_proxied any;
+  gzip_types text/html text/css application/javascript application/json image/svg+xml;
   gzip_min_length 1024;
 
   location / {

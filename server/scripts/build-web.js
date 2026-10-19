@@ -13,9 +13,18 @@ const ROOT = path.join(__dirname, '..', '..'); // repo root
 const SERVER = path.join(__dirname, '..');
 const PUBLIC = path.join(SERVER, 'public');
 
-const REACT_PRELOAD =
+// The x-dc runtime re-downloads the whole page after booting, to re-parse the
+// authored template from the raw text rather than from the DOM the browser gave
+// it (`if (!window.__resources)` in support.js). That is for the authoring
+// workflow; here the served file IS the authored template, so it was a second
+// 200 KB download of the shell on every cold load — invisible, because the page
+// works perfectly either way. Declaring an empty resource map turns it off.
+// Verified: the landing, the setup form and a sitting render byte-identically
+// with it off, screenshots included.
+const RUNTIME_PRELOAD =
   '<script src="/vendor/react.production.min.js"></script>\n' +
   '<script src="/vendor/react-dom.production.min.js"></script>\n' +
+  '<script>window.__resources = {};</script>\n' +
   '<script src="./support.js"></script>';
 
 function ensureEmptyDir(dir) {
@@ -37,7 +46,7 @@ function main() {
   if (html.indexOf('<script src="./support.js"></script>') === -1) {
     throw new Error('build-web: support.js script tag not found in Kompas.dc.html');
   }
-  html = html.replace('<script src="./support.js"></script>', REACT_PRELOAD);
+  html = html.replace('<script src="./support.js"></script>', RUNTIME_PRELOAD);
   fs.writeFileSync(path.join(PUBLIC, 'index.html'), html);
 
   // Runtime + design system.

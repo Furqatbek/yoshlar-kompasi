@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 
 const { config, assertProdConfig } = require('./config');
 const { securityHeaders } = require('./middleware/security');
@@ -18,6 +19,18 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
 app.use(securityHeaders);
+// The app shell is one 200 KB HTML file and the runtime another 66 KB, and the
+// audience is on Uzbek mobile data. Uncompressed that was 610 KB per cold load;
+// gzipped it is about a fifth of that, for the cost of this line. nginx is in
+// front in production but only for TLS, and a developer running the container
+// directly has no proxy at all — so this belongs here, not in the proxy config.
+app.use(compression({
+  // The default brotli quality is 4, which on this shell is *worse* than gzip
+  // (45 KB vs 45 KB, measured) because it trades ratio for streaming latency.
+  // 6 gives 41 KB for the same 9ms. 11 would give 37 KB but costs 325ms of CPU
+  // per request, which is a build-time job, not a per-request one.
+  brotli: { params: { [require('zlib').constants.BROTLI_PARAM_QUALITY]: 6 } },
+}));
 app.use(express.json({ limit: '32kb' }));
 app.use(cookieParser());
 
@@ -58,8 +71,22 @@ app.use(
   express.static(PUBLIC_DIR, {
     index: false,
     setHeaders: (res, filePath) => {
-      // The app shell must not be cached; hashed assets can be.
-      if (filePath.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache');
+      // The app shell must always be re-checked: it carries the application
+      // itself, so a stale copy is a stale product.
+      if (filePath.endsWith('index.html')) return res.setHeader('Cache-Control', 'no-cache');
+      // A webfont file is its own version: the name says which family, style
+      // and subset it is, and a different cut would be a different file. These
+      // are the largest things we serve, so they get the long cache.
+      if (/\.(woff2?|ttf|otf)$/.test(filePath)) {
+        return res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+      // Everything else is React, the runtime and the design system — none of
+      // which changes without a deploy, and all of which is re-downloaded on
+      // every visit without this. The filenames are not content-hashed, so this
+      // is a day rather than a year, and `must-revalidate` means a deploy is
+      // picked up on the next day-old load rather than whenever the browser
+      // feels like asking.
+      res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
     },
   })
 );
@@ -70,6 +97,10 @@ app.get('*', (req, res, next) => {
   if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api/') || req.path.startsWith('/admin/')) return next();
   if (!hasBuild) return res.status(503).send('Frontend not built. Run `npm run build:web`.');
+  // Same rule as the static copy: every deep link and refresh re-checks the
+  // shell. sendFile's own default is max-age=0, which amounts to the same
+  // thing, but saying it means the two paths cannot drift.
+  res.setHeader('Cache-Control', 'no-cache');
   return res.sendFile(INDEX_HTML);
 });
 

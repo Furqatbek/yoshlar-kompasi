@@ -2,7 +2,7 @@
   "name": "yoshlar-kompasi-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend for Yosh Iste'dodlar Kompasi \u2014 Claude proxy, persistence, lead capture, admin.",
+  "description": "Backend for Yosh Iste'dodlar Kompasi — Claude proxy, persistence, lead capture, admin.",
   "license": "UNLICENSED",
   "type": "commonjs",
   "engines": {
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "compression": "^1.8.2",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

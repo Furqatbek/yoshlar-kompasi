@@ -1894,10 +1894,13 @@ class Component extends DCLogic {
         // the last child's position for a frame.
         qList: [], qAnswers: {}, qIdx: 0, qScale: [], qFetchError: '',
       }, () => { location.hash = '#/mashgulot/' + d.session_token; });
-      // The questions themselves. Without this the parent lands on the session
+      // The questions themselves. Without these the parent lands on the session
       // screen with nothing to answer — loadSession fetches them on a resume,
-      // but starting fresh never went through loadSession.
-      this.loadInventory(d.session_token);
+      // but starting fresh never went through loadSession. They now come back
+      // with the session, so the first question is on screen in one round trip;
+      // an older server that does not send them is still asked.
+      if (d.inventory && (d.inventory.questions || []).length) this.showInventory(d.inventory);
+      else this.loadInventory(d.session_token);
     } catch (e) {
       this.setState({ sending: false, formError: this._errMsg(e) });
     }
@@ -1960,22 +1963,28 @@ class Component extends DCLogic {
 
   // ---- admin: the question bank -------------------------------------------
   // ---- the inventory ------------------------------------------------------
+  // Put an inventory payload on screen. Separate from fetching it, because
+  // starting a sitting gets one back with the session itself — asking again
+  // would be a second round trip for data already in hand.
+  showInventory(d) {
+    const answers = d.answers || {};
+    // Resume where they stopped: the first question with no row at all.
+    // A skipped question counts as addressed, so it is not revisited.
+    const list = d.questions || [];
+    let idx = list.findIndex((q) => !(String(q.n) in answers));
+    if (idx < 0) idx = list.length;
+    this.setState({
+      qList: list, qAnswers: answers, qIdx: idx, qScale: d.scale || [],
+      qLoading: false, qFetchError: '', progress: this._prog(d.progress),
+    });
+  }
+
   async loadInventory(token) {
     this.setState({ qLoading: true, qFetchError: '' });
     try {
-      const d = await this.api('/api/sessions/' + encodeURIComponent(token) + '/questions', {
+      this.showInventory(await this.api('/api/sessions/' + encodeURIComponent(token) + '/questions', {
         headers: { 'x-session-token': token },
-      });
-      const answers = d.answers || {};
-      // Resume where they stopped: the first question with no row at all.
-      // A skipped question counts as addressed, so it is not revisited.
-      const list = d.questions || [];
-      let idx = list.findIndex((q) => !(String(q.n) in answers));
-      if (idx < 0) idx = list.length;
-      this.setState({
-        qList: list, qAnswers: answers, qIdx: idx, qScale: d.scale || [],
-        qLoading: false, progress: this._prog(d.progress),
-      });
+      }));
     } catch (e) {
       this.setState({ qLoading: false, qFetchError: "Savollarni yuklab bo'lmadi." });
     }

@@ -116,9 +116,10 @@ make prod-logs
 
 What you get:
 
-- **nginx** terminates HTTPS on 80/443 (HTTP redirects to HTTPS), proxies to
-  the app with a 300s read timeout (report generation), gzips static assets.
-  The app container itself binds to 127.0.0.1 only — never directly reachable.
+- **nginx** terminates HTTPS on 80/443 (HTTP redirects to HTTPS) and proxies to
+  the app with a 300s read timeout (report generation). The app container binds
+  to 127.0.0.1 only — never directly reachable. Compression is the app's own
+  job, so it holds however the container is run; nginx keeps a gzip fallback.
 - **Automatic certificate renewal**: a certbot sidecar renews via webroot every
   12h; nginx reloads itself every 6h to pick up renewed certs. No cron needed.
 - **In-stack cron** (also runs with plain `make up`): nightly DB backup to
