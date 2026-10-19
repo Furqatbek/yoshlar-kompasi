@@ -59,13 +59,11 @@ Siz “Yosh Iste’dodlar Kompasi” veb-ilovasi ichida ishlayapsiz. Maqsad — 
 
    Bu diapazonlar klinik yoki standartlashtirilgan test me’yorlari emasligini kattalarga eslating.
 
-9. Bola charchasa, tanaffus qilishga yoki keyin davom ettirishga ruxsat bering. Javob bermaslikni salbiy xususiyat deb talqin qilmang.
+9. Bola istalgan savolni o‘tkazib yuborishi yoki mashg‘ulotni keyin davom ettirishi mumkin. Javob bermaslikni salbiy xususiyat deb talqin qilmang.
 
-   Har bir yo‘nalish tugaganda bitta qisqa, iliq jumla bilan dalda bering va keyingi yo‘nalish nomini ayting. Maqtov umumiy bo‘lsin («Zo‘r, shu qism tugadi»), bolaning javoblariga baho bermang — bu yerda to‘g‘ri yoki noto‘g‘ri javob yo‘q.
+10. Baholashga aloqasi bo‘lmagan so‘rovlarni muloyimlik bilan rad eting.
 
-10. Baholashga aloqasi bo‘lmagan so‘rovlarni muloyimlik bilan rad eting va mashg‘ulotga qayting.
-
-11. 70 ta savol tugagach, faqat to‘plangan javoblarga asoslanib yakunlashni taklif qiling. To‘liq hisobotni faqat “[HISOBOT-SOROVI]” belgisi bilan boshlangan maxsus so‘rov kelganda yozing. Oddiy suhbat ichida hisobot so‘ralsa, “To‘liq hisobotni olish uchun ‘Yakunlash’ tugmasini bosing” deb tushuntiring.
+11. Siz faqat “[HISOBOT-SOROVI]” belgisi bilan boshlangan so‘rovga javob yozasiz — bir mashg‘ulotga bir marta. Javoblar sizga shu so‘rov ichida hisoblangan holda beriladi.
 
 12. Har bir xulosa dalilga tayanishi shart. Bola aytmagan, savollarda o‘lchanmagan yoki mashg‘ulotda kuzatilmagan jihatlarni uydirmang. Musiqiy qobiliyat, emotsional intellekt, o‘rganish uslubi, sportga moslik yoki kasbiy salohiyat haqida maxsus dalil bo‘lmasa, ularni aniqlangandek yozmang.
 `;
@@ -211,30 +209,25 @@ function promptVersion() {
   return _version;
 }
 
-function buildIntro(c) {
-  const grade = Number(c.grade);
-
-  let s =
-    'Assalomu alaykum! “Yosh Iste’dodlar Kompasi” mashg‘ulotini boshlaymiz.\n' +
-    'Bola haqida: ism yoki taxallus — ' +
-    c.nickname +
-    '; sinf — ' +
-    grade +
-    '-sinf';
-
-  if (c.age) {
-    s += '; yosh — ' + c.age;
-  }
-
-  s +=
-    '\nKattaga qisqa salom bering, bolaning ismi va sinfini tasdiqlang, ' +
-    'javoblar 1–5 oralig‘ida kiritilishini tushuntiring va savollar ' +
-    'bankidagi 1-savoldan boshlang. Savollarni aynan bankdagi matn bilan ' +
-    'bering. Bolaning orzusi yoki maqsadini istasangiz, savollar yakunida ' +
-    'alohida so‘rang; uni 70 savol ballariga qo‘shmang.';
-
-  return s;
+// Who the sitting is about. This is stored once, when the session is created,
+// and is the only thing the model ever learns about the child besides the
+// scores — goal and notes stay in our database.
+//
+// It used to be an instruction to greet the adult and start asking from
+// question 1, and starting a sitting waited on the model's reply to it. The
+// app asks the questions now, so there is nothing to instruct: this is a
+// statement of fact that costs no round trip.
+function childContext(c) {
+  let s = 'Bola haqida: ism yoki taxallus — ' + c.nickname + '; sinf — ' + Number(c.grade) + '-sinf';
+  if (c.age) s += '; yosh — ' + c.age;
+  return s + '.';
 }
+
+// The one request the model ever answers. It is a shared constant because two
+// other places have to recognise it: the route, to know whether this sitting
+// has already been asked, and the system prompt, which tells the model to
+// write a report only when it sees this.
+const REPORT_MARKER = '[HISOBOT-SOROVI]';
 
 // `scored` is services/scoring.js output. It is embedded verbatim because the
 // inventory is a form: there is no conversation for the model to read results
@@ -273,8 +266,11 @@ function buildReportRequest(name, partial, scored) {
       + '; to\u2018liqlik: ' + scored.data_completeness + '.\n';
   }
 
+  // The name is repeated here rather than left to the stored context turn: the
+  // report addresses the child directly, and it must not depend on how much of
+  // the history happens to survive normalization.
   return (
-    '[HISOBOT-SOROVI] Mashg‘ulot yakunlandi.' +
+    REPORT_MARKER + ' ' + (name ? name + ' bilan mashg‘ulot yakunlandi.' : 'Mashg‘ulot yakunlandi.') +
     partialRule +
     ' Hisobotni faqat bolaning 70 savolga bergan haqiqiy javoblari va ' +
     'qayd etilgan kuzatuvlar asosida tayyorlang. Hech narsa uydirmang. ' +
@@ -293,6 +289,7 @@ module.exports = {
   invalidate,
   systemPrompt,
   promptVersion,
-  buildIntro,
-  buildReportRequest
+  childContext,
+  buildReportRequest,
+  REPORT_MARKER
 };

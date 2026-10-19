@@ -120,8 +120,12 @@ BILLING_ALERT_MIN_USD=5                        # daily credit-check threshold
 ```
 
 Leave the rate limits at their defaults for production
-(`RL_SESSIONS_PER_DAY=5` per IP, etc.) — they are the abuse brake on your
-LLM spend.
+(`RL_SESSIONS_PER_DAY=20` per IP, etc.). The one to think about is the
+per-IP daily session cap: starting a sitting costs no model call, so what
+it protects is your database rather than your LLM bill — the bill is the
+report, which is one call per session. Raise it if a school works through a
+class on one connection; `RL_MESSAGES_PER_MIN` and the per-session report
+limit are the brakes on spend.
 
 ### 2.3 One-time certificate
 

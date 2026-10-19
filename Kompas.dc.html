@@ -491,8 +491,8 @@ input, textarea, button, select { font-family: var(--font-body); }
         <input type="checkbox" checked="{{ consentVal }}" onChange="{{ onConsent }}" style="width: 18px; height: 18px; margin-top: 1px; accent-color: var(--color-accent);">
         <span>Men bolaning ota-onasi yoki o'qituvchisiman, 18 yoshdan kattaman va <a href="#/maxfiylik">maxfiylik siyosatiga</a> roziman. *</span>
       </label>
-      <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
-        <div style="color: var(--color-accent-700); font-weight: 600; font-size: 14px;">{{ formError }}</div>
+      <sc-if value="{{ stepOneError }}" hint-placeholder-val="{{ false }}">
+        <div style="color: var(--color-accent-700); font-weight: 600; font-size: 14px;">{{ stepOneError }}</div>
       </sc-if>
       <sc-if value="{{ notPrepared }}" hint-placeholder-val="{{ true }}">
         <div><button type="button" class="btn btn-primary" onClick="{{ submitForm }}" style="font-size: 16px; padding: 12px 20px;">Davom etish</button></div>
@@ -511,7 +511,14 @@ input, textarea, button, select { font-family: var(--font-body); }
         </div>
         <button type="button" class="btn btn-primary" onClick="{{ startSession }}" disabled="{{ starting }}" style="font-size: 16px; padding: 12px 20px;">{{ startLabel }}</button>
         <sc-if value="{{ starting }}" hint-placeholder-val="{{ false }}">
-          <p style="margin: var(--space-3) 0 0; font-size: 14px; color: var(--color-accent-700); font-weight: 600;">Sun'iy intellekt birinchi savollarni tayyorlamoqda — odatda 10–20 soniya. Sahifani yopmang.</p>
+          <p style="margin: var(--space-3) 0 0; font-size: 14px; color: var(--color-accent-700); font-weight: 600;">Mashg'ulot ochilmoqda…</p>
+        </sc-if>
+        <!-- The failure has to appear where the button is. It used to render
+             only in step 1, a screen's worth of scrolling above this button, so
+             a refused start (the daily limit, most often) looked like a button
+             that simply did nothing. -->
+        <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+          <p style="margin: var(--space-3) 0 0; color: var(--color-accent-700); font-weight: 600; font-size: 14px;">{{ formError }}</p>
         </sc-if>
       </div>
     </sc-if>
@@ -1767,7 +1774,15 @@ class Component extends DCLogic {
       const r = (location.hash || '#/').replace(/^#/, '') || '/';
       if (r === '/admin' && this.state.admAuthed) { location.hash = '#/admin/leads'; return; }
       if (r === '/mashgulot' && this._stok) { location.hash = '#/mashgulot/' + this._stok; return; }
-      this.setState({ route: r, copied: false, lowEngage: false }, () => this.syncRoute());
+      // Arriving at the setup screen after a sitting is a NEW child: start at
+      // step 1 with an empty form. Without this, the second child's setup opens
+      // on step 2 showing the first child's name, grade and ticked consent —
+      // the two-step guard silently skipped. Only a finished sitting triggers
+      // it, so stepping out to the privacy page mid-form and back does not
+      // throw away what the adult has typed.
+      const fresh = (r === '/boshlash' && this.state.status !== 'setup') ? this.blankSitting() : null;
+      if (fresh) { this._loadedSession = null; this._loadedReportToken = null; this._busy = false; }
+      this.setState({ ...(fresh || {}), route: r, copied: false, lowEngage: false }, () => this.syncRoute());
       this.trackRoute(r);
       if (!r.startsWith('/mashgulot')) window.scrollTo(0, 0);
     };
@@ -2252,16 +2267,25 @@ class Component extends DCLogic {
     return m[st] || st;
   }
 
-  resetAll() {
-    this.clearHandle(); this._stok = null; this._loadedSession = null; this._lastN = 0; this._loadedReportToken = null; this._busy = false;
-    this.setState({
+  // Everything the previous child left behind on screen. Split out of resetAll
+  // because arriving at the setup route needs exactly this and NOT the part
+  // that forgets the saved session: an adult who stepped out of an unfinished
+  // sitting still has it offered back to them.
+  blankSitting() {
+    return {
       name: '', grade: 0, age: '', goal: '', notes: '', role: 'parent', consent: false, formError: '', prepared: false,
       messages: [], draft: '', sending: false, apiError: '', paused: false, finishConfirm: false, lowEngage: false, generating: false,
       status: 'setup', progress: { answered: 0, seen: 0, total: 70 },
-      token: '', shareToken: '', reportPartial: false, resumeName: '',
+      token: '', shareToken: '', reportPartial: false,
+      qList: [], qAnswers: {}, qIdx: 0, qScale: [], qLoading: false, qFetchError: '',
       gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false,
       report: null, reportNotFound: false, deliveryLink: ''
-    });
+    };
+  }
+
+  resetAll() {
+    this.clearHandle(); this._stok = null; this._loadedSession = null; this._lastN = 0; this._loadedReportToken = null; this._busy = false;
+    this.setState({ ...this.blankSitting(), resumeName: '' });
     location.hash = '#/boshlash';
   }
 
@@ -2577,6 +2601,8 @@ class Component extends DCLogic {
       })),
       consentVal: S.consent, onConsent: e => this.setState({ consent: e.target.checked, formError: '', prepared: e.target.checked ? S.prepared : false }),
       gradeOpts, formError: S.formError, prepared: S.prepared, notPrepared: !S.prepared,
+      // One error, shown once, next to whichever button could have caused it.
+      stepOneError: S.prepared ? '' : S.formError,
       starting: S.sending, startLabel: S.sending ? 'Tayyorlanmoqda…' : "Mashg'ulotni boshlash",
       submitForm: () => this.submitForm(), startSession: () => this.startSession(),
       childName: S.name.trim() || 'Bola', gradeLabel: S.grade ? S.grade + '-sinf' : '',

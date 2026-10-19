@@ -71,19 +71,7 @@ function allDone(session) {
   return Number(session.seen_count || 0) >= _total;
 }
 
-function progressOf(session) {
-  const answered = Number(session.answered_count || 0);
-  const seen = Number(session.seen_count || 0);
-  return { answered, seen, total: _total, pct: Math.min(100, Math.round((seen / _total) * 100)) };
-}
-// The inventory is finished when every question has been put to the child —
-// counting the ones they passed on. A child who skips fourteen questions must
-// still be able to reach the end; measuring by answers alone would strand them.
-function allDone(session) {
-  return Number(session.seen_count || 0) >= _total;
-}
-
-// POST /api/sessions — create child + session, greet + first batch.
+// POST /api/sessions — create the child and the sitting. No model call.
 router.post(
   '/',
   newSessionLimiter,
@@ -130,45 +118,29 @@ router.post(
       parentId: parent ? parent.id : null, sessionId: session.id,
     });
 
-    // Store the generated intro as an internal (meta) user turn, then greet.
-    // Data minimization: goal/notes are stored in OUR db only — buildIntro
-    // sends nothing but nickname/grade/age to the LLM.
-    await repo.addMessage(session.id, 'user', prompt.buildIntro({ nickname, grade, age }), true);
+    // Who the sitting is about, stored as an internal (meta) turn so the report
+    // call knows whose report it is writing. Data minimization: goal/notes stay
+    // in OUR db — this line carries nothing but nickname/grade/age.
+    //
+    // Starting a sitting does NOT call the model. It used to: a greeting was
+    // generated here and waited for before the parent could see question 1.
+    // The app serves the questions itself, so nothing ever displayed that
+    // greeting — it was a 30-second wait (a full minute when the model timed
+    // out) in front of a database insert, and two sittings back to back meant
+    // two of them, with the second usually the slower because the first had
+    // just spent the minute's quota. The model is now called once per sitting,
+    // for the report.
+    await repo.addMessage(session.id, 'user', prompt.childContext({ nickname, grade, age }), true);
 
-    const base = {
+    return res.status(201).json({
       session_id: session.id,
       session_token: token,
       child: { nickname, grade, age, goal, notes },
       status: 'active',
-    };
-
-    try {
-      const history = await repo.getMessages(session.id);
-      const out = await claude.complete({
-        system: prompt.systemPrompt(), model,
-        maxTokens: config.llm.conversationMaxTokens, messages: history,
-      });
-      await repo.addMessage(session.id, 'assistant', stripAnswerMarkers(out.text), false);
-      const updated = await repo.applyTurn(session.id, {
-        inputTokens: out.inputTokens, outputTokens: out.outputTokens, incTurn: true,
-      });
-      const messages = await repo.getMessages(session.id);
-      return res.status(201).json({ ...base, messages, progress: progressOf(updated), done: allDone(updated) });
-    } catch (err) {
-      // Log the real cause server-side (bad model / key / credits show up here)
-      // so operators can diagnose; the client only gets a generic message.
-      // eslint-disable-next-line no-console
-      console.error('[error] POST /api/sessions greeting failed session=' + session.id + ': ' + err.message);
-      // The session exists; let the client enter it and retry the first turn.
-      const messages = await repo.getMessages(session.id);
-      // Never surface upstream Claude error text to the client.
-      return res.status(201).json({
-        ...base, messages, progress: progressOf(session), done: false,
-        api_error: err.retryable
-          ? 'Claude javob bermadi. Qayta urinib ko‘ring.'
-          : 'Xatolik yuz berdi. Birozdan so‘ng qayta urinib ko‘ring.',
-      });
-    }
+      messages: await repo.getMessages(session.id),
+      progress: progressOf(session),
+      done: false,
+    });
   })
 );
 
@@ -340,8 +312,16 @@ router.post(
     const liveBankForReq = await require('../services/questionBank').load().catch(() => null);
     const scoredForReq = scoring.score(await repo.getAnswers(session.id), scoring.shapeOf(liveBankForReq));
 
-    const last = msgs[msgs.length - 1];
-    if (!(last && last.role === 'user' && last.meta)) {
+    // Appended once, however many times this is retried. The test is the
+    // marker, not "the last turn is a hidden one": the child-context turn is
+    // also a hidden user turn, and with the greeting gone it is the last
+    // message in a sitting nobody typed into — so a "is the last turn hidden?"
+    // check reads a brand-new session as one that has already been asked, and
+    // the model is sent a name with no request attached. It then answers
+    // conversationally and that reply is stored as the report.
+    const alreadyAsked = msgs.some((m) => m.role === 'user' && m.meta
+      && String(m.content || '').includes(prompt.REPORT_MARKER));
+    if (!alreadyAsked) {
       await repo.addMessage(session.id, 'user',
         prompt.buildReportRequest(child.nickname, partial, scoredForReq), true);
     }

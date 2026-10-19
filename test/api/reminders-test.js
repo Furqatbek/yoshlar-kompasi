@@ -148,8 +148,12 @@ const { authorize } = require('./auth-helper');
   await age(`UPDATE parents SET reminders_opted_out = FALSE WHERE telegram_chat_id = 855000333`);
 
   // ---- quiet hours --------------------------------------------------------
+  // The window is half-open (at or after FROM, before TO), so 0 -> 23 leaves
+  // hour 23 awake and this assertion failed for one hour a day — between 23:00
+  // and midnight Tashkent time, which is exactly when a "nothing runs at night"
+  // test ought to be at its most certain. 0 -> 24 covers every hour.
   process.env.REMIND_QUIET_FROM = '0';
-  process.env.REMIND_QUIET_TO = '23';
+  process.env.REMIND_QUIET_TO = '24';
   delete require.cache[require.resolve('../../server/config')];
   delete require.cache[require.resolve('../../server/services/reminders')];
   const nightly = require('../../server/services/reminders');

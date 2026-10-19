@@ -32,32 +32,34 @@ const REPORT = [
 // The app serves the questions and records the answers itself, so a reply that
 // claimed answers would be inventing them. The stub stays out of it.
 
-const REALISTIC = process.env.STUB_MODE === 'realistic';
-const GREETING = [
-  'Assalomu alaykum! Ali bilan mashg‘ulotni boshlaymiz.',
-  'Har bir savolga 1–5 oralig‘ida javob bering.',
-  '',
-  '> LEGO yoki konstruktor yig‘ishni yaxshi ko‘raman.',
-  '',
-  'Javobini yozing.',
-].join('\n');
-
-// An ordinary conversational turn. The app serves the questions and records the
-// answers itself now, so a reply never claims an answer — one that did would be
-// inventing them.
+// An ordinary conversational turn, kept for the /messages route. Starting a
+// sitting no longer calls the model at all, so there is no greeting to fake:
+// a stub that answered one would be covering for a request the app must not
+// make.
 const TURN = () => [
   'Savollarni ilovaning o‘zi ko‘rsatadi.',
   'Bola javoblarini belgilab boring; yakunda hisobot tayyorlanadi.',
 ].join('\n');
 
+// How many completions the app has asked for. A test can read it before and
+// after a step and assert on the difference, which is the only way to prove a
+// call did NOT happen — a missing greeting looks identical to a fast one from
+// the outside.
+let calls = 0;
+
 const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', (c) => (body += c));
   req.on('end', () => {
+    if (/\/__calls$/.test(req.url)) {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ calls }));
+    }
     if (!/\/chat\/completions$/.test(req.url)) {
       res.writeHead(404, { 'content-type': 'application/json' });
       return res.end(JSON.stringify({ error: { message: 'not found: ' + req.url } }));
     }
+    calls++;
     let payload = {};
     try { payload = JSON.parse(body); } catch (e) {}
     // Mimic real OpenRouter: model ids are namespaced vendor/model slugs. A bare
@@ -72,11 +74,7 @@ const server = http.createServer((req, res) => {
     // top-level `system` field.
     const lastUser = [...msgs].reverse().find((m) => m.role === 'user');
     const isReport = lastUser && /\[HISOBOT-SOROVI\]/i.test(lastUser.content || '');
-    const isGreeting = lastUser && /1-savoldan boshlang/i.test(lastUser.content || '');
-    let text;
-    if (isReport) text = REPORT;
-    else if (REALISTIC && isGreeting) text = GREETING; // no markers
-    else text = TURN();
+    const text = isReport ? REPORT : TURN();
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify({
       id: 'gen-stub', object: 'chat.completion', model: payload.model,

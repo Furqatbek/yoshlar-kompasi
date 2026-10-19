@@ -27,10 +27,11 @@ let pass = 0, fail = 0;
 function ok(name, cond, extra) { (cond ? pass++ : fail++); console.log((cond ? 'PASS ' : 'FAIL ') + name + (extra ? '  ' + extra : '')); }
 
 const TOKEN = 'testtok_ABCDEF123456';
-const GREETING = { role: 'assistant', content: 'Salom! Ali uchun birinchi savol:\n\n> Qizil, ko\'k, qizil, ... keyin nima?', meta: false };
+// One hidden turn and no greeting: starting a sitting does not call the model,
+// so this is everything a fresh session holds.
 const SESSION_PAYLOAD = {
   child: { nickname: 'Ali', grade: 2, age: 7, goal: '', notes: '' },
-  messages: [{ role: 'user', content: 'intro', meta: true }, GREETING],
+  messages: [{ role: 'user', content: 'child context', meta: true }],
   status: 'active',
   progress: { answered: 0, seen: 0, total: 70 },
   done: false, turn_count: 1, report: null,

@@ -68,7 +68,7 @@ sections below explain what is in it and why.
 |---|---|---|---|
 | `COOKIE_SECURE` | `true` (because `NODE_ENV=production`) | Safari refuses a Secure cookie over `http://` — admin login bounces back with no error | `false` |
 | `AUTH_REQUIRED` | `true` | the app refuses to boot without a real Telegram bot | `false` at first |
-| `RL_SESSIONS_PER_DAY` | `5` | you will hit it on your first afternoon of testing | `100` |
+| `RL_SESSIONS_PER_DAY` | `20` | per IP, per day — you will hit it on an afternoon of testing | `100` |
 
 ### Everything else, and what it does
 
@@ -245,8 +245,19 @@ docker compose run --rm \
   app node /app/test/live-smoke.js
 ```
 
-It drives one real sitting and hard-asserts the three things that matter — that
-the model quotes the questions verbatim, that it emits the `[JAVOBLAR:]` answer
-line (without it nothing is recorded and every area silently scores null), and
-that the report comes back with twelve scored areas. Run it against the free
-model and against a paid one and compare the output.
+It answers all seventy questions as a child with a deliberate shape — high on
+building and science, low on tidiness — and then asks for the report. One model
+call, a few cents at most: the app serves the questions and does the scoring,
+so the only thing the model writes is the report itself.
+
+That is what to read. The test hard-asserts the structure (twelve scored areas,
+the right sections, scores that match the answers it gave) and prints WARN lines
+for the judgement calls a weak model fails: does the report write about the
+areas the child actually scored highest on, does it stay inside what seventy
+agreement ratings can show, is it Uzbek. Then it prints the link. Open it.
+
+Run it against the free model and against a paid one and compare the two
+reports side by side — that is the decision, and nothing else settles it.
+
+`.env.local.example` sets `PAYMENTS_ENABLED=false`, so the link shows the whole
+report. With payments on you would see only the free sections.

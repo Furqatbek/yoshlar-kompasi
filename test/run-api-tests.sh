@@ -81,6 +81,10 @@ node test/api/auth-test.js
 
 echo "==== api: full flow (37 assertions) ===="
 node test/api/e2e-driver.js
+# Runs early, while the stub's call counter is still small and easy to read in
+# a failure message.
+echo "==== api: one model call per sitting ===="
+STUB_URL=http://127.0.0.1:5602 node test/api/one-call-test.js
 echo "==== api: idempotency + cross-device resume ===="
 node test/api/e2e-extra.js
 echo "==== api: right-to-erasure cascade ===="

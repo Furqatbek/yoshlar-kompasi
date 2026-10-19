@@ -51,7 +51,10 @@ function ok(name, cond, extra) { (cond ? pass++ : fail++); console.log((cond ? '
   await page.route('**/api/sessions', async (route) => {
     apiCalls++;
     console.log('  [route hit]', route.request().method(), 'call#' + apiCalls);
-    await new Promise((r) => setTimeout(r, 2000)); // simulate slow LLM greeting
+    // Creating a session is a database insert now, but it is still a network
+    // call that can be slow or refused, so the pending state and the
+    // double-click latch still have to hold.
+    await new Promise((r) => setTimeout(r, 2000));
     route.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ error: 'stub: upstream slow/down' }) });
   });
 
@@ -79,7 +82,7 @@ function ok(name, cond, extra) { (cond ? pass++ : fail++); console.log((cond ? '
   const pendingBtn = page.locator('button:has-text("Tayyorlanmoqda")');
   ok('button label flips to Tayyorlanmoqda…', await pendingBtn.count() === 1);
   ok('button is disabled while pending', await pendingBtn.first().isDisabled());
-  const hint = page.locator('text=birinchi savollarni tayyorlamoqda');
+  const hint = page.locator('text=Mashg\'ulot ochilmoqda');
   ok('waiting hint is shown', await hint.count() >= 1);
   ok('same-tick double-click fired only ONE api call', apiCalls === 1, 'calls=' + apiCalls);
 
@@ -89,6 +92,27 @@ function ok(name, cond, extra) { (cond ? pass++ : fail++); console.log((cond ? '
   ok('button restored after failure (retry possible)', await backBtn.count() === 1);
   const errText = await page.locator('body').innerText();
   ok('error surfaced to user', /stub: upstream slow\/down|Xatolik|xatosi/i.test(errText));
+
+  // ...and surfaced WHERE THEY PRESSED. The message used to render only in
+  // step 1, roughly a screen above this button, so a refused start — the daily
+  // session limit, most often — looked like a button that did nothing at all.
+  const err = page.locator('text=stub: upstream slow/down').first();
+  ok('the error is on screen, not above it', await err.isVisible());
+  // The deepest elements holding the text — the runtime may wrap an
+  // interpolated value in a span, so "leaf" is found rather than assumed.
+  const shown = await page.evaluate(() => {
+    const hit = [...document.querySelectorAll('body *')]
+      .filter((e) => /upstream slow/.test(e.textContent || ''))
+      .filter((e) => ![...e.children].some((c) => /upstream slow/.test(c.textContent || '')));
+    const btn = [...document.querySelectorAll('button')].find((b) => b.textContent.includes("Mashg'ulotni boshlash"));
+    const b = btn && btn.getBoundingClientRect();
+    return {
+      count: hit.length,
+      gap: b ? Math.min(...hit.map((m) => Math.abs(m.getBoundingClientRect().top - b.bottom))) : null,
+    };
+  });
+  ok('  within sight of the button', shown.gap != null && shown.gap < 120, 'gap=' + shown.gap + 'px');
+  ok('  and shown once, not twice', shown.count === 1, 'copies=' + shown.count);
 
   await b.close(); srv.close();
   console.log('\n==== ' + pass + ' passed, ' + fail + ' failed ====');

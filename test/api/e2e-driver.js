@@ -26,9 +26,16 @@ const { installAuth } = require('./auth-helper');
   ok('POST /api/sessions -> 201', r.status === 201, 'status=' + r.status);
   const sid = r.data.session_id, stok = r.data.session_token;
   ok('  returns session_id + token', !!sid && !!stok);
+  // Starting a sitting must not talk to the model. It used to generate a
+  // greeting here and wait for it — a reply the question screen never showed,
+  // in front of an insert that takes milliseconds. An assistant turn coming
+  // back from this call means the round trip is back.
   const visible = (r.data.messages || []).filter((m) => !m.meta);
-  ok('  greeting returned (non-meta assistant msg)', visible.some((m) => m.role === 'assistant'));
-  ok('  intro user turn is meta (hidden)', (r.data.messages || []).some((m) => m.role === 'user' && m.meta));
+  ok('  no model call: nothing visible is created', visible.length === 0,
+    JSON.stringify(visible).slice(0, 120));
+  ok('  only the hidden child-context turn is stored',
+    (r.data.messages || []).length === 1 && r.data.messages[0].role === 'user' && r.data.messages[0].meta,
+    JSON.stringify(r.data.messages).slice(0, 140));
   ok('  a fresh sitting has answered nothing',
     r.data.progress.seen === 0 && r.data.progress.total === 70, JSON.stringify(r.data.progress));
 

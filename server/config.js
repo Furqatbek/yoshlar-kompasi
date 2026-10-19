@@ -92,7 +92,13 @@ const config = {
   // Rate limits (spec §6). In-memory; single-instance. See README for scaling.
   rateLimit: {
     messagesPerMin: int(process.env.RL_MESSAGES_PER_MIN, 20),
-    newSessionsPerDayPerIp: int(process.env.RL_SESSIONS_PER_DAY, 5),
+    // Per IP, per day. Five was set when starting a sitting cost a model call,
+    // so an abandoned sitting still cost money; it no longer does — only a
+    // finished report calls the model, and that is one per session. The cap is
+    // now a brake on junk rows rather than on spend, and five was below what
+    // the actual customer does: a teacher works through a class on one school
+    // connection, and a family shares a router.
+    newSessionsPerDayPerIp: int(process.env.RL_SESSIONS_PER_DAY, 20),
     adminLoginPerMin: int(process.env.RL_ADMIN_LOGIN_PER_MIN, 5),
   },
 

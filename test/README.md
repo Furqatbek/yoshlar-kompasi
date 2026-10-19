@@ -28,6 +28,7 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 | `unit/bot-replies.test.js` | What the bot says back to `/start`, `/stop`, a shared or forwarded contact, an expired login and an unknown report. The API suites drive the real webhook shapes but swallow the bot's outbound sends, so nothing else looks at the replies; this stubs `fetch` and reads the `sendMessage` payloads. Every reply must be valid Telegram HTML — with `parse_mode` on, a stray `<` is a 400 and a message the parent never gets |
 | `api/auth-test.js` | Telegram login gate: nonce → `/start` → Share-contact → parent token; unauthorized start refused, nonce single-use, returning adult skips the phone, logout revokes |
 | `api/e2e-driver.js` | Full product flow: session → messages → contact → report → public report → admin (leads, detail, patch, stats, CSV) → parent dedupe |
+| `api/one-call-test.js` | How many times a sitting talks to the model: **once**, for the report. Starting a sitting and answering seventy questions make no upstream call at all, and a re-requested report returns the stored one. Reads the stub's call counter, because a greeting nobody renders looks exactly like no greeting from the outside — which is how a 30-second wait sat in front of a database insert, and why two sittings back to back felt like the service hanging. Also reads the stored report, since a request that reached the model without a report request still returns 200 with a share token |
 | `api/e2e-extra.js` | Retry idempotency, concurrent double-report, contact idempotency, cross-device resume |
 | `api/delete-test.js` | Right-to-erasure: admin lead delete cascades to children/sessions/reports |
 | `api/gate-test.js` | Report engagement gate: zero-answer report refused (even with model-emitted completion markers), allowed after a real answer |
@@ -45,13 +46,23 @@ parent row and a shared id would merge their leads.
 
 ## Live smoke test (real model, costs money)
 
-`BASE_URL=http://127.0.0.1:8080 node test/live-smoke.js` drives one short REAL
-session (greeting + 2 turns + report, ~$0.05-0.20) against a running app with a
-real LLM key. Hard-asserts the wire contract (session, report, ## sections,
-JSON levels block); prints WARN lines for prompt-quality signals (premature
-markers, fabricated-looking levels) and the report link for human review. Run
-after every prompt change and before every deploy — stub tests cannot catch a
-model that stops following the prompt.
+`BASE_URL=http://127.0.0.1:8080 node test/live-smoke.js` drives one REAL sitting
+against a running app with a real LLM key. It costs about $0.02-0.10: the model
+is called **once**, for the report. Starting the sitting and answering all
+seventy questions cost nothing, so this is a test of the report — which is the
+whole of what the model produces and the whole of what is sold.
+
+It answers a child with a deliberate shape (high on building and science, low
+on tidiness) and hard-asserts the wire contract plus that the scores it gets
+back are that child's. The prose is judged in WARN lines — whether the report
+writes about the areas the child actually scored highest on, whether it stays
+inside what seventy agreement ratings can show, whether it is Uzbek — and the
+link is printed for a human to read. Run it after every prompt change and
+before every deploy; a stub cannot catch a model that stops following the
+prompt. To compare models, point it at each in turn and read both reports.
+
+Against a build with payments on, the public link shows only the free sections
+— so for judging the whole report, run it against `PAYMENTS_ENABLED=false`.
 
 ## Browser suites (local only, not in CI)
 
@@ -63,6 +74,7 @@ production CSP — run `npm run build:web` in `server/` first:
 node test/browser/render-check.js    # app mounts, zero console errors under prod CSP
 node test/browser/start-btn-test.js  # start-button pending state; same-tick double-click fires ONE request
 node test/browser/exit-test.js       # quit-without-report -> resume banner -> resume works
+node test/browser/back-to-back-test.js  # two children in a row: a clean form for the second, the first still resumable
 node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
 node test/browser/auth-ui-test.js    # Telegram login card -> waiting state -> form unlocks from polling alone; survives reload
 node test/browser/landing-claims-test.js  # landing copy matches the server's config (needs TWO apps: see below)
@@ -117,7 +129,14 @@ the frame colour belongs to the letter rather than another accent, and that the
 letter is never split across a page break. Point it at the paid build with
 `API_PAID=…`.
 
-The other three suites mock the API with `page.route` and never reach a server,
+`back-to-back-test.js` is the teacher's afternoon: one child, then the next. It
+pins that returning to the setup screen opens a clean step 1 rather than the
+previous child's step 2 (which skipped the two-step guard and left the wrong
+name one tap from a new sitting), that the second sitting starts as quickly as
+the first, and that the reset is not a wipe — an unfinished sitting is still
+saved and still offered back.
+
+The other suites mock the API with `page.route` and never reach a server,
 so they call `stubLogin(page)` from `browser/auth-stub.js` **before**
 `page.goto` — it seeds the parent token and stubs `/api/auth/me`, leaving the
 page in the state an adult who logged in yesterday would see.
@@ -125,8 +144,9 @@ page in the state an adult who logged in yesterday would see.
 ## Stubs
 
 - `stubs/openrouter-stub.js` — OpenAI-format `/chat/completions`; rejects bare
-  (slash-less) model ids with 400 like real OpenRouter; `STUB_MODE=realistic`
-  makes the greeting markerless (no `[JAVOBLAR:]`) as a real greeting would be.
+  (slash-less) model ids with 400 like real OpenRouter. It answers the report
+  request and nothing else worth faking: starting a sitting makes no model
+  call, so a stub greeting would only hide one that should not happen.
 - `stubs/anthropic-stub.js` — Anthropic `/v1/messages` format.
 
 Both accept `STUB_PORT` to relocate.
