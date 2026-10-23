@@ -170,6 +170,17 @@ const server = app.listen(config.port, async () => {
   // eslint-disable-next-line no-console
   console.log('[llm] provider=' + config.llm.provider + ' model=' + claude.activeModel() + ' prompt=' + prompt.promptVersion());
 
+  // Whether the key works and the account can call that model. Both are
+  // configuration, and both were previously discovered by a child answering
+  // seventy questions and the one model call of the sitting coming back 401.
+  // Costs no tokens, and is never fatal.
+  try {
+    await require('./services/llmCheck').report();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[llm] provider check skipped: ' + err.message);
+  }
+
   // Whether Telegram is actually pointed at us. Nothing here is fatal, and it
   // costs one HTTP call at boot — against a login flow that otherwise fails by
   // going quiet, with no log line anywhere, because the thing that failed

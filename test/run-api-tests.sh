@@ -74,6 +74,9 @@ node test/unit/llm-guards.test.js
 echo "==== unit: is Telegram actually pointed at us ===="
 node test/unit/webhook-check.test.js
 
+echo "==== unit: does the key work, can we call that model ===="
+node test/unit/llm-check.test.js
+
 echo "==== unit: the type is ours and complete ===="
 node test/unit/fonts.test.js
 

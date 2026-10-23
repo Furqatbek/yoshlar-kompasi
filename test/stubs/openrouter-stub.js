@@ -55,6 +55,13 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'content-type': 'application/json' });
       return res.end(JSON.stringify({ calls }));
     }
+    // The key check the app runs at boot, so a test run does not print a
+    // provider warning about a stub that simply never implemented it. Not
+    // counted in `calls`: that counts generations, and this is not one.
+    if (/\/key$/.test(req.url)) {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ data: { label: 'stub', usage: 0, limit: null } }));
+    }
     if (!/\/chat\/completions$/.test(req.url)) {
       res.writeHead(404, { 'content-type': 'application/json' });
       return res.end(JSON.stringify({ error: { message: 'not found: ' + req.url } }));
