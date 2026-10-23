@@ -516,7 +516,17 @@ same one before and after payment, so nothing has to be re-sent once they buy.
 With Telegram login on, delivery is also reliable: every parent reached the
 assessment through the bot, so `DELIVERY_PROVIDER=telegram` pushes the report
 straight to their chat by `telegram_chat_id` — no deep-link dance, no
-prior-subscription problem. (That problem is why login exists: before it, a
+prior-subscription problem. **It pushes the PDF itself**, as a document with
+the message as its caption and the link still on a button: one send, and the
+report then lives in the chat and in Telegram's own storage rather than behind
+a tab the parent has to still have open in three months. A refused or
+undrawable file falls back to the message and the link, because a parent with
+a link is in a far better position than a parent with nothing.
+
+With payments on, nothing is unlocked when the report is written, so that
+first delivery is the message and the price; the file goes out when the
+payment lands (`PerformTransaction` → `delivery.pushPaidReport`), and that
+message says the payment was received instead of quoting the price again. (That problem is why login exists: before it, a
 bot deep-link silently did nothing for anyone who had not already started the
 bot.) The report screen still offers **Telegram orqali olish** for parents from
 the older anonymous flow, and the admin panel keeps a report link per lead for

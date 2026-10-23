@@ -103,6 +103,16 @@ async function performTransaction(params) {
   const performed = await repo.performPayment(p.id, now());
   // This is the moment the parent has bought the report.
   await repo.markOrderPaid(p.order_id);
+
+  // ...and the moment to hand it over. Not awaited: Payme needs this answer
+  // promptly, and an RPC that fails because Telegram was slow makes Payme
+  // retry a payment that already went through. A failed push leaves the report
+  // reachable at its link exactly as before.
+  require('../services/delivery').pushPaidReport(p.order_id).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error('[delivery] paid-report push failed for order ' + p.order_id + ': ' + err.message);
+  });
+
   return payme.txnResult(performed);
 }
 

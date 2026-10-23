@@ -41,7 +41,15 @@ router.post('/webhook', webhookLimiter, (req, res) => {
         if (config.delivery.provider !== 'telegram') return null;
         const r = await repo.getReportByShareToken(tok);
         if (!r) return null;
-        return { childNickname: r.nickname, reportUrl: reportUrl(req, tok) };
+        // One paywall check, both facts: whether this reader may read the
+        // whole report, and the file if so.
+        const d = await require('../services/reportFile').forDelivery(r);
+        return {
+          childNickname: r.nickname,
+          reportUrl: reportUrl(req, tok),
+          unlocked: d.unlocked,
+          getDocument: async () => d.document,
+        };
       },
       markDelivered: async (tok) => repo.markReportDelivered(tok),
 

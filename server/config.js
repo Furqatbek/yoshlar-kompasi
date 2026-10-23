@@ -133,6 +133,10 @@ const config = {
     telegram: {
       botToken: process.env.TELEGRAM_BOT_TOKEN || '',
       botUsername: process.env.TELEGRAM_BOT_USERNAME || '',
+      // Where the Bot API lives. Overridable for two reasons: a local mock, so
+      // the delivery path can be exercised end to end without a real bot, and
+      // a reverse proxy, for networks where api.telegram.org is not reachable.
+      apiBase: (process.env.TELEGRAM_API_BASE || 'https://api.telegram.org').replace(/\/+$/, ''),
     },
   },
 

@@ -635,6 +635,23 @@ async function isReportPaid(reportId) {
   return rows.length > 0;
 }
 
+// Everything needed to hand a just-paid report to its buyer, in one query:
+// the report itself, the child's name for the file, and the chat to send it
+// to. The parent is taken from the order when it has one and from the child
+// otherwise, since an order created on demand for an old report may not.
+async function getPaidReportTarget(orderId) {
+  const { rows } = await query(
+    `SELECT r.*, c.nickname, c.grade, p.telegram_chat_id
+       FROM orders o
+       JOIN reports r  ON r.id = o.report_id
+       JOIN children c ON c.id = r.child_id
+       LEFT JOIN parents p ON p.id = COALESCE(o.parent_id, c.parent_id)
+      WHERE o.id = $1`,
+    [orderId]
+  );
+  return rows[0] || null;
+}
+
 async function markOrderPaid(orderId) {
   const { rows } = await query(
     `UPDATE orders SET state = 'paid', paid_at = now()
@@ -839,6 +856,7 @@ module.exports = {
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,
   getReportBySession, createReport, getReportByShareToken, markReportDelivered,
+  getPaidReportTarget,
   getAdminByEmail, listLeads, getParent, getLeadChildren, updateLead, deleteParent, weeklyBuckets, tokenTotals,
   upsertParentByTelegram, setParentPhone, applyAuthConsent,
   createAuthRequest, getAuthRequest, bindAuthRequest, completeAuthRequest, consumeAuthRequest,

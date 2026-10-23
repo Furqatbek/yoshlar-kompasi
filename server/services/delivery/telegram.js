@@ -25,19 +25,37 @@ function authLink(nonce) {
   return deepLink(AUTH_PREFIX + nonce);
 }
 
-async function apiCall(method, payload) {
-  const url = 'https://api.telegram.org/bot' + config.delivery.telegram.botToken + '/' + method;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(15000),
-  });
+const apiUrl = (method) =>
+  config.delivery.telegram.apiBase + '/bot' + config.delivery.telegram.botToken + '/' + method;
+
+async function finish(method, res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
     throw new Error('telegram ' + method + ' failed: ' + (data.description || res.status));
   }
   return data.result;
+}
+
+async function apiCall(method, payload) {
+  return finish(method, await fetch(apiUrl(method), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(15000),
+  }));
+}
+
+// Uploads go as multipart, which is the only way Telegram accepts a file it
+// cannot fetch from a URL — and ours is behind an unguessable token on a host
+// Telegram may not be able to reach at all. A longer timeout than a text
+// message: this is an upload from a server that may be a long way from
+// Telegram's.
+async function apiUpload(method, form) {
+  return finish(method, await fetch(apiUrl(method), {
+    method: 'POST',
+    body: form,
+    signal: AbortSignal.timeout(60000),
+  }));
 }
 
 // A Telegram message is a message, not a page: one short paragraph, one button.
@@ -80,6 +98,28 @@ async function sendMessage(chatId, text, extra) {
   });
 }
 
+// The report as a file, in the chat. A link needs a browser, a signal and a
+// tab the parent still has open in three months; a document sits in the chat
+// and in Telegram's own storage, which is where a parent in Tashkent actually
+// keeps things. The caption carries the same words as the message it replaces
+// and the same button, so this is one message rather than two.
+//
+// Telegram's caption limit is 1024 characters — far above anything
+// reportMessage produces, but truncated rather than risking a 400 that would
+// lose the whole delivery.
+const CAPTION_MAX = 1024;
+async function sendDocument(chatId, { filename, buffer, caption, replyMarkup }) {
+  const form = new FormData();
+  form.append('chat_id', String(chatId));
+  form.append('document', new Blob([buffer], { type: 'application/pdf' }), filename);
+  if (caption) {
+    form.append('caption', String(caption).slice(0, CAPTION_MAX));
+    form.append('parse_mode', 'HTML');
+  }
+  if (replyMarkup) form.append('reply_markup', JSON.stringify(replyMarkup));
+  return apiUpload('sendDocument', form);
+}
+
 // One-tap phone sharing. Telegram fills the number from the account itself, so
 // it arrives verified — no OTP round-trip, no typos.
 const CONTACT_KEYBOARD = {
@@ -93,15 +133,21 @@ const HIDE_KEYBOARD = { remove_keyboard: true };
 // states the split before they spend the evening; saying nothing here and
 // letting them discover eight locked sections after tapping would undo exactly
 // that. So when the report is sold, the message says so — before the tap.
-function reportMessage(childNickname, url) {
+// `unlocked` is whether this reader may read the whole thing. It matters here
+// and not only at the paywall: the same message goes out when the report is
+// written and again when it is bought, and quoting the price to someone who
+// has just paid it reads as a demand for money they already sent.
+function reportMessage(childNickname, url, { unlocked = false } = {}) {
   const name = esc(childNickname);
   const lines = ['<b>' + name + '</b> uchun hisobot tayyor.'];
-  if (config.payments.enabled) {
+  if (config.payments.enabled && !unlocked) {
     const price = Number(config.payments.priceUzs).toLocaleString('en-US').replace(/,/g, ' ') + ' so‘m';
     lines.push(
       'Bepul: kuchli tomonlari va ' + name + ' uchun xat.\n' +
       'Qolgan sakkiz qism — ' + esc(price) + ', bir marta. Havola doim ishlaydi.'
     );
+  } else if (config.payments.enabled) {
+    lines.push('To‘lov qabul qilindi — hisobotning hamma qismi ochiq. Havola doim ishlaydi.');
   } else {
     lines.push('O‘n qismning hammasi ochiq. Havola doim ishlaydi.');
   }
@@ -109,9 +155,40 @@ function reportMessage(childNickname, url) {
   return { text: lines.join('\n\n'), reply_markup: linkButton('Hisobotni ochish', url) };
 }
 
+// Send the report to a chat: as a file when the reader is entitled to the whole
+// thing, as a message with a link when they are not.
+//
+// `getDocument` is a function rather than a buffer because drawing the PDF
+// costs something and most calls never reach here — no chat id, a locked
+// report, Telegram not configured. It is called at the last possible moment.
+//
+// A failed upload falls back to the plain message rather than failing the
+// delivery. The parent getting a link is a much better outcome than the parent
+// getting nothing because Telegram was slow.
+async function pushReport(chatId, childNickname, reportUrl, getDocument, unlocked) {
+  const m = reportMessage(childNickname, reportUrl, { unlocked });
+  if (getDocument) {
+    try {
+      const doc = await getDocument();
+      if (doc && doc.buffer && doc.buffer.length) {
+        await sendDocument(chatId, {
+          filename: doc.filename, buffer: doc.buffer,
+          caption: m.text, replyMarkup: m.reply_markup,
+        });
+        return { status: 'sent', channel: 'telegram', document: true };
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[delivery] telegram sendDocument failed, falling back to a link: ' + err.message);
+    }
+  }
+  await sendMessage(chatId, m.text, { reply_markup: m.reply_markup });
+  return { status: 'sent', channel: 'telegram', document: false };
+}
+
 const provider = {
   name: 'telegram',
-  async deliver({ reportUrl, shareToken, chatId, childNickname }) {
+  async deliver({ reportUrl, shareToken, chatId, childNickname, getDocument, unlocked }) {
     if (!configured()) {
       // No bot configured — let the caller fall back to console.
       return { status: 'skipped', channel: 'telegram', reason: 'not_configured' };
@@ -119,11 +196,7 @@ const provider = {
     // Since authorization happens up front we usually already hold the chat id,
     // so the report can be pushed immediately instead of waiting for the parent
     // to discover a deep link.
-    if (chatId) {
-      const m = reportMessage(childNickname, reportUrl);
-      await sendMessage(chatId, m.text, { reply_markup: m.reply_markup });
-      return { status: 'sent', channel: 'telegram' };
-    }
+    if (chatId) return pushReport(chatId, childNickname, reportUrl, getDocument, unlocked);
     // Legacy parents (contact-gate era) have no chat: hand back the deep link
     // and let the /start handler finish delivery.
     return { status: 'pending', channel: 'telegram', link: deepLink(shareToken), reportUrl };
@@ -248,12 +321,13 @@ async function handleUpdate(update, deps) {
     ).catch(() => {});
     return;
   }
-  const rm = reportMessage(rep.childNickname, rep.reportUrl);
-  await sendMessage(chatId, rm.text, { reply_markup: rm.reply_markup });
+  // Same delivery as the push above, file and all: a parent arriving by deep
+  // link is owed the same thing as one we could reach directly.
+  await pushReport(chatId, rep.childNickname, rep.reportUrl, rep.getDocument, rep.unlocked);
   await deps.markDelivered(payload);
 }
 
 module.exports = {
   name: 'telegram', provider, configured, deepLink, authLink, AUTH_PREFIX,
-  sendMessage, handleUpdate, reportMessage, esc, linkButton,
+  sendMessage, sendDocument, handleUpdate, reportMessage, esc, linkButton,
 };

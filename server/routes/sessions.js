@@ -403,6 +403,15 @@ router.post(
         reportUrl: reportUrl(req, shareTok), shareToken: shareTok,
         chatId: reportParent.telegram_chat_id || null,
         parentPhone: reportParent.phone, childNickname: child.nickname,
+        // The file itself, so the report arrives in the chat rather than as a
+        // link to a tab the parent has to still have open in three months.
+        // Lazy: only drawn if there is somewhere to send it, and null while
+        // the report is still behind the paywall — which at this moment it
+        // always is on a paid deployment, since nobody has had the chance to
+        // buy it yet. That case is handled when the payment lands.
+        unlocked: !config.payments.enabled,
+        getDocument: async () =>
+          (await require('../services/reportFile').forDeliveryByToken(shareTok)).document,
       });
       if (deliveryInfo.status === 'sent') {
         await repo.markReportDelivered(shareTok);
