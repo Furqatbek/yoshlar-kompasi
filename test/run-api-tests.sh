@@ -24,6 +24,11 @@ export DELIVERY_PROVIDER=console
 export TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-test-bot-token}"
 export TELEGRAM_BOT_USERNAME="${TELEGRAM_BOT_USERNAME:-kompas_test_bot}"
 export TELEGRAM_WEBHOOK_SECRET="${TELEGRAM_WEBHOOK_SECRET:-test-webhook-secret}"
+# ...and point the Bot API at a dead local port so "expected to fail" fails in a
+# millisecond, locally, instead of travelling to api.telegram.org with a fake
+# token on every run. A test suite should not depend on a third party being up,
+# or tell it anything.
+export TELEGRAM_API_BASE="${TELEGRAM_API_BASE:-http://127.0.0.1:1}"
 # Paid reports. The Payme integration is inbound (Payme calls us), so the
 # suite plays Payme itself and no sandbox credentials are needed — the key
 # below is simply the shared secret both sides check.
@@ -65,6 +70,9 @@ node test/unit/database-url.test.js
 
 echo "==== unit: when the model answers 200 with nothing usable ===="
 node test/unit/llm-guards.test.js
+
+echo "==== unit: is Telegram actually pointed at us ===="
+node test/unit/webhook-check.test.js
 
 echo "==== unit: the type is ours and complete ===="
 node test/unit/fonts.test.js

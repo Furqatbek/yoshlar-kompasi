@@ -169,6 +169,17 @@ const server = app.listen(config.port, async () => {
   const prompt = require('./services/prompt');
   // eslint-disable-next-line no-console
   console.log('[llm] provider=' + config.llm.provider + ' model=' + claude.activeModel() + ' prompt=' + prompt.promptVersion());
+
+  // Whether Telegram is actually pointed at us. Nothing here is fatal, and it
+  // costs one HTTP call at boot — against a login flow that otherwise fails by
+  // going quiet, with no log line anywhere, because the thing that failed
+  // never reached us.
+  try {
+    await require('./services/delivery/webhookCheck').report();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[telegram] webhook check skipped: ' + err.message);
+  }
 });
 
 function shutdown(sig) {

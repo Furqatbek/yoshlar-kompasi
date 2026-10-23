@@ -22,10 +22,37 @@ const webhookLimiter = rateLimit({
 // the bot with the report's share token. Acknowledge fast, process after.
 // Fails closed: without a configured shared secret the endpoint is disabled,
 // so forged updates can never trigger a send or flip delivery state.
+// Both rejections below used to be silent, and both of them stop every login
+// in the deployment dead. Telegram does not tell the parent, the page just
+// waits, and the app log said nothing at all — so the one place that knew the
+// webhook was being turned away never mentioned it. Now it does, at most once
+// a minute per reason so a flood of forged posts cannot fill the disk, with a
+// count of what it swallowed in between.
+const rejectLog = new Map();
+function noteRejection(reason, detail) {
+  const now = Date.now();
+  const seen = rejectLog.get(reason) || { at: 0, since: 0 };
+  seen.since += 1;
+  if (now - seen.at < 60000) { rejectLog.set(reason, seen); return; }
+  // eslint-disable-next-line no-console
+  console.warn('[telegram] webhook rejected: ' + detail
+    + (seen.since > 1 ? ' (' + seen.since + ' in the last minute)' : ''));
+  rejectLog.set(reason, { at: now, since: 0 });
+}
+
 router.post('/webhook', webhookLimiter, (req, res) => {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET || '';
-  if (!secret) return res.sendStatus(503); // webhook not configured
+  if (!secret) {
+    noteRejection('unconfigured',
+      'TELEGRAM_WEBHOOK_SECRET is not set, so the endpoint is disabled — no '
+      + 'login can complete and no report can be delivered');
+    return res.sendStatus(503); // webhook not configured
+  }
   if (!timingSafeEqual(req.get('x-telegram-bot-api-secret-token') || '', secret)) {
+    noteRejection('bad-secret',
+      'secret token did not match. If this is Telegram and not a forged post, '
+      + 'TELEGRAM_WEBHOOK_SECRET differs from the secret_token the webhook was '
+      + 'registered with — re-run setWebhook with the current value');
     return res.sendStatus(401);
   }
   res.json({ ok: true });
