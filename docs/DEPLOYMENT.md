@@ -139,7 +139,7 @@ OPENROUTER_MODEL=anthropic/claude-sonnet-4.6
 JWT_SECRET=<openssl rand -base64 48>
 ADMIN_EMAIL=admin@careerkids.uz
 ADMIN_PASSWORD=<strong>
-POSTGRES_PASSWORD=<strong>
+POSTGRES_PASSWORD=<openssl rand -hex 32>       # -hex, not -base64: see below
 COOKIE_SECURE=true                             # (default in prod)
 
 DELIVERY_PROVIDER=telegram                     # report PDF into the parent's chat
@@ -153,6 +153,14 @@ BILLING_ALERT_MIN_USD=5                        # daily credit-check threshold
 `PUBLIC_BASE_URL` is not decoration: report links, the Payme return and the
 bot's deep links are all built from it. Wrong, and the links in a parent's chat
 point somewhere else.
+
+**Generate `POSTGRES_PASSWORD` with `openssl rand -hex 32`, not `-base64`.**
+Compose interpolates it into `DATABASE_URL`, and base64 emits a `/` about four
+times in ten, which makes the URL unparsable — the app refuses to start and
+names the character. `%` is worse than fatal: it parses, then percent-decodes,
+so pg sends a different password than the one in `.env`. If you need to change
+it after the fact, the volume has to be recreated too — Postgres only reads
+`POSTGRES_PASSWORD` when it initialises its data directory.
 
 Three more worth a decision rather than a default:
 
@@ -329,6 +337,8 @@ encryption, and keep backup copies OFF the machine.
 
 | Symptom | Cause / fix |
 |---|---|
+| app crash-loops: `DATABASE_URL is not a parsable URL ... contains "/"` | `POSTGRES_PASSWORD` contains a character a URL cannot hold (`/`, `?`, `#`). Replace it with `openssl rand -hex 32` — and recreate the volume, because Postgres only read the old one at init: `docker compose down -v` (**this deletes the database**; harmless before launch, a restore-from-backup job afterwards). |
+| app crash-loops: `password authentication failed for user yik` | Either the volume was initialised with a different `POSTGRES_PASSWORD` than the one in `.env` now, or the password contains a `%` and was percent-decoded on the way to pg. Same fix as above. |
 | Boot fails: `OPENROUTER_MODEL="..." is not a valid OpenRouter slug` | OpenRouter needs `vendor/model` slugs with DOT versions (`anthropic/claude-sonnet-4.6`), not Anthropic ids (`claude-sonnet-4-6`). Deliberate fail-fast at boot. |
 | `POST .../report` → 504/timeout | The report is one 1–3 min LLM call. `REPORT_TIMEOUT_MS` default 180000; bundled nginx allows 300 s. If Cloudflare or another proxy sits in front, raise ITS read timeout too. |
 | **The domain shows "Welcome to nginx!"** | nginx is running on the stock config that ships in its image: port 80, no TLS, no app. Every container still reports healthy, which is why this is the one failure that looks like success. The rendering of `deploy/nginx/*.template` happens inside the image's entrypoint, and that entrypoint only runs it when its first argument is `nginx` — so a `command:` on the nginx service skips it in silence. There is now a guard: `deploy/nginx/entrypoint.d/99-reload-and-verify.sh` refuses to start on an unrendered config, and `test/unit/compose-env.test.js` fails if the override comes back. If you see the welcome page, the guard is not mounted. |

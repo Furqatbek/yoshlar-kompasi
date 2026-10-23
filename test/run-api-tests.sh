@@ -60,6 +60,9 @@ node test/unit/bot-replies.test.js
 echo "==== unit: compose passes every setting through ===="
 node test/unit/compose-env.test.js
 
+echo "==== unit: what a bad DATABASE_URL says ===="
+node test/unit/database-url.test.js
+
 echo "==== unit: the type is ours and complete ===="
 node test/unit/fonts.test.js
 
