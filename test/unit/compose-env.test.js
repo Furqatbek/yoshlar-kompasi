@@ -33,7 +33,7 @@ const HOST_ONLY = new Set([
   'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', // compose builds DATABASE_URL from these
   'DATABASE_URL',        // assembled per service, pointing at the db service
   'APP_PORT',            // a port mapping, not an app setting
-  'DOMAIN', 'LETSENCRYPT_DIR', // nginx/certbot wiring
+  'DOMAIN', 'DOMAIN_ALIASES', 'LETSENCRYPT_DIR', // nginx/certbot wiring, checked below
   'NODE_ENV',            // pinned to production in the image
 ]);
 
@@ -72,14 +72,22 @@ const SERVICE_OF = {
 // starts at two spaces, and its environment entries are the SCREAMING_CASE
 // keys nested under it. Regex-slicing a block structure is how this test
 // failed the first time it was written.
-function envOf(service) {
+function blockOf(service) {
   const lines = compose.split('\n');
   const start = lines.findIndex((l) => l === '  ' + service + ':');
-  if (start < 0) return {};
-  const out = {};
+  if (start < 0) return [];
+  const out = [];
   for (let i = start + 1; i < lines.length; i++) {
     const line = lines[i];
     if (/^\S/.test(line) || /^  [a-z_-]+:/.test(line)) break; // next service or top level
+    out.push(line);
+  }
+  return out;
+}
+
+function envOf(service) {
+  const out = {};
+  for (const line of blockOf(service)) {
     const m = /^      ([A-Z][A-Z0-9_]*):\s*(.*)$/.exec(line);
     if (m) out[m[1]] = m[2];
   }
@@ -88,6 +96,7 @@ function envOf(service) {
 
 const APP = envOf('app');
 const CRON = envOf('cron');
+const NGINX = envOf('nginx');
 
 test('the compose file parses into app and cron environment blocks', () => {
   assert.ok(APP.DATABASE_URL, 'app env block not found');
@@ -136,6 +145,69 @@ test('no setting is wired to a differently-named variable', () => {
   }
   // DATABASE_URL is assembled from the POSTGRES_* parts, so it has several.
   assert.deepStrictEqual(mismatched, [], mismatched.join('\n  '));
+});
+
+// ---- nginx: the same failure mode, one layer out -------------------------
+//
+// The reverse proxy's real config is a template. It is rendered by the official
+// image's entrypoint, which runs its /docker-entrypoint.d/ scripts ONLY when
+// its first argument is `nginx`. Give the service a `command:` of its own and
+// the whole step is skipped without a word — nginx then starts on the stock
+// default.conf that ships in the image, which is the "Welcome to nginx!" page
+// on port 80 and no TLS listener at all, while every container reports healthy
+// and `docker compose ps` looks perfect.
+//
+// This is not hypothetical. The nginx service carried a `command:` override for
+// a 6-hourly reload loop, and the first time the prod profile was actually
+// started the domain served the nginx welcome page over plain HTTP.
+
+const NGINX_BLOCK = blockOf('nginx').join('\n');
+const template = fs.readFileSync(
+  path.join(ROOT, 'deploy', 'nginx', 'default.conf.template'), 'utf8');
+const CHECK = 'deploy/nginx/entrypoint.d/99-reload-and-verify.sh';
+
+test('the nginx block parses', () => {
+  assert.ok(/image:\s*nginx:/.test(NGINX_BLOCK), 'nginx service block not found');
+});
+
+test('the nginx service leaves the image entrypoint alone', () => {
+  const command = /^\s{4}command:\s*(.*)$/m.exec(NGINX_BLOCK);
+  // If a command is ever needed again, it has to start with `nginx` for the
+  // template step to run at all.
+  if (command) {
+    assert.ok(/^\[?\s*"?nginx/.test(command[1].trim()),
+      'nginx `command:` must start with nginx, or the config template is never\n'
+      + 'rendered and the site becomes the stock welcome page: ' + command[1]);
+  }
+});
+
+test('every placeholder in the nginx template reaches the nginx container', () => {
+  // envsubst only substitutes variables that exist in the environment; it
+  // leaves an undefined ${VAR} as literal text, and nginx then refuses to
+  // parse it. An empty value is fine — being absent is not.
+  const directives = template.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  const used = [...new Set([...directives.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)].map((m) => m[1]))];
+  assert.ok(used.includes('DOMAIN'), 'template no longer uses ${DOMAIN}: check this test');
+  const missing = used.filter((n) => !(n in NGINX));
+  assert.deepStrictEqual(missing, [],
+    'used in deploy/nginx/default.conf.template but not in the nginx service '
+    + 'environment:\n  ' + missing.join('\n  '));
+});
+
+test('the rendered config is checked before nginx serves it', () => {
+  // Checked before the mount itself, because mounting the directory is the
+  // tempting way to do this and the worse one: it hides the image's own
+  // entrypoint scripts, including the one that renders the template.
+  assert.ok(!/entrypoint\.d:\/docker-entrypoint\.d/.test(NGINX_BLOCK),
+    'mount the check script as a file; mounting the directory hides the '
+    + 'image\'s own entrypoint scripts, and rendering is one of them');
+  assert.ok(NGINX_BLOCK.includes(CHECK + ':/docker-entrypoint.d/'),
+    CHECK + ' must be mounted into /docker-entrypoint.d/ — it is what turns a '
+    + 'silently unrendered config into a refusal to start');
+  const mode = fs.statSync(path.join(ROOT, CHECK)).mode;
+  assert.ok(mode & 0o111,
+    CHECK + ' is not executable, and the entrypoint silently ignores a '
+    + 'non-executable script — chmod +x it and commit the mode');
 });
 
 console.log('\n' + pass + ' passed, 0 failed  (' + documented.length + ' settings checked)');

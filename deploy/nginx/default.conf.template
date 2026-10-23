@@ -1,10 +1,16 @@
-# Reverse proxy for CareerKids. ${DOMAIN} is substituted from the
-# environment by the official nginx image's template mechanism; nginx's own
-# runtime variables ($host, $request_uri, ...) are left untouched.
+# Reverse proxy for CareerKids. ${DOMAIN} and ${DOMAIN_ALIASES} are substituted
+# from the environment by the official nginx image's template mechanism (which
+# only runs when the service does NOT override `command` — see
+# entrypoint.d/99-reload-and-verify.sh); nginx's own runtime variables ($host,
+# $request_uri, ...) are left untouched.
+#
+# Every ${VAR} here must be present in the nginx service's environment, empty or
+# not: envsubst leaves an undefined one as literal text, and nginx then refuses
+# to parse it.
 
 server {
   listen 80;
-  server_name ${DOMAIN};
+  server_name ${DOMAIN} ${DOMAIN_ALIASES};
 
   # ACME webroot for certbot renewals (shared volume with the certbot service).
   location /.well-known/acme-challenge/ {
@@ -19,12 +25,19 @@ server {
 server {
   listen 443 ssl;
   http2 on;
-  server_name ${DOMAIN};
+  server_name ${DOMAIN} ${DOMAIN_ALIASES};
 
   ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
   ssl_protocols TLSv1.2 TLSv1.3;
   ssl_session_cache shared:SSL:10m;
+
+  # One canonical host. Report links, the Payme return URL and the Telegram
+  # deep links are all built from PUBLIC_BASE_URL, so an alias like www. has to
+  # end up at the same origin rather than quietly serving a second one.
+  if ($host != ${DOMAIN}) {
+    return 301 https://${DOMAIN}$request_uri;
+  }
 
   client_max_body_size 1m;
 

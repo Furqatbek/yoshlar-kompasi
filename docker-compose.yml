@@ -150,15 +150,32 @@ services:
         condition: service_started
     environment:
       DOMAIN: ${DOMAIN:-localhost}
+      # Extra names this server answers on, space separated — typically
+      # "www.${DOMAIN}". They are redirected to DOMAIN, so the certificate has
+      # to cover them (see `make cert ... ALIASES=...`) or visitors get a
+      # certificate warning before the redirect. Empty, but still passed: an
+      # undefined variable is left as literal text in the config and nginx then
+      # refuses to parse it.
+      DOMAIN_ALIASES: ${DOMAIN_ALIASES:-}
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./deploy/nginx:/etc/nginx/templates:ro
+      # Checks that the template above actually got rendered, then reloads every
+      # 6h so renewed certificates are picked up without downtime. Mounted as a
+      # single file on purpose: mounting the directory would hide the image's
+      # own entrypoint scripts, one of which does the rendering.
+      - ./deploy/nginx/entrypoint.d/99-reload-and-verify.sh:/docker-entrypoint.d/99-reload-and-verify.sh:ro
       - ${LETSENCRYPT_DIR:-./letsencrypt}:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot
-    # Reload every 6h so renewed certificates are picked up without downtime.
-    command: ["/bin/sh", "-c", "while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec nginx -g 'daemon off;'"]
+    # No `command:` override here, and that is deliberate — the image's default
+    # (nginx -g 'daemon off;') is what we want anyway. The entrypoint runs the
+    # /docker-entrypoint.d/ scripts, which render deploy/nginx/*.template into
+    # the live config, ONLY when its first argument is `nginx`. Override the
+    # command and that step is skipped in silence: nginx then serves its stock
+    # welcome page on port 80 with no TLS listener at all, and every container
+    # still reports healthy.
 
   # Automatic certificate renewal (webroot) — production only.
   certbot:

@@ -55,10 +55,16 @@ prod-logs:
 
 # Initial certificate issuance (standalone; needs port 80 free — run BEFORE
 # prod-up, or `make prod-down` first). Renewals are automatic afterwards.
+#
+# ALIASES is optional and space separated — extra names on the SAME
+# certificate, typically www.<domain>. Every name needs its own DNS record
+# pointing here first: certbot verifies them all and one failure fails the
+# whole request. Whatever you put here also belongs in DOMAIN_ALIASES in .env,
+# or nginx will not answer on it.
 cert:
-	@test -n "$(DOMAIN)" || (echo "Usage: make cert DOMAIN=kompas.example.uz EMAIL=you@example.com"; exit 1)
-	@test -n "$(EMAIL)" || (echo "Usage: make cert DOMAIN=kompas.example.uz EMAIL=you@example.com"; exit 1)
-	docker run --rm -p 80:80 -v $$(pwd)/letsencrypt:/etc/letsencrypt certbot/certbot certonly --standalone -d $(DOMAIN) -m $(EMAIL) --agree-tos --no-eff-email
+	@test -n "$(DOMAIN)" || (echo "Usage: make cert DOMAIN=careerkids.uz EMAIL=you@example.com [ALIASES='www.careerkids.uz']"; exit 1)
+	@test -n "$(EMAIL)" || (echo "Usage: make cert DOMAIN=careerkids.uz EMAIL=you@example.com [ALIASES='www.careerkids.uz']"; exit 1)
+	docker run --rm -p 80:80 -v $$(pwd)/letsencrypt:/etc/letsencrypt certbot/certbot certonly --standalone -d $(DOMAIN) $(foreach a,$(ALIASES),-d $(a)) -m $(EMAIL) --agree-tos --no-eff-email
 
 down:
 	$(COMPOSE) down
