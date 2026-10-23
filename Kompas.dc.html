@@ -755,6 +755,128 @@ input, textarea, button, select { font-family: var(--font-body); }
 </div>
 </sc-if>
 
+<!-- The reading diary (§19). Parent-facing and kept over months, so it hangs
+     off its own route rather than living inside a sitting. Every field is
+     optional except the book‘s name: a blank means the child did not say, and
+     filling one in would be the product inventing an opinion for a child. -->
+<sc-if value="{{ isDiary }}" hint-placeholder-val="{{ false }}">
+<main data-screen-label="Kitobxonlik kundaligi" style="flex: 1;">
+  <div style="max-width: 760px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);">
+    <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-1);">Kitobxonlik</h6>
+    <h2 style="margin-bottom: var(--space-2);">Kundalik</h2>
+    <p class="text-muted" style="max-width: 56ch; margin-bottom: var(--space-6);">{{ dyIntro }}</p>
+
+    <sc-if value="{{ dyNeedsLogin }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px solid var(--color-divider); padding: var(--space-6); text-align: center;">
+        <p class="text-muted" style="margin-bottom: var(--space-4);">Kundalikni ko‘rish uchun Telegram orqali tizimga kiring.</p>
+        <a class="btn btn-primary" href="#/boshlash">Tizimga kirish</a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ dyReady }}" hint-placeholder-val="{{ true }}">
+      <!-- Whose diary. Only shown when there is a choice to make. -->
+      <sc-if value="{{ dyManyChildren }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: var(--space-5);">
+          <sc-for list="{{ dyChildren }}" as="c" hint-placeholder-count="2">
+            <button type="button" onClick="{{ c.pick }}" class="{{ c.cls }}" style="cursor: pointer;">{{ c.label }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ dyEmpty }}" hint-placeholder-val="{{ false }}">
+        <p class="text-muted" style="margin-bottom: var(--space-5);">Hali kitob qo‘shilmagan. Birinchi kitobni quyida qo‘shing.</p>
+      </sc-if>
+
+      <sc-for list="{{ dyEntries }}" as="e" hint-placeholder-count="2">
+        <div data-entry-status="{{ e.status }}" style="border: 1px solid var(--color-divider); border-left: 3px solid {{ e.accent }}; padding: var(--space-4); margin-bottom: var(--space-3); background: var(--color-neutral-100);">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;">
+            <p style="margin: 0; font-family: var(--font-heading); font-weight: 600; font-size: 18px;">{{ e.title }}</p>
+            <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: {{ e.accent }};">{{ e.statusLabel }}</span>
+          </div>
+          <p class="text-muted" style="margin: 4px 0 0; font-size: 14px;">{{ e.meta }}</p>
+          <sc-if value="{{ e.hasNotes }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: var(--space-3) 0 0; font-size: 15px; white-space: pre-wrap;">{{ e.notes }}</p>
+          </sc-if>
+          <div style="display: flex; gap: var(--space-2); margin-top: var(--space-3); flex-wrap: wrap;">
+            <button type="button" class="btn btn-ghost" onClick="{{ e.edit }}" style="cursor: pointer; font-size: 14px;">Tahrirlash</button>
+            <button type="button" class="btn btn-ghost" onClick="{{ e.remove }}" style="cursor: pointer; font-size: 14px;">O‘chirish</button>
+          </div>
+        </div>
+      </sc-for>
+
+      <!-- Add or edit. One form, because a diary entry grows over time: the
+           child starts a book, then has something to say about it later. -->
+      <div style="border: 1px solid var(--color-text); padding: var(--space-5); margin-top: var(--space-6);">
+        <h4 style="margin-bottom: var(--space-4);">{{ dyFormTitle }}</h4>
+        <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <div class="field">
+            <label for="dy-title">Kitob nomi *</label>
+            <input class="input" id="dy-title" value="{{ dyTitle }}" onChange="{{ dyOnTitle }}" placeholder="Masalan: Kichkina shahzoda">
+          </div>
+          <div class="field">
+            <label for="dy-author">Muallif</label>
+            <input class="input" id="dy-author" value="{{ dyAuthor }}" onChange="{{ dyOnAuthor }}">
+          </div>
+          <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+            <div class="field" style="flex: 1; min-width: 150px;">
+              <label for="dy-start">Boshlangan sana</label>
+              <input class="input" id="dy-start" type="date" value="{{ dyStart }}" onChange="{{ dyOnStart }}">
+            </div>
+            <div class="field" style="flex: 1; min-width: 150px;">
+              <label for="dy-finish">Tugatilgan sana</label>
+              <input class="input" id="dy-finish" type="date" value="{{ dyFinish }}" onChange="{{ dyOnFinish }}">
+            </div>
+          </div>
+          <div class="field">
+            <label for="dy-moment">Eng qiziq voqea</label>
+            <textarea class="input" id="dy-moment" rows="2" value="{{ dyMoment }}" onChange="{{ dyOnMoment }}"></textarea>
+          </div>
+          <div class="field">
+            <label for="dy-character">Sevimli qahramon</label>
+            <input class="input" id="dy-character" value="{{ dyCharacter }}" onChange="{{ dyOnCharacter }}">
+          </div>
+          <div class="field">
+            <label for="dy-unclear">Tushunmagan yoki savol tug‘dirgan joy</label>
+            <textarea class="input" id="dy-unclear" rows="2" value="{{ dyUnclear }}" onChange="{{ dyOnUnclear }}"></textarea>
+          </div>
+          <div class="field">
+            <label for="dy-opinion">Bolaning kitob haqidagi fikri</label>
+            <textarea class="input" id="dy-opinion" rows="2" value="{{ dyOpinion }}" onChange="{{ dyOnOpinion }}"></textarea>
+          </div>
+          <div class="field">
+            <label for="dy-discussed">Kattalar bilan muhokama qilingan savollar</label>
+            <textarea class="input" id="dy-discussed" rows="2" value="{{ dyDiscussed }}" onChange="{{ dyOnDiscussed }}"></textarea>
+          </div>
+          <div class="field">
+            <label for="dy-next">Keyingi kitob uchun bolaning tanlovi</label>
+            <input class="input" id="dy-next" value="{{ dyNext }}" onChange="{{ dyOnNext }}">
+          </div>
+
+          <!-- §19: a book is not finished because a form was submitted. The
+               checkbox and the date move together, and the server refuses one
+               without the other. -->
+          <label style="display: flex; align-items: flex-start; gap: var(--space-3); cursor: pointer;">
+            <input type="checkbox" checked="{{ dyFinishedVal }}" onChange="{{ dyOnFinished }}" style="margin-top: 3px;">
+            <span style="font-size: 15px;">Bola bu kitobni o‘qib tugatdi. <span class="text-muted">Buning uchun tugatilgan sanani ham yozing — o‘qilmagan kitob tugatilgan deb belgilanmaydi.</span></span>
+          </label>
+
+          <sc-if value="{{ dyError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" style="color: var(--color-accent-700); font-weight: 600; font-size: 14px; margin: 0;">{{ dyError }}</p>
+          </sc-if>
+
+          <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" onClick="{{ dySave }}" style="cursor: pointer;">Saqlash</button>
+            <sc-if value="{{ dyEditing }}" hint-placeholder-val="{{ false }}">
+              <button type="button" class="btn btn-ghost" onClick="{{ dyCancel }}" style="cursor: pointer;">Bekor qilish</button>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</main>
+</sc-if>
+
 <sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
 <main data-screen-label="Hisobot" style="flex: 1;">
   <div style="max-width: 900px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);">
@@ -779,6 +901,7 @@ input, textarea, button, select { font-family: var(--font-body); }
              read on a phone. Printing stays, as its own button, for the people
              who actually want paper. -->
         <a class="btn btn-primary" href="{{ pdfUrl }}" download="{{ pdfName }}" style="text-decoration: none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>PDF yuklab olish</a>
+        <a class="btn btn-secondary" href="#/kundalik" style="text-decoration: none;">Kitobxonlik kundaligi</a>
         <button type="button" class="btn btn-secondary" onClick="{{ printNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 9V2h12v7"></path><rect x="6" y="14" width="12" height="8"></rect></svg>Chop etish</button>
         <button type="button" class="btn btn-secondary" onClick="{{ resetAll }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Boshqa bola uchun</button>
         <span style="flex: 1;"></span>
@@ -1398,6 +1521,7 @@ input, textarea, button, select { font-family: var(--font-body); }
       <p class="text-muted" style="font-size: 13px; max-width: 40ch; margin: 0;">Bu hisobot tashxis emas, yo'l-yo'riq vositasi. Qobiliyatlar mashq bilan o'sadi.</p>
     </div>
     <div style="display: flex; flex-direction: column; gap: var(--space-1); font-size: 14px;">
+      <a href="#/kundalik">Kitobxonlik kundaligi</a>
       <a href="#/maxfiylik">Maxfiylik siyosati</a>
       <a href="#/haqida">Metodika</a>
       <a href="#/admin" class="text-muted" style="color: inherit;">Markaz uchun: admin</a>
@@ -1426,6 +1550,12 @@ class Component extends DCLogic {
     // The two optional modules. `mods` null means not fetched yet, which is
     // different from [] — an empty list means there are none to offer.
     mods: null, modKey: null, modIdx: 0, modPicked: {}, modError: '',
+    // The reading diary. dyChecked guards the "log in" panel from
+    // flashing before we know whether there is a token.
+    dyChecked: false, dyChildren: [], dyEntries: [], dyChildId: '',
+    dyId: '', dyTitle: '', dyAuthor: '', dyStart: '', dyFinish: '',
+    dyMoment: '', dyCharacter: '', dyUnclear: '', dyOpinion: '',
+    dyDiscussed: '', dyNext: '', dyFinished: false, dyError: '',
     admAuthed: false, admEmail: '', admPass: '', admError: '',
     fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
     // server-fetched, route-scoped data
@@ -1943,6 +2073,13 @@ class Component extends DCLogic {
       if (this._loadedReportToken !== seg[1] && !this._reportLoading) this.fetchReport(seg[1]);
       return;
     }
+    if (seg[0] === 'kundalik') {
+      // Reloaded each time the route is entered: the diary is edited over
+      // months and from more than one device, so a cached copy is the one
+      // thing it should not show.
+      this.loadDiary();
+      return;
+    }
     if (seg[0] === 'admin' && this.state.admAuthed) {
       if (seg[1] === 'leads' && seg[2]) this.fetchLead(seg[2]);
       else if (seg[1] === 'stats') this.fetchStats();
@@ -2203,6 +2340,154 @@ class Component extends DCLogic {
     if (d.length > 5) out += '-' + d.slice(5, 7);
     if (d.length > 7) out += '-' + d.slice(7, 9);
     return out;
+  }
+
+  // ---- the reading diary (§19) --------------------------------------------
+  async loadDiary() {
+    if (!this._ptok) { this.setState({ dyChecked: true }); return; }
+    try {
+      const d = await this.api('/api/diary');
+      const kids = (d && d.children) || [];
+      this.setState({
+        dyChildren: kids,
+        dyEntries: (d && d.entries) || [],
+        dyChildId: this.state.dyChildId || (kids[0] && kids[0].id) || '',
+        dyChecked: true,
+      });
+    } catch (_) {
+      this.setState({ dyChildren: [], dyEntries: [], dyChecked: true });
+    }
+  }
+
+  dyPickChild(id) { this.setState({ dyChildId: id, ...this._dyBlankForm() }); }
+
+  _dyBlankForm() {
+    return {
+      dyId: '', dyTitle: '', dyAuthor: '', dyStart: '', dyFinish: '',
+      dyMoment: '', dyCharacter: '', dyUnclear: '', dyOpinion: '',
+      dyDiscussed: '', dyNext: '', dyFinished: false, dyError: '',
+    };
+  }
+
+  // Dates arrive as timestamps from Postgres; the date input wants YYYY-MM-DD.
+  _dyDate(v) { return v ? String(v).slice(0, 10) : ''; }
+
+  dyEdit(e) {
+    this.setState({
+      dyId: e.id, dyTitle: e.title || '', dyAuthor: e.author || '',
+      dyStart: this._dyDate(e.started_on), dyFinish: this._dyDate(e.finished_on),
+      dyMoment: e.favourite_moment || '', dyCharacter: e.favourite_character || '',
+      dyUnclear: e.unclear_part || '', dyOpinion: e.opinion || '',
+      dyDiscussed: e.discussed || '', dyNext: e.next_choice || '',
+      dyFinished: e.status === 'finished', dyError: '',
+    });
+  }
+
+  async dySave() {
+    const S = this.state;
+    if (!S.dyTitle.trim()) return this.setState({ dyError: 'Kitob nomini yozing.' });
+    if (!S.dyChildId) return this.setState({ dyError: 'Bolani tanlang.' });
+    // Checked without a date is the one combination §19 rules out, so say so
+    // here rather than letting the server answer it — the adult is looking at
+    // both fields right now.
+    if (S.dyFinished && !S.dyFinish) {
+      return this.setState({ dyError: 'Tugatilgan sanani yozing — o‘qilmagan kitob tugatilgan deb belgilanmaydi.' });
+    }
+    try {
+      await this.api('/api/diary', {
+        method: 'POST',
+        body: {
+          child_id: S.dyChildId,
+          title: S.dyTitle.trim(),
+          author: S.dyAuthor,
+          started_on: S.dyStart || null,
+          status: S.dyFinished ? 'finished' : 'reading',
+          finished_on: S.dyFinished ? S.dyFinish : null,
+          favourite_moment: S.dyMoment,
+          favourite_character: S.dyCharacter,
+          unclear_part: S.dyUnclear,
+          opinion: S.dyOpinion,
+          discussed: S.dyDiscussed,
+          next_choice: S.dyNext,
+        },
+      });
+      this.setState(this._dyBlankForm(), () => this.loadDiary());
+    } catch (e) {
+      this.setState({ dyError: this._errMsg(e) });
+    }
+  }
+
+  async dyRemove(id) {
+    try {
+      await this.api('/api/diary/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (this.state.dyId === id) this.setState(this._dyBlankForm());
+      this.loadDiary();
+    } catch (e) { this.setState({ dyError: this._errMsg(e) }); }
+  }
+
+  _dyVals(S, isDiary) {
+    const forChild = (S.dyEntries || []).filter(
+      (e) => !S.dyChildId || e.child_id === S.dyChildId);
+    const fmt = (d) => (d ? this._dyDate(d).split('-').reverse().join('.') : '');
+
+    return {
+      isDiary,
+      dyIntro: 'Bola o‘qigan kitoblarni shu yerda yozib boring. Hisobotdagi '
+        + 'kitobxonlik tavsiyasi shu kundalikka tayanadi. Faqat kitob nomi '
+        + 'majburiy — qolganini bola aytgan bo‘lsa yozing, aytmagan bo‘lsa '
+        + 'bo‘sh qoldiring.',
+      dyNeedsLogin: isDiary && S.dyChecked && !this._ptok,
+      dyReady: isDiary && S.dyChecked && !!this._ptok,
+      dyManyChildren: (S.dyChildren || []).length > 1,
+      dyChildren: (S.dyChildren || []).map((c) => ({
+        label: c.nickname + ' (' + c.entries + ')',
+        cls: c.id === S.dyChildId ? 'btn btn-primary' : 'btn btn-secondary',
+        pick: () => this.dyPickChild(c.id),
+      })),
+      dyEmpty: S.dyChecked && !!this._ptok && forChild.length === 0,
+      dyEntries: forChild.map((e) => {
+        const done = e.status === 'finished';
+        const notes = [e.favourite_moment, e.favourite_character && ('Sevimli qahramon: ' + e.favourite_character),
+          e.unclear_part && ('Tushunmagan joyi: ' + e.unclear_part), e.opinion,
+          e.discussed && ('Muhokama: ' + e.discussed),
+          e.next_choice && ('Keyingi kitob: ' + e.next_choice)].filter(Boolean).join('\n');
+        const dates = [e.started_on && ('boshlandi ' + fmt(e.started_on)),
+          e.finished_on && ('tugatildi ' + fmt(e.finished_on))].filter(Boolean).join(' · ');
+        return {
+          title: e.title,
+          // On the element as well as in the label: the label is uppercased by
+          // CSS, so innerText reads it back transformed and a test asserting on
+          // the prose passes or fails for reasons that have nothing to do with
+          // the state. This is the state.
+          status: e.status,
+          statusLabel: done ? 'Tugatilgan' : 'O‘qilyapti',
+          accent: done ? 'var(--color-accent-700)' : 'var(--color-neutral-600)',
+          meta: [e.author, dates].filter(Boolean).join(' · '),
+          hasNotes: !!notes,
+          notes,
+          edit: () => this.dyEdit(e),
+          remove: () => this.dyRemove(e.id),
+        };
+      }),
+
+      dyFormTitle: S.dyId ? 'Kitobni tahrirlash' : 'Kitob qo‘shish',
+      dyEditing: !!S.dyId,
+      dyCancel: () => this.setState(this._dyBlankForm()),
+      dyTitle: S.dyTitle, dyOnTitle: (e) => this.setState({ dyTitle: e.target.value, dyError: '' }),
+      dyAuthor: S.dyAuthor, dyOnAuthor: (e) => this.setState({ dyAuthor: e.target.value }),
+      dyStart: S.dyStart, dyOnStart: (e) => this.setState({ dyStart: e.target.value }),
+      dyFinish: S.dyFinish, dyOnFinish: (e) => this.setState({ dyFinish: e.target.value, dyError: '' }),
+      dyMoment: S.dyMoment, dyOnMoment: (e) => this.setState({ dyMoment: e.target.value }),
+      dyCharacter: S.dyCharacter, dyOnCharacter: (e) => this.setState({ dyCharacter: e.target.value }),
+      dyUnclear: S.dyUnclear, dyOnUnclear: (e) => this.setState({ dyUnclear: e.target.value }),
+      dyOpinion: S.dyOpinion, dyOnOpinion: (e) => this.setState({ dyOpinion: e.target.value }),
+      dyDiscussed: S.dyDiscussed, dyOnDiscussed: (e) => this.setState({ dyDiscussed: e.target.value }),
+      dyNext: S.dyNext, dyOnNext: (e) => this.setState({ dyNext: e.target.value }),
+      dyFinishedVal: S.dyFinished,
+      dyOnFinished: (e) => this.setState({ dyFinished: e.target.checked, dyError: '' }),
+      dyError: S.dyError || '',
+      dySave: () => this.dySave(),
+    };
   }
 
   // Everything the module screens bind to. Kept in one method so the offer and
@@ -2663,6 +2948,7 @@ class Component extends DCLogic {
     const segs = route.split('/').filter(Boolean);
     const isSession = segs[0] === 'mashgulot';
     const isReport = segs[0] === 'hisobot';
+    const isDiary = segs[0] === 'kundalik';
     const adminArea = segs[0] === 'admin';
     const isAdminLogin = adminArea && !S.admAuthed;
     const admin = adminArea && S.admAuthed;
@@ -2827,6 +3113,7 @@ class Component extends DCLogic {
       authMarketingVal: S.authMarketing,
       onAuthMarketing: (e) => this.setState({ authMarketing: !!(e && e.target && e.target.checked) }),
       beginAuth: () => this.beginAuth(), cancelAuth: () => this.cancelAuth(),
+      ...this._dyVals(S, isDiary),
       isReport, isPrivacy: route === '/maxfiylik', isAbout: route === '/haqida',
       isAdminLogin, isAdminArea: admin, isLeads, isLeadDetail, isStats,
       leadsNavW: isLeads ? '700' : '400', statsNavW: isStats ? '700' : '400',

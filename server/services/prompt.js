@@ -180,8 +180,26 @@ function modulesBlock(questions, state) {
 // unfilled module does: a model shown nothing writes the section anyway, and
 // what it writes is a plausible Uzbek title for a book that does not exist.
 // §17 and §23 both require it said out loud.
-function cataloguesBlock(books, tutors) {
+function cataloguesBlock(books, tutors, read) {
   const out = [];
+
+  // What the child has finished, from their own diary (§19). This is the only
+  // thing that may say a book was read: the model must not infer it from an
+  // interest score, and "has read a lot" is not a conclusion available from
+  // seventy answers about what they enjoy.
+  if (read && read.length) {
+    out.push('### Bola o‘qib tugatgan kitoblar (kundalikdan, ' + read.length + ' ta)\n'
+      + 'Bu ro‘yxat ota-ona kundalikda belgilagan kitoblar. Faqat shularni '
+      + 'o‘qilgan deb hisoblang. Kitobxonlik tavsiyasini shularning ustiga '
+      + 'quring — allaqachon o‘qilganini qayta tavsiya qilmang.\n'
+      + read.map((r) => {
+        const bits = ['**' + r.title + '**'];
+        if (r.author) bits.push(r.author);
+        if (r.favourite_character) bits.push('sevimli qahramon: ' + r.favourite_character);
+        if (r.opinion) bits.push('fikri: ' + r.opinion);
+        return '- ' + bits.join(' — ');
+      }).join('\n'));
+  }
 
   if (books && books.length) {
     out.push('### Tasdiqlangan kitoblar ro‘yxati (' + books.length + ' ta)\n'
@@ -268,7 +286,8 @@ function buildReportRequest(name, partial, scored, modules, catalogues) {
     'qayd etilgan kuzatuvlar asosida tayyorlang. Hech narsa uydirmang. ' +
     results +
     modulesBlock(modules && modules.questions, modules && modules.state) +
-    cataloguesBlock(catalogues && catalogues.books, catalogues && catalogues.tutors) +
+    cataloguesBlock(catalogues && catalogues.books, catalogues && catalogues.tutors,
+      catalogues && catalogues.read) +
     '\nMarkdown formatida quyidagi sarlavhalarni aynan shu tartibda va aynan shu ' +
     'matn bilan ishlating:\n\n' +
     body +

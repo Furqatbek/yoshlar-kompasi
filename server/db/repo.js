@@ -131,6 +131,104 @@ async function getAnswers(sessionId) {
 }
 
 // ---------------------------------------------------------------------------
+// The reading diary (§19).
+//
+// Every function here takes a parentId and joins through `children` on it. The
+// ownership check is part of the query, not a step before it: a diary holds a
+// child's own words about what they read and did not understand, and "fetch it,
+// then check who owns it" is one forgotten `if` away from handing that to a
+// stranger. There is deliberately no getDiaryEntry(id) that a caller could use
+// without proving whose it is.
+
+const DIARY_TEXT = ['title', 'author', 'favourite_moment', 'favourite_character',
+  'unclear_part', 'opinion', 'discussed', 'next_choice'];
+
+async function listDiary(parentId, childId) {
+  const { rows } = await query(
+    `SELECT d.* FROM reading_diary d
+       JOIN children c ON c.id = d.child_id
+      WHERE c.parent_id = $1 AND ($2::uuid IS NULL OR d.child_id = $2)
+      ORDER BY d.created_at DESC`,
+    [parentId, childId || null]
+  );
+  return rows;
+}
+
+// The children this parent may keep a diary for, so the UI can offer a picker
+// and the API can refuse an id that is not theirs.
+async function diaryChildren(parentId) {
+  const { rows } = await query(
+    `SELECT c.id, c.nickname, c.grade, c.age,
+            (SELECT count(*) FROM reading_diary d WHERE d.child_id = c.id) AS entries
+       FROM children c WHERE c.parent_id = $1 ORDER BY c.created_at ASC`,
+    [parentId]
+  );
+  return rows;
+}
+
+// Upsert on (child, title): re-reading a book updates the row it already has
+// rather than making a second one.
+//
+// `fields` is whatever the caller supplied. A field that is absent is left
+// alone; a field explicitly sent as empty is cleared. §19's "do not fill in
+// what was not given" means absence and emptiness are different things here,
+// and neither of them is ever a guess.
+async function upsertDiaryEntry(parentId, childId, fields) {
+  const owns = await query(
+    'SELECT 1 FROM children WHERE id = $1 AND parent_id = $2', [childId, parentId]);
+  if (!owns.rowCount) return null;
+
+  const cols = ['child_id', 'title'];
+  const vals = [childId, fields.title];
+  for (const k of DIARY_TEXT) {
+    if (k === 'title') continue;
+    if (k in fields) { cols.push(k); vals.push(fields[k] || null); }
+  }
+  for (const k of ['started_on', 'finished_on', 'status', 'book_id']) {
+    if (k in fields) { cols.push(k); vals.push(fields[k] ?? null); }
+  }
+
+  const placeholders = vals.map((_, i) => '$' + (i + 1));
+  const updates = cols.slice(2).map((c) => c + ' = EXCLUDED.' + c);
+  // status and finished_on move together or the CHECK constraint refuses the
+  // row — which is the intended behaviour, not something to work around.
+  updates.push('updated_at = now()');
+
+  const { rows } = await query(
+    `INSERT INTO reading_diary (${cols.join(', ')}) VALUES (${placeholders.join(', ')})
+     ON CONFLICT (child_id, lower(title)) DO UPDATE SET ${updates.join(', ')}
+     RETURNING *`,
+    vals
+  );
+  return rows[0] || null;
+}
+
+async function deleteDiaryEntry(parentId, id) {
+  const { rowCount } = await query(
+    `DELETE FROM reading_diary d USING children c
+      WHERE d.id = $1 AND c.id = d.child_id AND c.parent_id = $2`,
+    [id, parentId]
+  );
+  return rowCount > 0;
+}
+
+// What the report may say about reading. Finished books only, and only what
+// the diary actually records: §19 forbids claiming a book was finished when
+// nobody said so, and this is the query that decides what "finished" means
+// downstream.
+async function finishedReading(childId, limit = 12) {
+  const { rows } = await query(
+    `SELECT title, author, finished_on, favourite_moment, favourite_character, opinion
+       FROM reading_diary
+      WHERE child_id = $1 AND status = 'finished'
+      ORDER BY finished_on DESC NULLS LAST
+      LIMIT $2`,
+    [childId, Math.min(Number(limit) || 12, 50)]
+  );
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
 // The catalogues (§17 books, §16 tutors).
 //
 // Two readers, and the difference between them is the point:
@@ -1085,6 +1183,7 @@ async function optOutReminders(chatId) {
 module.exports = {
   saveAnswers, getAnswers, getAnswerRows,
   getModuleQuestions, getModuleState, saveModuleAnswers, setModuleCompletion,
+  listDiary, diaryChildren, upsertDiaryEntry, deleteDiaryEntry, finishedReading,
   listBooks, approvedBooks, upsertBook, importBooks, setBookApproval, deleteBook,
   listTutors, approvedTutors, upsertTutor, setTutorApproval, deleteTutor,
   createChildAndSession, getSessionById, getSessionByToken, getChildById,

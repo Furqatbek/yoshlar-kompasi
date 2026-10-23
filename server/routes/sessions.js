@@ -333,16 +333,19 @@ router.post(
       // The approved catalogues (§17, §16). Books are age-filtered: §17 asks
       // for books matched to the child's age, and sending a hundred to pick
       // three from is input tokens spent on ninety-seven.
-      const [moduleQuestions, moduleState, books, tutors] = await Promise.all([
+      const [moduleQuestions, moduleState, books, tutors, read] = await Promise.all([
         repo.getModuleQuestions(),
         repo.getModuleState(session.id),
         repo.approvedBooks({ age: Number.isInteger(child.age) ? child.age : null }),
         repo.approvedTutors(),
+        // What this child has actually finished reading (§19). Only entries a
+        // parent marked finished — the diary is the only thing that may say so.
+        repo.finishedReading(child.id),
       ]);
       await repo.addMessage(session.id, 'user',
         prompt.buildReportRequest(child.nickname, partial, scoredForReq,
           { questions: moduleQuestions, state: moduleState },
-          { books, tutors }), true);
+          { books, tutors, read }), true);
     }
 
     const history = await repo.getMessages(session.id);

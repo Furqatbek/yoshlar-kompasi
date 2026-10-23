@@ -17,6 +17,22 @@ const sessionAuth = asyncHandler(async (req, res, next) => {
   next();
 });
 
+// Parent auth, for the things that outlive a sitting — the reading diary is
+// the first. A session token identifies ONE assessment; the diary belongs to
+// the child and is kept for months, across sittings and devices, so it needs
+// the parent's own token (the one the Telegram login issues).
+//
+// Unauthorized rather than notFound: unlike a session token, the caller knows
+// perfectly well whether they are logged in, so there is no existence oracle
+// to protect and "log in again" is the useful answer.
+const parentAuth = asyncHandler(async (req, res, next) => {
+  const token = String(req.get('x-parent-token') || (req.body && req.body.parent_token) || '');
+  const parent = token ? await repo.getParentByToken(token) : null;
+  if (!parent) throw unauthorized('Tizimga qayta kiring.');
+  req.parent = parent;
+  next();
+});
+
 // Admin auth: signed JWT in an httpOnly cookie.
 function signAdmin(admin) {
   return jwt.sign(
@@ -47,4 +63,4 @@ function adminAuth(req, res, next) {
   }
 }
 
-module.exports = { sessionAuth, adminAuth, signAdmin, adminCookieOptions };
+module.exports = { sessionAuth, parentAuth, adminAuth, signAdmin, adminCookieOptions };

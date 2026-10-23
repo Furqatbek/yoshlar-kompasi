@@ -138,6 +138,9 @@ node test/api/reminders-test.js
 echo "==== api: the two optional modules, and what they must not touch ===="
 node test/api/modules-test.js
 
+echo "==== api: the reading diary, and whose it is ===="
+node test/api/diary-test.js
+
 echo "==== api: the catalogues, and what may reach the model ===="
 node test/api/catalogues-test.js
 
