@@ -251,6 +251,93 @@ await atest('the boot line warns on a problem and only logs on success', async (
   assert.match(lines.warn[0], /PROVIDER PROBLEM \(bad-key\)/);
 });
 
+// ---- a key that cannot be sent at all ------------------------------------
+//
+// An API key goes out as an HTTP header value, and header values are
+// ByteStrings — ASCII only. One non-ASCII character and `fetch` throws before
+// anything leaves the machine:
+//
+//   Cannot convert argument to a ByteString because the character at index 8
+//   has a value of 8226 which is greater than 255
+//
+// 8226 is U+2022, a bullet. Which is how it happens: the console masks a key as
+// `sk-ant-a••••…`, and that display gets copied instead of the key. It is the
+// right length to look plausible and everything after the eighth character is a
+// lie. On careerkids.uz it cost a second round of "the report just fails",
+// because the error names a code point and an index and nothing else.
+//
+// No retry can help, so config.js refuses to boot — tested the way an operator
+// meets it, as a process that will not start.
+
+const { execFileSync } = require('child_process');
+
+function boot(key, extra) {
+  try {
+    execFileSync(process.execPath, ['-e', 'require("./config").assertProdConfig()'], {
+      cwd: SERVER,
+      env: {
+        PATH: process.env.PATH,
+        NODE_ENV: 'production',
+        DATABASE_URL: 'postgres://u:p@h:5432/d',
+        JWT_SECRET: 'x'.repeat(20),
+        PUBLIC_BASE_URL: 'https://careerkids.uz',
+        ADMIN_EMAIL: 'a@b.c', ADMIN_PASSWORD: 'x',
+        AUTH_REQUIRED: 'false', DELIVERY_PROVIDER: 'console',
+        LLM_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: key,
+        ...(extra || {}),
+      },
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return { started: true, output: '' };
+  } catch (err) {
+    return { started: false, output: String(err.stderr || '') + String(err.stdout || '') };
+  }
+}
+
+const MASKED = 'sk-ant-a' + '•'.repeat(54); // exactly what was in their .env
+
+await atest('a masked key copied from the console will not boot', async () => {
+  const { started, output } = boot(MASKED);
+  assert.ok(!started, 'a key that cannot be put in a header must not reach a parent');
+  assert.match(output, /ANTHROPIC_API_KEY contains a non-ASCII character at position 9/,
+    'name where it is: ' + output.slice(0, 300));
+  assert.match(output, /U\+2022/, 'name what it is');
+  assert.match(output, /masked key was copied/, 'name how it happened');
+  assert.match(output, /create a new key/,
+    'a key is shown in full once, so the fix is a new key, not a better paste');
+});
+
+await atest('  and the key itself is not printed while saying so', async () => {
+  const { output } = boot(MASKED);
+  assert.ok(!output.includes(MASKED), 'the value leaked');
+  assert.ok(!output.includes('•'.repeat(10)), 'a run of the value leaked');
+});
+
+await atest('a non-ASCII character that is not a bullet is still refused', async () => {
+  // A Cyrillic lookalike from a key typed rather than copied.
+  const { started, output } = boot('sk-ant-api03-аbcdefghijklmnop');
+  assert.ok(!started);
+  assert.match(output, /U\+0430/);
+  assert.match(output, /cannot be sent in an HTTP header/);
+  assert.ok(!/masked key/.test(output), 'do not guess the bullet story for every character');
+});
+
+await atest('an ordinary ASCII key boots', async () => {
+  const { started, output } = boot('sk-ant-api03-' + 'a'.repeat(95));
+  assert.ok(started, 'a perfectly good key must not be refused:\n' + output);
+});
+
+await atest('the OpenRouter key is checked the same way', async () => {
+  const { started, output } = boot('', {
+    LLM_PROVIDER: 'openrouter',
+    ANTHROPIC_API_KEY: '',
+    OPENROUTER_API_KEY: 'sk-or-v1-' + '•'.repeat(40),
+    OPENROUTER_MODEL: 'anthropic/claude-sonnet-4.6',
+  });
+  assert.ok(!started);
+  assert.match(output, /OPENROUTER_API_KEY contains a non-ASCII character/);
+});
+
 console.log('\n' + pass + ' passed, 0 failed');
 }
 

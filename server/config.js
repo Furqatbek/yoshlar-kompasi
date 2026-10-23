@@ -226,14 +226,47 @@ const config = {
   promptSourceDir: process.env.PROMPT_SOURCE_DIR || require('path').join(__dirname, '..', 'uploads'),
 };
 
+// A key that cannot physically be put in an HTTP header.
+//
+// An API key goes out as a header value, and header values are ByteStrings —
+// ASCII only. One non-ASCII character and `fetch` throws before anything
+// leaves the machine, with the true but unhelpful
+//
+//   Cannot convert argument to a ByteString because the character at index 8
+//   has a value of 8226 which is greater than 255
+//
+// 8226 is U+2022: a bullet. Which is how it happens — the console masks a key
+// as `sk-ant-a••••…` and that display gets copied instead of the key. It is
+// the right length to look plausible and every character after the eighth is
+// a lie. Caught here, at boot, because no retry can ever help: every report
+// would fail this way, one per finished sitting, until someone read the log.
+//
+// Reports the position and the code point, never the key.
+function unsendableKey(name, key) {
+  const i = [...key].findIndex((c) => c.charCodeAt(0) > 255);
+  if (i < 0) return '';
+  const cp = key.codePointAt(i);
+  const bullet = cp === 0x2022;
+  return name + ' contains a non-ASCII character at position ' + (i + 1)
+    + ' (U+' + cp.toString(16).toUpperCase().padStart(4, '0') + ')'
+    + (bullet
+      ? ' — a bullet, which means a masked key was copied from the provider\'s'
+        + ' console rather than the key itself. A key is shown in full only once,'
+        + ' at creation, so this one cannot be recovered: create a new key and'
+        + ' use the Copy button.'
+      : ', which cannot be sent in an HTTP header. Re-copy the key.');
+}
+
 function assertProdConfig() {
   const missing = [];
   if (!config.databaseUrl) missing.push('DATABASE_URL');
   // Only the active provider's credentials are required.
   if (config.llm.provider === 'openrouter') {
     if (!config.openrouter.apiKey) missing.push('OPENROUTER_API_KEY (required when LLM_PROVIDER=openrouter)');
+    else { const b = unsendableKey('OPENROUTER_API_KEY', config.openrouter.apiKey); if (b) missing.push(b); }
   } else {
     if (!config.anthropic.apiKey) missing.push('ANTHROPIC_API_KEY');
+    else { const b = unsendableKey('ANTHROPIC_API_KEY', config.anthropic.apiKey); if (b) missing.push(b); }
   }
   if (!config.admin.jwtSecret || config.admin.jwtSecret.length < 16) missing.push('JWT_SECRET (>=16 chars)');
   // Report/resume links are built from this in prod; without it we would fall
