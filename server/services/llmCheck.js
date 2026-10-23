@@ -14,6 +14,30 @@
 
 const { config } = require('../config');
 
+// Why a rejected key is rejected, when the value itself can say.
+//
+// A revoked key and a key that lost half of itself to a line wrap in .env both
+// come back 401, and the fixes are different: reissue, or re-paste. The second
+// is what happened on careerkids.uz — a 108-character key stored as 62, both
+// `source .env` and compose reading the same truncated value, so every check
+// that compared them agreed and said nothing.
+//
+// Only ever appended to a failure that the provider has already confirmed, and
+// never used to refuse a key on its own: if a provider changes its key format
+// tomorrow, a working key must keep working. Reports the length, never a
+// character of the value — the prefix it checks for is public.
+function shapeHint(name, key, prefix, minLen) {
+  const bits = [];
+  if (!key.startsWith(prefix)) bits.push('it does not start with "' + prefix + '"');
+  if (key.length < minLen) {
+    bits.push('it is only ' + key.length + ' characters, which is shorter than any '
+      + 'issued key — the likeliest cause is a paste that wrapped onto a second '
+      + 'line in .env, leaving the tail of it as a stray line. ' + name
+      + ' has to be one unbroken line');
+  }
+  return bits.length ? ' Also worth checking: ' + bits.join('; ') + '.' : '';
+}
+
 // status: skipped | ok | bad-key | model-unavailable | error
 async function check(fetchImpl) {
   const f = fetchImpl || fetch;
@@ -44,7 +68,8 @@ async function checkAnthropic(f) {
         + 'everything. A revoked or mistyped key, or a key for a different '
         + 'account, all look like this. Note that editing .env is not enough on '
         + 'its own — the container keeps the environment it started with until '
-        + 'it is recreated (make prod-up).',
+        + 'it is recreated (make prod-up).'
+        + shapeHint('ANTHROPIC_API_KEY', apiKey, 'sk-ant-', 80),
     };
   }
   if (res.status === 404) {
@@ -92,7 +117,8 @@ async function checkOpenRouter(f) {
       detail: 'the provider rejected OPENROUTER_API_KEY (HTTP ' + res.status + '). Every '
         + 'report will fail at the last step. Note that editing .env is not '
         + 'enough on its own — the container keeps the environment it started '
-        + 'with until it is recreated (make prod-up).',
+        + 'with until it is recreated (make prod-up).'
+        + shapeHint('OPENROUTER_API_KEY', apiKey, 'sk-or-', 40),
     };
   }
   if (!res.ok) return { status: 'error', detail: 'HTTP ' + res.status + ' from ' + baseUrl };

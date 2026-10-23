@@ -92,6 +92,45 @@ await atest('  and it says that editing .env alone will not fix it', async () =>
   assert.match(r.detail, /make prod-up/);
 });
 
+// The careerkids.uz key was 62 characters where it should have been ~108:
+// pasted into .env across two lines, so `source .env` and compose both read the
+// same truncated value and every check that compared them agreed. "Rejected"
+// sends you to reissue a key that was fine; the length sends you to the file.
+await atest('a truncated key says so, because the fix is re-paste not reissue', async () => {
+  const half = 'sk-ant-api03-TRUNCATEDHALFOFAREALKEY0123456789';
+  const lc = load({ ...ANTHROPIC, ANTHROPIC_API_KEY: half });
+  const r = await lc.check(fakeProvider([['/v1/models/', { status: 401 }]]));
+  assert.strictEqual(r.status, 'bad-key');
+  assert.match(r.detail, new RegExp('only ' + half.length + ' characters'),
+    'name the length it actually found: ' + r.detail);
+  assert.match(r.detail, /wrapped onto a second line/, 'name the likely cause');
+  assert.match(r.detail, /one unbroken line/, 'say what right looks like');
+});
+
+await atest('a key of the wrong shape entirely is called out', async () => {
+  const lc = load({ ...ANTHROPIC, ANTHROPIC_API_KEY: 'sk-or-v1-' + 'a'.repeat(72) });
+  const r = await lc.check(fakeProvider([['/v1/models/', { status: 401 }]]));
+  assert.match(r.detail, /does not start with "sk-ant-"/, 'an OpenRouter key in the Anthropic slot');
+  assert.ok(!/only \d+ characters/.test(r.detail), 'it is long enough; do not also claim truncation');
+});
+
+await atest('  but a full-length key is not second-guessed', async () => {
+  // The shape check only ever explains a refusal the provider already made. If
+  // the format changes tomorrow, a working key must keep working and a rejected
+  // one must not be slandered.
+  const lc = load({ ...ANTHROPIC, ANTHROPIC_API_KEY: 'sk-ant-api03-' + 'a'.repeat(95) });
+  const r = await lc.check(fakeProvider([['/v1/models/', { status: 401 }]]));
+  assert.strictEqual(r.status, 'bad-key');
+  assert.ok(!/Also worth checking/.test(r.detail),
+    'nothing is wrong with the shape, so say nothing about it: ' + r.detail);
+});
+
+await atest('  and a working key of any shape is still accepted', async () => {
+  const lc = load({ ...ANTHROPIC, ANTHROPIC_API_KEY: 'whatever-the-format-becomes' });
+  const r = await lc.check(fakeProvider([['/v1/models/', { status: 200, body: {} }]]));
+  assert.strictEqual(r.status, 'ok', 'the shape must never be grounds for refusal on its own');
+});
+
 await atest('403 is treated as a rejected key too', async () => {
   const lc = load(ANTHROPIC);
   const r = await lc.check(fakeProvider([['/v1/models/', { status: 403 }]]));
