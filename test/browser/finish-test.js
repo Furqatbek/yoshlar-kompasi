@@ -81,6 +81,9 @@ const REPORT_MD = [
   // Server-side state the mocks share, so progress moves as answers are posted.
   let answered = 0, seen = 0;
   let reportRequests = 0;
+  // Flipped on for the first attempt: the report has to fail visibly before it
+  // is allowed to succeed. See the failure pass below.
+  let failReport = true;
 
   await page.route('**/api/sessions', (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
@@ -108,6 +111,16 @@ const REPORT_MD = [
   }));
   await page.route('**/api/sessions/' + TOKEN + '/report', (route) => {
     reportRequests++;
+    if (failReport) {
+      // What the server actually sends when the model call fails: a 5xx whose
+      // body is deliberately vague, because the real cause (a model id the
+      // account cannot call, an exhausted key) is logged, not shown to a
+      // parent.
+      return route.fulfill({
+        status: 502, contentType: 'application/json',
+        body: JSON.stringify({ error: 'Serverda xatolik. Birozdan so‘ng urinib ko‘ring.', retryable: true }),
+      });
+    }
     route.fulfill({
       status: 200, contentType: 'application/json',
       body: JSON.stringify({ report_url: 'http://127.0.0.1:8097/hisobot/' + SHARE, share_token: SHARE, partial: false, delivered: false, delivery: null }),
@@ -187,8 +200,33 @@ const REPORT_MD = [
   await page.click('button:has-text("Hisobotni ochish")');
   await page.waitForTimeout(1500);
 
+  // ---- the failure pass ---------------------------------------------------
+  // The report call failed. generate() put the reason in `apiError` and sent
+  // the parent back to the question screen — where, with every question
+  // answered, the app rendered "Hammasi tayyor!" and the same button, and the
+  // error nowhere at all. So the sitting ended, the phone number was taken, the
+  // screen said everything was ready, and no report ever came: on careerkids.uz
+  // that was reported as "it finishes and then nothing happens", with the real
+  // cause sitting in the server log the whole time.
+  ok('a failed report was attempted', reportRequests === 1, 'requests=' + reportRequests);
+  const afterFail = await page.locator('body').innerText();
+  ok('  the failure is on screen, not only in the console',
+    /xatolik|tayyorlanmadi/i.test(afterFail),
+    JSON.stringify(afterFail.replace(/\s+/g, ' ').slice(0, 200)));
+  ok('  and it says the answers are not lost', /saqlangan/i.test(afterFail),
+    'the fear at this point is having to redo seventy questions');
+  ok('  the button offers a retry rather than repeating "Hisobotni olish"',
+    await page.locator('button:has-text("Qaytadan urinib ko‘rish")').count() === 1,
+    JSON.stringify(afterFail.replace(/\s+/g, ' ').slice(0, 200)));
+  // Not a dead end: the same answers, one more attempt.
+  failReport = false;
+  await page.click('button:has-text("Qaytadan urinib ko‘rish")');
+  await page.waitForTimeout(400);
+  await page.click('button:has-text("Hisobotni ochish")');
+  await page.waitForTimeout(1500);
+
   // ---- the report ---------------------------------------------------------
-  ok('the report was generated', reportRequests === 1, 'requests=' + reportRequests);
+  ok('the retry produced the report', reportRequests === 2, 'requests=' + reportRequests);
   const report = await page.locator('body').innerText();
   ok('  and is on screen', report.includes('Qisqacha xulosa'),
     JSON.stringify(report.replace(/\s+/g, ' ').slice(0, 120)));

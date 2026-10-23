@@ -599,7 +599,13 @@ input, textarea, button, select { font-family: var(--font-body); }
         <div style="text-align: center;">
           <p style="font-family: var(--font-heading); font-weight: 600; font-size: clamp(24px, 4vw, 34px); margin: 0 0 var(--space-3);">Hammasi tayyor!</p>
           <p class="text-muted" style="max-width: 44ch; margin: 0 auto var(--space-6);">{{ qDoneNote }}</p>
-          <button type="button" class="btn btn-primary" onClick="{{ askFinish }}" style="font-size: 17px; padding: 14px 28px;">Hisobotni olish</button>
+          <!-- A failed report lands back here. Without this the screen reads
+               "Hammasi tayyor!" again and says nothing: the one place the
+               parent is looking is the one place the error was not shown. -->
+          <sc-if value="{{ finishError }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="max-width: 44ch; margin: 0 auto var(--space-5); padding: var(--space-3); border: 1px solid var(--color-accent-700); color: var(--color-accent-700); font-size: 14px; font-weight: 600; text-align: left;">{{ finishError }}</div>
+          </sc-if>
+          <button type="button" class="btn btn-primary" onClick="{{ askFinish }}" style="font-size: 17px; padding: 14px 28px;">{{ finishLabel }}</button>
         </div>
       </sc-if>
     </div>
@@ -2170,7 +2176,11 @@ class Component extends DCLogic {
       if (e && e.data && e.data.code === 'insufficient_engagement') {
         this.setState({ generating: false, status: 'active', gate: false, lowEngage: true });
       } else {
-        this.setState({ generating: false, status: 'active', apiError: 'Hisobot tayyorlanmadi. ' + this._errMsg(e) });
+        // Every answer is already saved server-side, so say so: the fear at
+        // this point is having to do the 70 questions again.
+        this.setState({ generating: false, status: 'active',
+          apiError: 'Hisobot tayyorlanmadi — javoblar saqlangan, qaytadan urinib ko‘rsa bo‘ladi. ('
+            + this._errMsg(e) + ')' });
       }
     }
     this._busy = false;
@@ -2686,6 +2696,10 @@ class Component extends DCLogic {
             ? ("Barcha savollar ko'rib chiqildi. " + (prog.seen - prog.answered)
                + " ta savol o'tkazib yuborilgan — ular hisobga olinmaydi.")
             : 'Barcha savollarga javob berildi.',
+          // generate() returns here on failure. The answers are all saved, so
+          // the honest offer is to try again, not to start over.
+          finishError: S.apiError,
+          finishLabel: S.apiError ? 'Qaytadan urinib ko‘rish' : 'Hisobotni olish',
           qChoices: SCALE_UI.map(([value, label]) => {
             const on = chosen === value;
             return {
