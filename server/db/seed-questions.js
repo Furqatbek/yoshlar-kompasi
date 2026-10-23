@@ -9,6 +9,7 @@
 
 const { SECTIONS, BANDS } = require('../data/questions');
 const { SECTIONS: REPORT_SECTIONS } = require('../data/reportTemplate');
+const { MODULES } = require('../data/modules');
 
 async function seedQuestions(client) {
   let sections = 0, questions = 0, bands = 0;
@@ -49,7 +50,25 @@ async function seedQuestions(client) {
     );
     report += res.rowCount;
   }
-  return { sections, questions, bands, report };
+
+  // The two optional modules (§8, §9). Same rule as the bank above: insert what
+  // is missing, never overwrite — an administrator's rewording of a question a
+  // child has already answered must survive a redeploy.
+  let modules = 0;
+  for (const m of MODULES) {
+    let position = 0;
+    for (const [n, text, options] of m.items) {
+      position += 1;
+      const res = await client.query(
+        `INSERT INTO module_questions (module, n, text, kind, options, position, is_default)
+         VALUES ($1,$2,$3,$4,$5::jsonb,$6,true)
+         ON CONFLICT (module, n) DO NOTHING`,
+        [m.key, n, text, m.kind, options ? JSON.stringify(options) : null, position]
+      );
+      modules += res.rowCount;
+    }
+  }
+  return { sections, questions, bands, report, modules };
 }
 
 module.exports = { seedQuestions };

@@ -117,7 +117,62 @@ const REPORT_MARKER = '[HISOBOT-SOROVI]';
 // inventory is a form: there is no conversation for the model to read results
 // out of, and letting it recompute them from raw answers is how a skipped
 // question becomes a zero.
-function buildReportRequest(name, partial, scored) {
+// The two optional modules, rendered for the report request.
+//
+// A module that was not filled has to be stated, not omitted. §23 is explicit:
+// "O‘rganish afzalliklari moduli to‘ldirilmagan bo‘lsa, bolaga o‘rganish
+// uslubini belgilamang" — and a model that is simply shown nothing tends to
+// write the section anyway, from the interest scores, which is exactly the
+// inference §8 forbids. Saying "this was not filled in" is what makes the
+// silence deliberate rather than an absence the model feels obliged to fill.
+//
+// `questions` is repo.getModuleQuestions(), `state` is repo.getModuleState().
+function modulesBlock(questions, state) {
+  const { MODULES } = require('../data/modules');
+  if (!questions || !questions.length) return '';
+
+  const byModule = new Map();
+  for (const q of questions) {
+    if (!byModule.has(q.module)) byModule.set(q.module, []);
+    byModule.get(q.module).push(q);
+  }
+
+  const answers = (state && state.answers) || {};
+  const completion = (state && state.completion) || {};
+  const out = [];
+
+  for (const m of MODULES) {
+    const qs = byModule.get(m.key);
+    if (!qs || !qs.length) continue;
+    const given = new Map(((answers[m.key]) || []).map((a) => [a.n, a]));
+    const done = completion[m.key] === true && given.size > 0;
+
+    if (!done) {
+      out.push('### ' + m.title + ' — to‘ldirilmadi\n'
+        + 'Bu modul to‘ldirilmagan. Shu sababli bu mavzuda bolaga hech qanday '
+        + 'ta’rif, uslub yoki tavsiya bermang — hatto qiziqish ballariga '
+        + 'tayanib ham. JSON’da `module_completed: false` bo‘lsin.');
+      continue;
+    }
+
+    const lines = qs.map((q) => {
+      const a = given.get(q.n);
+      if (!a) return '- ' + q.text + ' — javob berilmadi';
+      if (a.value != null) {
+        const label = (m.scale.find((s) => s.value === a.value) || {}).label || String(a.value);
+        return '- ' + q.text + ' — ' + label + ' (' + a.value + '/5)';
+      }
+      return '- ' + q.text + ' — ' + a.choice;
+    });
+    out.push('### ' + m.title + ' — to‘ldirildi\n' + lines.join('\n'));
+  }
+
+  if (!out.length) return '';
+  return '\nQo‘shimcha modullar (qiziqish ballariga qo‘shilmaydi):\n\n'
+    + out.join('\n\n') + '\n';
+}
+
+function buildReportRequest(name, partial, scored, modules) {
   const partialRule = partial
     ? ' Diqqat: baholash qisman yakunlangan. Hisobot boshida ma’lumotlar ' +
       'to‘liq emasligini ayting. Javobsiz savollarni taxmin qilmang; ' +
@@ -159,6 +214,7 @@ function buildReportRequest(name, partial, scored) {
     ' Hisobotni faqat bolaning 70 savolga bergan haqiqiy javoblari va ' +
     'qayd etilgan kuzatuvlar asosida tayyorlang. Hech narsa uydirmang. ' +
     results +
+    modulesBlock(modules && modules.questions, modules && modules.state) +
     '\nMarkdown formatida quyidagi sarlavhalarni aynan shu tartibda va aynan shu ' +
     'matn bilan ishlating:\n\n' +
     body +
@@ -171,6 +227,7 @@ function buildReportRequest(name, partial, scored) {
 module.exports = {
   invalidate,
   systemPrompt,
+  modulesBlock,
   promptVersion,
   childContext,
   buildReportRequest,

@@ -130,6 +130,85 @@ async function getAnswers(sessionId) {
   return rows;
 }
 
+// ---------------------------------------------------------------------------
+// The two optional modules (§8 learning preferences, §9 homework environment).
+//
+// Everything here reads and writes module_answers / module_completions. None of
+// it touches `answers`, which is the table getAnswers() above feeds to
+// services/scoring.js — that separation is the whole point and is asserted in
+// unit/modules.test.js.
+
+async function getModuleQuestions() {
+  const { rows } = await query(
+    `SELECT module, n, text, kind, options FROM module_questions
+      WHERE active = true ORDER BY module ASC, position ASC`
+  );
+  return rows;
+}
+
+// Answers and completion state for one sitting, shaped for the client and for
+// the report request.
+async function getModuleState(sessionId) {
+  const [answers, done] = await Promise.all([
+    query(`SELECT module, question_n, value, choice FROM module_answers
+            WHERE session_id = $1 ORDER BY module ASC, question_n ASC`, [sessionId]),
+    query('SELECT module, completed FROM module_completions WHERE session_id = $1', [sessionId]),
+  ]);
+  const byModule = {};
+  for (const r of answers.rows) {
+    (byModule[r.module] = byModule[r.module] || []).push({
+      n: r.question_n,
+      value: r.value == null ? null : Number(r.value),
+      choice: r.choice,
+    });
+  }
+  const completion = {};
+  for (const r of done.rows) completion[r.module] = r.completed;
+  return { answers: byModule, completion };
+}
+
+// Upsert, so a child changing their mind replaces rather than duplicates.
+// A null value AND a null choice means "skipped this question", which is a row
+// the CHECK constraint refuses — so those are dropped rather than stored, and
+// an unanswered question is simply absent.
+async function saveModuleAnswers(sessionId, module, items) {
+  const rows = (items || []).filter(
+    (a) => a && (Number.isInteger(a.value) || (typeof a.choice === 'string' && a.choice)));
+  if (!rows.length) return 0;
+  return withTransaction(async (client) => {
+    let n = 0;
+    for (const a of rows) {
+      const res = await client.query(
+        `INSERT INTO module_answers (session_id, module, question_n, value, choice)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (session_id, module, question_n)
+         DO UPDATE SET value = EXCLUDED.value, choice = EXCLUDED.choice
+         RETURNING id`,
+        [sessionId, module, a.n,
+          Number.isInteger(a.value) ? a.value : null,
+          Number.isInteger(a.value) ? null : a.choice]
+      );
+      n += res.rowCount;
+    }
+    return n;
+  });
+}
+
+// `completed` false records a deliberate skip, which §23 needs to tell apart
+// from "not offered yet": the report must say nothing about a skipped module,
+// and the UI must not keep asking.
+async function setModuleCompletion(sessionId, module, completed) {
+  const { rows } = await query(
+    `INSERT INTO module_completions (session_id, module, completed)
+     VALUES ($1,$2,$3)
+     ON CONFLICT (session_id, module)
+     DO UPDATE SET completed = EXCLUDED.completed, finished_at = now()
+     RETURNING *`,
+    [sessionId, module, !!completed]
+  );
+  return rows[0] || null;
+}
+
 async function setSessionStatus(sessionId, status, finished = false) {
   const { rows } = await query(
     `UPDATE sessions SET status = $2${finished ? ', finished_at = now()' : ''} WHERE id = $1 RETURNING *`,
@@ -858,6 +937,7 @@ async function optOutReminders(chatId) {
 
 module.exports = {
   saveAnswers, getAnswers, getAnswerRows,
+  getModuleQuestions, getModuleState, saveModuleAnswers, setModuleCompletion,
   createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,

@@ -36,7 +36,8 @@ async function runAll() {
   const added = await seedQuestions(pool);
   // eslint-disable-next-line no-console
   console.log('[seed] question bank: +' + added.questions + ' questions, +'
-    + added.sections + ' sections, +' + added.bands + ' bands, +' + added.report + ' report sections');
+    + added.sections + ' sections, +' + added.bands + ' bands, +' + added.report + ' report sections, +'
+    + added.modules + ' module questions');
 }
 
 if (require.main === module) {

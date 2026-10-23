@@ -606,10 +606,65 @@ input, textarea, button, select { font-family: var(--font-body); }
             <div role="alert" style="max-width: 44ch; margin: 0 auto var(--space-5); padding: var(--space-3); border: 1px solid var(--color-accent-700); color: var(--color-accent-700); font-size: 14px; font-weight: 600; text-align: left;">{{ finishError }}</div>
           </sc-if>
           <button type="button" class="btn btn-primary" onClick="{{ askFinish }}" style="font-size: 17px; padding: 14px 28px;">{{ finishLabel }}</button>
+
+          <!-- The two optional modules, offered after the seventy and never in
+               front of them. A child who has just answered seventy statements
+               is allowed to be finished; the report is complete without these,
+               and the prompt is told so explicitly rather than left to guess.
+               So the report button stays primary and this sits under it. -->
+          <sc-if value="{{ modOffer }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-divider);">
+              <p class="text-muted" style="max-width: 46ch; margin: 0 auto var(--space-3); font-size: 15px;">{{ modOfferNote }}</p>
+              <button type="button" class="btn btn-secondary" onClick="{{ modStart }}" style="cursor: pointer;">{{ modOfferLabel }}</button>
+            </div>
+          </sc-if>
         </div>
       </sc-if>
     </div>
   </main>
+
+  <!-- An optional module, one question at a time, over the top of everything.
+       Same shape as the inventory so nothing new has to be learned: read it
+       out, tap, next. The scale module shows five levels; the homework module
+       shows that question's own options, which is why the list is per-question
+       rather than fixed. -->
+  <sc-if value="{{ modOpen }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Ixtiyoriy modul" style="position: fixed; inset: 0; z-index: 66; background: var(--color-bg); overflow: auto;">
+      <div style="max-width: 640px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8);">
+        <h6 style="color: var(--color-accent-700); margin-bottom: var(--space-1);">Ixtiyoriy</h6>
+        <h3 style="margin-bottom: var(--space-2);">{{ modTitle }}</h3>
+        <p class="text-muted" style="font-size: 14px; margin-bottom: var(--space-6); max-width: 54ch;">{{ modIntro }}</p>
+
+        <div style="background: var(--color-neutral-100); border: 1px solid var(--color-divider); border-radius: var(--radius-lg); padding: clamp(20px, 4vw, 32px); margin-bottom: var(--space-5);">
+          <p style="margin: 0; font-family: var(--font-heading); font-weight: 600; font-size: clamp(18px, 2.8vw, 24px); line-height: 1.35; text-wrap: pretty;">{{ modQText }}</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <sc-for list="{{ modChoices }}" as="c" hint-placeholder-count="4">
+            <button type="button" onClick="{{ c.pick }}"
+                    style="display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 54px; padding: 12px var(--space-4); cursor: pointer; border-radius: var(--radius-md); font-family: var(--font-body); text-align: left; background: {{ c.bg }}; border: 1px solid {{ c.border }}; color: var(--color-text);"
+                    style-hover="border-color: var(--color-accent); background: var(--color-accent-100);">
+              <span style="font-size: 16px; font-weight: 500;">{{ c.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-5);">
+          <button type="button" class="btn btn-ghost" onClick="{{ modBack }}" disabled="{{ modBackDisabled }}" style="cursor: pointer;">← Orqaga</button>
+          <span class="text-muted" style="font-size: 13px;">{{ modCounter }}</span>
+          <button type="button" class="btn btn-ghost" onClick="{{ modSkipQ }}" style="cursor: pointer;">O'tkazib yuborish →</button>
+        </div>
+
+        <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-divider); text-align: center;">
+          <button type="button" class="btn btn-ghost" onClick="{{ modQuit }}" style="cursor: pointer; font-size: 14px;">Bu savolnomani to'xtatish</button>
+        </div>
+
+        <sc-if value="{{ modError }}" hint-placeholder-val="{{ false }}">
+          <p role="alert" style="margin-top: var(--space-4); color: var(--color-accent-700); font-weight: 600; font-size: 14px; text-align: center;">{{ modError }}</p>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
 
   <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
     <div class="dialog-backdrop" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-text) 55%, transparent);">
@@ -1368,6 +1423,9 @@ class Component extends DCLogic {
     status: 'setup', progress: { answered: 0, seen: 0, total: 70 },
     token: '', shareToken: '', reportPartial: false, resumeName: '',
     gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false, copied: false,
+    // The two optional modules. `mods` null means not fetched yet, which is
+    // different from [] — an empty list means there are none to offer.
+    mods: null, modKey: null, modIdx: 0, modPicked: {}, modError: '',
     admAuthed: false, admEmail: '', admPass: '', admError: '',
     fStatus: 'all', fGrade: 'all', fDate: 'all', isMobile: false,
     // server-fetched, route-scoped data
@@ -1927,6 +1985,7 @@ class Component extends DCLogic {
         messages: d.messages || [], status: 'active', paused: false, apiError: d.api_error || '',
         resumeName: '', draft: '', token: d.session_token, shareToken: '',
         gate: false, delivered: false, gateError: '', progress: this._prog(d.progress),
+        mods: null, modKey: null, modIdx: 0, modPicked: {}, modError: '',
         reportPartial: false, sending: false,
         // Clear any previous sitting's questions so the new screen cannot show
         // the last child's position for a frame.
@@ -2059,6 +2118,11 @@ class Component extends DCLogic {
         body: { answers: [{ n: q.n, value }] },
       });
       this.setState({ progress: this._prog(d.progress) });
+      // The seventy are done — fetch the optional modules now, so the offer is
+      // on screen the moment the done view appears rather than popping in a
+      // second later. Lazy on purpose: a sitting that stops partway never
+      // pays for this call.
+      if (d && d.done) this.loadModules();
     } catch (e) {
       // Keep the answer on screen; it is re-sent with the next batch.
       this.setState({ qFetchError: '' });
@@ -2139,6 +2203,164 @@ class Component extends DCLogic {
     if (d.length > 5) out += '-' + d.slice(5, 7);
     if (d.length > 7) out += '-' + d.slice(7, 9);
     return out;
+  }
+
+  // Everything the module screens bind to. Kept in one method so the offer and
+  // the screen cannot disagree about which module is open.
+  _modVals(S) {
+    const mods = S.mods || [];
+    const next = mods.find((m) => m.questions && m.questions.length && m.completed === null) || null;
+    const open = mods.find((m) => m.key === S.modKey) || null;
+    const q = open ? (open.questions[S.modIdx] || null) : null;
+    const picked = (S.modPicked || {})[q ? q.n : -1];
+
+    // Scale modules share one set of levels; choice modules carry their own
+    // options per question, which is why this is built from the question and
+    // not from the module.
+    const options = !q ? []
+      : (open.kind === 'scale'
+        ? (open.scale || []).map((s) => ({ key: String(s.value), label: s.label, answer: { value: s.value } }))
+        : (q.options || []).map((o) => ({ key: o, label: o, answer: { choice: o } })));
+
+    const chosen = picked ? (picked.value != null ? String(picked.value) : picked.choice) : null;
+
+    return {
+      // The offer, under the report button on the done screen.
+      modOffer: !!next,
+      modOfferLabel: next ? next.title : '',
+      modOfferNote: next
+        ? 'Ixtiyoriy: ' + next.questions.length + ' ta qisqa savol. Hisobot busiz ham to‘liq — '
+          + 'bu javoblar qiziqish ballariga qo‘shilmaydi.'
+        : '',
+      modStart: () => this.modStart(),
+
+      // The screen itself.
+      modOpen: !!open,
+      modTitle: open ? open.title : '',
+      modIntro: open ? open.intro : '',
+      modQText: q ? q.text : '',
+      modCounter: open ? ((S.modIdx + 1) + ' / ' + open.questions.length) : '',
+      modBack: () => this.modBack(),
+      modBackDisabled: S.modIdx === 0,
+      modSkipQ: () => this.modSkipQ(),
+      modQuit: () => this.modQuit(),
+      modError: S.modError || '',
+      modChoices: options.map((o) => {
+        const on = chosen === o.key;
+        return {
+          label: o.label,
+          bg: on ? 'var(--color-accent-100)' : 'var(--color-neutral-100)',
+          border: on ? 'var(--color-accent)' : 'var(--color-divider)',
+          pick: () => this.modPick(q.n, o.answer),
+        };
+      }),
+    };
+  }
+
+  // ---- the two optional modules -------------------------------------------
+  //
+  // Loaded lazily, when the seventy are done: a sitting that never gets there
+  // should not pay for the round trip, and until then there is nothing to show.
+  async loadModules() {
+    if (this._modsLoading || this.state.mods) return;
+    this._modsLoading = true;
+    try {
+      const d = await this.api('/api/sessions/' + this._stok + '/modules');
+      this.setState({ mods: (d && d.modules) || [] });
+    } catch (_) {
+      // Optional means optional: a module list that will not load must not
+      // stand between the child and their report. The offer simply does not
+      // appear.
+      this.setState({ mods: [] });
+    }
+    this._modsLoading = false;
+  }
+
+  // The next module worth offering: one that has questions and has not already
+  // been answered or deliberately skipped.
+  _nextModule() {
+    return (this.state.mods || []).find(
+      (m) => m.questions && m.questions.length && m.completed === null) || null;
+  }
+
+  modStart() {
+    const m = this._nextModule();
+    if (!m) return;
+    this.setState({ modKey: m.key, modIdx: 0, modPicked: {}, modError: '' });
+  }
+
+  _modCurrent() {
+    const m = (this.state.mods || []).find((x) => x.key === this.state.modKey);
+    if (!m) return null;
+    return { mod: m, q: m.questions[this.state.modIdx] || null };
+  }
+
+  // Record a pick and move on; the last question submits the module.
+  modPick(n, answer) {
+    const picked = { ...this.state.modPicked, [n]: answer };
+    const cur = this._modCurrent();
+    if (!cur) return;
+    const last = this.state.modIdx >= cur.mod.questions.length - 1;
+    this.setState({ modPicked: picked, modError: '' },
+      () => (last ? this.modSubmit() : this.setState({ modIdx: this.state.modIdx + 1 })));
+  }
+
+  modSkipQ() {
+    const cur = this._modCurrent();
+    if (!cur) return;
+    if (this.state.modIdx >= cur.mod.questions.length - 1) return this.modSubmit();
+    this.setState({ modIdx: this.state.modIdx + 1, modError: '' });
+  }
+
+  modBack() {
+    if (this.state.modIdx > 0) this.setState({ modIdx: this.state.modIdx - 1, modError: '' });
+  }
+
+  // Stopping partway is a deliberate skip, not an abandonment: the report has
+  // to know the module was offered and declined so it says nothing about it,
+  // and the offer must not come back on the next screen.
+  async modQuit() {
+    const key = this.state.modKey;
+    const answered = Object.keys(this.state.modPicked || {}).length;
+    this.setState({ modKey: null, modError: '' });
+    if (!key) return;
+    try {
+      if (answered) await this.modSubmit(true);
+      else await this.api('/api/sessions/' + this._stok + '/modules/' + key, {
+        method: 'POST', body: { skipped: true },
+      });
+      this._modDone(key, false);
+    } catch (_) { /* a failed skip costs nothing; the report treats it as unfilled */ }
+  }
+
+  async modSubmit(quiet) {
+    const key = this.state.modKey;
+    const cur = this._modCurrent();
+    if (!key || !cur) return;
+    const answers = Object.entries(this.state.modPicked || {})
+      .map(([n, a]) => ({ n: Number(n), ...a }));
+    if (!answers.length) {
+      if (!quiet) this.setState({ modKey: null });
+      return;
+    }
+    try {
+      const d = await this.api('/api/sessions/' + this._stok + '/modules/' + key, {
+        method: 'POST', body: { answers },
+      });
+      this._modDone(key, !!(d && d.completed));
+      if (!quiet) this.setState({ modKey: null, modIdx: 0, modPicked: {} });
+    } catch (e) {
+      this.setState({ modError: 'Saqlanmadi. ' + this._errMsg(e) });
+    }
+  }
+
+  // Mark it answered locally so the offer moves on to the next module, or
+  // disappears when there is none.
+  _modDone(key, completed) {
+    this.setState({
+      mods: (this.state.mods || []).map(
+        (m) => (m.key === key ? { ...m, completed } : m)),
+    });
   }
 
   async gateSubmit() {
@@ -2339,6 +2561,7 @@ class Component extends DCLogic {
       token: '', shareToken: '', reportPartial: false,
       qList: [], qAnswers: {}, qIdx: 0, qScale: [], qLoading: false, qFetchError: '',
       gate: false, parentName: '', phone: '', cDelivery: false, cMarketing: false, gateError: '', delivered: false,
+      mods: null, modKey: null, modIdx: 0, modPicked: {}, modError: '',
       report: null, reportNotFound: false, deliveryLink: ''
     };
   }
@@ -2700,6 +2923,7 @@ class Component extends DCLogic {
           // the honest offer is to try again, not to start over.
           finishError: S.apiError,
           finishLabel: S.apiError ? 'Qaytadan urinib ko‘rish' : 'Hisobotni olish',
+          ...this._modVals(S),
           qChoices: SCALE_UI.map(([value, label]) => {
             const on = chosen === value;
             return {

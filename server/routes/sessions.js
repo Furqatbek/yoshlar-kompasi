@@ -327,8 +327,16 @@ router.post(
     const alreadyAsked = msgs.some((m) => m.role === 'user' && m.meta
       && String(m.content || '').includes(prompt.REPORT_MARKER));
     if (!alreadyAsked) {
+      // The optional modules, which the report must either use or explicitly
+      // say nothing about (§23). Fetched here rather than inside the prompt so
+      // the prompt layer stays free of database calls.
+      const [moduleQuestions, moduleState] = await Promise.all([
+        repo.getModuleQuestions(),
+        repo.getModuleState(session.id),
+      ]);
       await repo.addMessage(session.id, 'user',
-        prompt.buildReportRequest(child.nickname, partial, scoredForReq), true);
+        prompt.buildReportRequest(child.nickname, partial, scoredForReq,
+          { questions: moduleQuestions, state: moduleState }), true);
     }
 
     const history = await repo.getMessages(session.id);
@@ -510,6 +518,112 @@ router.post(
     }
 
     res.json({ progress: progressOf(updated), done: allDone(updated) });
+  })
+);
+
+// ---------------------------------------------------------------------------
+// The two optional modules (§8 learning preferences, §9 homework environment).
+//
+// Deliberately a separate pair of endpoints from /questions and /answers. The
+// 70 and these sixteen are different instruments with different consequences —
+// one is scored, the other must never be — and sharing a route would mean one
+// handler deciding which table a batch of answers lands in. That decision is
+// exactly what should not exist.
+
+// GET /api/sessions/:token/modules — the questions and whatever has been
+// answered so far, so a resumed sitting shows what was already filled.
+router.get(
+  '/:id/modules',
+  sessionAuth,
+  asyncHandler(async (req, res) => {
+    const { MODULES } = require('../data/modules');
+    const [rows, state] = await Promise.all([
+      repo.getModuleQuestions(),
+      repo.getModuleState(req.session.id),
+    ]);
+    const byModule = new Map();
+    for (const q of rows) {
+      if (!byModule.has(q.module)) byModule.set(q.module, []);
+      byModule.get(q.module).push({ n: q.n, text: q.text, options: q.options || null });
+    }
+    res.json({
+      modules: MODULES
+        .filter((m) => byModule.has(m.key))
+        .map((m) => ({
+          key: m.key,
+          title: m.title,
+          intro: m.intro,
+          kind: m.kind,
+          scale: m.kind === 'scale' ? m.scale : null,
+          questions: byModule.get(m.key),
+          answers: (state.answers[m.key] || []),
+          // true = filled, false = deliberately skipped, undefined = not offered yet.
+          completed: Object.prototype.hasOwnProperty.call(state.completion, m.key)
+            ? state.completion[m.key] : null,
+        })),
+    });
+  })
+);
+
+// POST /api/sessions/:token/modules/:module — save answers, or record a skip.
+//   { answers: [ { n: 1, value: 4 }, { n: 2, choice: 'Tinch muhit' } ] }
+//   { skipped: true }
+router.post(
+  '/:id/modules/:module',
+  sessionAuth,
+  asyncHandler(async (req, res) => {
+    const session = req.session;
+    if (session.status === 'finished') throw badRequest('Mashg‘ulot yakunlangan', 'session_finished');
+
+    const { BY_KEY } = require('../data/modules');
+    const moduleKey = String(req.params.module || '');
+    const mod = BY_KEY.get(moduleKey);
+    if (!mod) throw badRequest('Noma’lum modul', 'unknown_module');
+
+    const body = req.body || {};
+    if (body.skipped === true) {
+      // A skip is recorded, not merely an absence of answers: §23 needs the
+      // report to know the module was offered and declined, and the UI needs to
+      // stop asking on resume.
+      await repo.setModuleCompletion(session.id, moduleKey, false);
+      return res.json({ module: moduleKey, completed: false, saved: 0 });
+    }
+
+    const list = Array.isArray(body.answers) ? body.answers : [];
+    if (!list.length) throw badRequest('Javob yuborilmadi');
+    if (list.length > 40) throw badRequest('Juda ko‘p javob');
+
+    // Validate against the question's own kind. A scale answer to a choice
+    // question, or a choice that is not one of the offered options, is dropped
+    // rather than stored — the report quotes these back to a parent verbatim.
+    const allowed = new Map(mod.items.map(([n, , options]) => [n, options || null]));
+    const clean = [];
+    for (const a of list) {
+      const n = Number(a && a.n);
+      if (!allowed.has(n)) continue;
+      const options = allowed.get(n);
+      if (mod.kind === 'scale') {
+        const v = Number(a.value);
+        if (Number.isInteger(v) && v >= 1 && v <= 5) clean.push({ n, value: v });
+      } else {
+        const c = typeof a.choice === 'string' ? a.choice.trim() : '';
+        if (c && options && options.includes(c)) clean.push({ n, choice: c });
+      }
+    }
+    if (!clean.length) throw badRequest('Javoblar noto‘g‘ri');
+
+    const saved = await repo.saveModuleAnswers(session.id, moduleKey, clean);
+    // Complete only when every question has an answer. A half-filled module is
+    // not a completed one, and §23 treats the two the same way: say nothing.
+    const state = await repo.getModuleState(session.id);
+    const answeredCount = (state.answers[moduleKey] || []).length;
+    const complete = answeredCount >= mod.items.length;
+    await repo.setModuleCompletion(session.id, moduleKey, complete);
+
+    res.json({
+      module: moduleKey, saved, completed: complete,
+      answered: answeredCount, total: mod.items.length,
+    });
   })
 );
 
