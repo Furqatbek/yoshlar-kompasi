@@ -24,6 +24,17 @@ const config = {
   // Public origin used to build absolute report links for SMS/Telegram delivery.
   publicBaseUrl: (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
 
+  // Who the report says it is from. The browser has its own copy of both (the
+  // page is editable through its props), and unit/brand.test.js holds the two
+  // to the same values — a PDF headed with a different name from the page it
+  // was downloaded from is worse than either name alone. Phones are stored in
+  // E.164 and formatted where they are shown.
+  brand: {
+    name: process.env.BRAND_NAME || 'CareerKids',
+    phones: String(process.env.CONTACT_PHONES || '+998935157343,+998935657343')
+      .split(',').map((s) => s.trim()).filter(Boolean),
+  },
+
   // Postgres.
   databaseUrl: process.env.DATABASE_URL || '',
 

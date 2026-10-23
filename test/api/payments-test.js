@@ -72,6 +72,13 @@ const { authorize } = require('./auth-helper');
   ok('  the levels are withheld', view.levels && view.levels.logic === null, JSON.stringify(view.levels));
   ok('  the sports are withheld', Array.isArray(view.sports) && view.sports.length === 0, JSON.stringify(view.sports));
 
+  // The file, too: a PDF of the free excerpt would be a document that looks
+  // complete and is not, so it is refused outright rather than half-served.
+  const lockedPdf = await fetch(BASE + '/api/reports/' + share + '/pdf');
+  ok('  and the PDF is refused while the report is locked', lockedPdf.status === 400,
+    'status=' + lockedPdf.status);
+  ok('    saying why', ((await lockedPdf.json()).code) === 'payment_required');
+
   const checkout = await j('POST', '/api/reports/' + share + '/checkout', {});
   ok('checkout returns somewhere to pay', checkout.status === 200 && !!checkout.data.checkout_url);
   ok('  the amount matches the price', checkout.data.amount_uzs === PRICE_UZS, String(checkout.data.amount_uzs));
@@ -143,6 +150,28 @@ const { authorize } = require('./auth-helper');
   ok('  the full markdown is served', /12 yo‘nalish bo‘yicha natijalar/.test(view.content_md || ''),
     (view.content_md || '').slice(0, 60));
   ok('  locked_sections is gone', view.locked_sections === undefined);
+
+  // ---- the file ----------------------------------------------------------
+  // "PDF yuklab olish" is a download now, not a print dialog. The report is
+  // the thing sold, so the file is the thing delivered.
+  const pdfRes = await fetch(BASE + '/api/reports/' + share + '/pdf');
+  const pdfBody = Buffer.from(await pdfRes.arrayBuffer());
+  ok('the PDF downloads once the report is paid for', pdfRes.status === 200,
+    'status=' + pdfRes.status);
+  ok('  it is a PDF', pdfBody.slice(0, 5).toString() === '%PDF-', pdfBody.slice(0, 8).toString());
+  ok('  of a plausible size', pdfBody.length > 8000, pdfBody.length + ' bytes');
+  ok('  served as a download', /^attachment/.test(pdfRes.headers.get('content-disposition') || ''),
+    pdfRes.headers.get('content-disposition'));
+  ok('  under a name that says whose it is',
+    /filename\*=UTF-8''/.test(pdfRes.headers.get('content-disposition') || '')
+    && /Sinov|Ali|CareerKids/.test(decodeURIComponent(pdfRes.headers.get('content-disposition') || '')),
+    pdfRes.headers.get('content-disposition'));
+  ok('  and not cached by a shared proxy',
+    /no-store/.test(pdfRes.headers.get('cache-control') || ''), pdfRes.headers.get('cache-control'));
+
+  const missingPdf = await fetch(BASE + '/api/reports/nosuchtoken/pdf');
+  ok('  an unknown token is a 404, not an empty file', missingPdf.status === 404,
+    'status=' + missingPdf.status);
   // The scored findings, asserted here rather than in e2e-driver because this
   // is the only place a report is unlocked. These come from the SERVER's
   // arithmetic over the stub's answers, not from the stub's JSON block — the

@@ -63,10 +63,49 @@ const italicUrl = () => 'https://fonts.googleapis.com/css2'
   + '&display=swap'
   + '&text=' + encodeURIComponent([...new Set((LANDING_LETTER + ' ‘’“”').split(''))].join(''));
 
-async function get(url) {
-  const r = await fetch(url, { headers: { 'user-agent': UA } });
+// The same faces again, as TrueType, for the PDF. The browser gets woff2 and
+// the PDF generator cannot read it: pdfkit embeds TTF/OTF. Google serves
+// whichever format the caller can handle, so this asks as a browser too old to
+// know about woff — the oldest trick in webfont delivery, and the only way to
+// get a plain .ttf out of the same source the page uses, so the printed report
+// is set in the same type as the screen.
+const PDF_FONT_DIR = path.join(ROOT, 'server', 'assets', 'fonts');
+const PDF_UA = 'Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) '
+  + 'AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1';
+// Static instances, not a variable font: fontkit can read a variable TTF but
+// pdfkit gives no way to pick an instance, so it would embed the default weight
+// for every face and the headings would not be bold.
+const PDF_FACES = 'https://fonts.googleapis.com/css2'
+  + '?family=Literata:ital,wght@0,400;0,600;1,400'
+  + '&family=Public+Sans:wght@400;600'
+  + '&display=swap';
+
+async function get(url, ua) {
+  const r = await fetch(url, { headers: { 'user-agent': ua || UA } });
   if (!r.ok) throw new Error('GET ' + url.slice(0, 80) + ' -> ' + r.status);
   return r;
+}
+
+async function fetchPdfFonts() {
+  fs.rmSync(PDF_FONT_DIR, { recursive: true, force: true });
+  fs.mkdirSync(PDF_FONT_DIR, { recursive: true });
+  const css = await (await get(PDF_FACES, PDF_UA)).text();
+  const faces = parseFaces(css);
+  if (!faces.length) throw new Error('fetch-fonts: no TrueType faces came back');
+  let total = 0;
+  for (const f of faces) {
+    if (!/\.ttf(\?|$)/.test(f.src)) throw new Error('fetch-fonts: expected a .ttf, got ' + f.src);
+    // literata-400.ttf, literata-600.ttf, literata-italic-400.ttf, …
+    const file = f.family.toLowerCase().replace(/\s+/g, '-')
+      + (f.style === 'italic' ? '-italic' : '') + '-' + f.weight + '.ttf';
+    const buf = Buffer.from(await (await get(f.src, PDF_UA)).arrayBuffer());
+    fs.writeFileSync(path.join(PDF_FONT_DIR, file), buf);
+    total += buf.length;
+    // eslint-disable-next-line no-console
+    console.log('  pdf: ' + file + '  ' + Math.round(buf.length / 1024) + ' KB');
+  }
+  // eslint-disable-next-line no-console
+  console.log('[fonts] pdf: ' + faces.length + ' TrueType faces, ' + Math.round(total / 1024) + ' KB');
 }
 
 // Google's CSS is a run of `/* subset */ @font-face { ... }` blocks; a text
@@ -132,6 +171,8 @@ async function main() {
   // eslint-disable-next-line no-console
   console.log('[fonts] ' + kept.length + ' files, '
     + Math.round(kept.reduce((s, f) => s + f.bytes, 0) / 1024) + ' KB total; styles.css updated.');
+
+  await fetchPdfFonts();
 }
 
 main().catch((e) => { console.error(String(e.message || e)); process.exit(1); });

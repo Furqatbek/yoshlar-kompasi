@@ -33,6 +33,59 @@ router.get(
   })
 );
 
+// GET /api/reports/:token/pdf — the report as a file.
+//
+// Drawn here rather than printed by the browser: "PDF yuklab olish" was
+// window.print(), which opens a dialog and leaves the reader to find "Save as
+// PDF" — and on a phone, where most of these are read, that is Share → Print →
+// Save to Files. This hands over the file.
+//
+// Generating it server-side also means the same document can be sent through
+// Telegram later, which a print dialog could never do.
+router.get(
+  '/:token/pdf',
+  readLimiter,
+  asyncHandler(async (req, res) => {
+    const r = await repo.getReportByShareToken(req.params.token);
+    if (!r) throw notFound('Hisobot topilmadi.');
+
+    const paid = !config.payments.enabled || (await repo.isReportPaid(r.id));
+    if (!paid) {
+      // A PDF of the free excerpt would be a document that looks complete and
+      // is not; the reader is better served by the page, which says plainly
+      // what is still behind the payment.
+      throw badRequest('Hisobot hali sotib olinmagan.', 'payment_required');
+    }
+
+    // Required here rather than at the top: pdfkit and fontkit are 17 MB of
+    // module, and the cron container runs this same image without ever serving
+    // a download.
+    const pdf = require('../services/pdf');
+    const { formatUzPhone } = require('../utils/phone');
+    const doc = pdf.renderReport(r, {
+      brand: config.brand.name,
+      phones: config.brand.phones.map((p) => formatUzPhone(p) || p),
+    });
+    const name = pdf.fileNameFor(r, config.brand.name);
+    // Buffered rather than piped: a report is tens of kilobytes, and sending it
+    // in one piece means a Content-Length, which is what lets a browser show a
+    // progress bar and a download manager resume.
+    const body = await pdf.toBuffer(doc);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', body.length);
+    // Both forms: the plain one for anything that cannot read RFC 5987, the
+    // encoded one so a child's name keeps its letters.
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="' + name.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '') + '"'
+        + "; filename*=UTF-8''" + encodeURIComponent(name)
+    );
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.end(body);
+  })
+);
+
 // POST /api/reports/:token/checkout — where to send the parent to pay.
 //
 // The share token is the credential, exactly as it is for reading the report:

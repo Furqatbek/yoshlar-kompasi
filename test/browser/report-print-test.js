@@ -1,8 +1,10 @@
-// The report as a FILE, not a screen.
+// The report on PAPER, not on a screen.
 //
-// "PDF yuklab olish" is window.print(), so the thing a parent keeps, prints
-// and shows a teacher is this page under print media. Nothing else tests it,
-// and every way it breaks is silent: you only find out when someone prints.
+// Downloading is a real file now, drawn server-side (services/pdf.js, pinned by
+// unit/pdf.test.js). This covers the other button — "Chop etish" — which is
+// still window.print(), and is what a teacher reaches for. Nothing else tests
+// the page under print media, and every way it breaks is silent: you only find
+// out when someone prints.
 //
 // The failure that matters most: Chrome's print dialog ships with "Background
 // graphics" OFF, and that overrides print-color-adjust. Anything whose

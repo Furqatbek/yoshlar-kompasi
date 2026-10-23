@@ -66,6 +66,9 @@ node test/unit/fonts.test.js
 echo "==== unit: the product's name and the centre's numbers ===="
 node test/unit/brand.test.js
 
+echo "==== unit: the report as a file ===="
+node test/unit/pdf.test.js
+
 echo "==== migrate + seed ===="
 (cd server && npm run migrate && npm run seed)
 

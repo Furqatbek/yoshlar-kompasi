@@ -11,7 +11,9 @@ WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
-# Backend source (includes vendored React under server/vendor).
+# Backend source (includes vendored React under server/vendor and the TrueType
+# faces under server/assets/fonts, which the PDF generator embeds — narrow this
+# COPY and reports come out in a substitute typeface, or not at all).
 COPY server/ ./
 
 # Frontend + prompt sources live one level up (repo root).

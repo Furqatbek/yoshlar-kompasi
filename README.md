@@ -503,8 +503,13 @@ privacy page (`/#/maxfiylik`) discloses this in Uzbek.
 ## Report delivery
 
 **The primary delivery IS the app**: when the assessment finishes, the report
-opens on screen, is stored server-side, and the parent can save it as PDF or
-copy the share link. With `PAYMENTS_ENABLED=true` what opens is the free
+opens on screen, is stored server-side, and the parent can download it or copy
+the share link. "PDF yuklab olish" is a real file from
+`GET /api/reports/:token/pdf` — drawn by `services/pdf.js` with the product's
+own typeface embedded, named after the child and the date, and refused while
+the report is still behind the paywall. It used to be `window.print()`, which
+opens a dialog and leaves the reader to find "Save as PDF"; printing is still
+there as its own button, for paper. With `PAYMENTS_ENABLED=true` what opens is the free
 summary plus the paywall (see [Paid reports](#paid-reports)); the link is the
 same one before and after payment, so nothing has to be re-sent once they buy.
 

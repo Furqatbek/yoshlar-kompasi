@@ -712,8 +712,13 @@ input, textarea, button, select { font-family: var(--font-body); }
         </div>
       </sc-if>
       <div class="no-print" style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); align-items: center;">
-        <button type="button" class="btn btn-primary" onClick="{{ printNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 9V2h12v7"></path><rect x="6" y="14" width="12" height="8"></rect></svg>PDF yuklab olish</button>
-        <button type="button" class="btn btn-secondary" onClick="{{ printNow }}">Chop etish</button>
+        <!-- A real file, from the server. This used to be window.print(), which
+             opens a dialog and leaves the reader to find "Save as PDF" — on a
+             phone that is Share, Print, Save to Files, and most of these are
+             read on a phone. Printing stays, as its own button, for the people
+             who actually want paper. -->
+        <a class="btn btn-primary" href="{{ pdfUrl }}" download="{{ pdfName }}" style="text-decoration: none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>PDF yuklab olish</a>
+        <button type="button" class="btn btn-secondary" onClick="{{ printNow }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 9V2h12v7"></path><rect x="6" y="14" width="12" height="8"></rect></svg>Chop etish</button>
         <button type="button" class="btn btn-secondary" onClick="{{ resetAll }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Boshqa bola uchun</button>
         <span style="flex: 1;"></span>
         <button type="button" class="btn btn-ghost" onClick="{{ copyShare }}" style="font-size: 13px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="0" ry="0"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>{{ copyLabel }}</button>
@@ -2784,6 +2789,17 @@ class Component extends DCLogic {
       beginCheckout: () => this.beginCheckout(),
       payError: S.payError,
       extra: rep.extra,
+      // The file itself. The share token is the credential for the report, so
+      // it is the credential for the file; `download` is a hint, and the
+      // server sends the real name in Content-Disposition either way.
+      pdfUrl: '/api/reports/' + encodeURIComponent(segs[1] || S.shareToken || '') + '/pdf',
+      // repView.date is already formatted by fetchReport, so formatting it
+      // again gives an invalid date and an empty string — which is how the
+      // suggested filename lost its date and the print title ended on a
+      // dangling dash.
+      pdfName: [this.brand(), (repView && repView.name) || S.name || 'Hisobot',
+        (repView && repView.date) || this.fmtDate(Date.now())]
+        .filter(Boolean).join(' - ') + '.pdf',
       // "Save as PDF" in the browser's print dialog names the file after the
       // document title, so every report used to save as the brand name and a
       // parent with two children ended up with two identical filenames. Name it
@@ -2792,8 +2808,8 @@ class Component extends DCLogic {
       printNow: () => {
         const was = document.title;
         const name = (repView && repView.name) || S.name || 'Hisobot';
-        const date = (repView && repView.date) ? this.fmtDate(repView.date) : this.fmtDate(Date.now());
-        document.title = this.brand() + ' — ' + name + ' — ' + date;
+        const date = (repView && repView.date) || this.fmtDate(Date.now());
+        document.title = [this.brand(), name, date].filter(Boolean).join(' — ');
         const restore = () => { document.title = was; window.removeEventListener('afterprint', restore); };
         window.addEventListener('afterprint', restore);
         window.print();

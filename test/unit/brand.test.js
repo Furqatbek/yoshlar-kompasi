@@ -89,6 +89,17 @@ test('the displayed number is the number', () => {
   }
 });
 
+// The server has its own copy, because it draws the PDF. A file headed with a
+// different name from the page it was downloaded from is worse than either name
+// alone, so the two are held to the same values here.
+test('the server and the page agree on the name and the numbers', () => {
+  const cfg = fs.readFileSync(path.join(ROOT, 'server', 'config.js'), 'utf8');
+  const name = (cfg.match(/BRAND_NAME \|\| '([^']+)'/) || [])[1];
+  assert.strictEqual(name, BRAND, 'server default is ' + JSON.stringify(name));
+  const nums = (cfg.match(/CONTACT_PHONES \|\| '([^']+)'/) || [])[1];
+  assert.deepStrictEqual(String(nums).split(',').map((x) => x.trim()), PHONES, nums);
+});
+
 test('  and it does not share a name with the gate\'s input mask', () => {
   // Two methods of the same name in one class body: the later one wins and the
   // earlier one is silently dead. That is exactly how the wrong number shipped.

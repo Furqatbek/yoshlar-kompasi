@@ -72,7 +72,10 @@ const REPORT_MD = [
     executablePath: process.env.CHROMIUM_PATH || undefined,
     args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process'],
   });
-  const page = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  const page = await (await b.newContext({
+    viewport: { width: 390, height: 844 },
+    acceptDownloads: true, // the report is a file now
+  })).newPage();
   await stubLogin(page);
 
   // Server-side state the mocks share, so progress moves as answers are posted.
@@ -193,10 +196,43 @@ const REPORT_MD = [
     (await page.evaluate(() => location.hash)).includes('/hisobot/' + SHARE));
   ok('  with a way to keep it', report.includes('PDF yuklab olish'));
 
-  // The saved PDF is named by the document title, so it has to identify the
-  // child rather than being the brand name four times in a Downloads folder.
+  // ---- the file -----------------------------------------------------------
+  // "PDF yuklab olish" hands over a file. It used to be window.print(), which
+  // opens a dialog and leaves the reader to find "Save as PDF" — on a phone,
+  // where most of these are read, that is Share → Print → Save to Files.
+  const dl = page.locator('a:has-text("PDF yuklab olish")');
+  ok('the download is a link to a file, not a print dialog', await dl.count() === 1);
+  const href = await dl.first().getAttribute('href');
+  ok('  pointing at this report', href === '/api/reports/' + SHARE + '/pdf', String(href));
+  // The name has to carry the date as well: a parent with two children, or one
+  // child reassessed next term, ends up with files that differ only by it.
+  ok('  with a filename for the browser to suggest',
+    /CareerKids - Sinov - \d{2}\.\d{2}\.\d{4}\.pdf/.test(await dl.first().getAttribute('download') || ''),
+    await dl.first().getAttribute('download'));
+
+  // And it really downloads: serve the request and catch the file.
+  await page.route('**/api/reports/' + SHARE + '/pdf', (route) => route.fulfill({
+    status: 200,
+    headers: {
+      'content-type': 'application/pdf',
+      'content-disposition': 'attachment; filename="CareerKids - Sinov - 23.10.2026.pdf"',
+    },
+    body: Buffer.from('%PDF-1.3\n% stub\n'),
+  }));
+  const [download] = await Promise.all([
+    page.waitForEvent('download', { timeout: 15000 }).catch(() => null),
+    dl.first().click(),
+  ]);
+  ok('  and the browser receives a download', !!download);
+  if (download) {
+    ok('    named after the child', /Sinov/.test(download.suggestedFilename()),
+      download.suggestedFilename());
+  }
+
+  // Printing stays, as its own button, for the people who want paper. It
+  // renames the tab for the duration so a print-to-PDF is named usefully too.
   const title = await page.evaluate(() => {
-    const btn = [...document.querySelectorAll('button')].find((x) => x.textContent.includes('PDF yuklab olish'));
+    const btn = [...document.querySelectorAll('button')].find((x) => x.textContent.includes('Chop etish'));
     let seenTitle = null;
     const print = window.print;
     window.print = () => { seenTitle = document.title; };
@@ -204,7 +240,8 @@ const REPORT_MD = [
     window.print = print;
     return seenTitle;
   });
-  ok('  and the file will be named after the child', !!title && /Sinov/.test(title), JSON.stringify(title));
+  ok('printing is still offered, and names the page after the child',
+    !!title && /CareerKids — Sinov — \d{2}\.\d{2}\.\d{4}/.test(title), JSON.stringify(title));
   ok('  without leaving the tab renamed afterwards',
     await page.evaluate(() => new Promise((r) => setTimeout(() => r(!/Sinov/.test(document.title)), 2300))));
 
