@@ -208,7 +208,7 @@ runtime.
 | `DATABASE_URL` | yes | Postgres connection string |
 | `LLM_PROVIDER` | no | `anthropic` (default) or `openrouter` |
 | `ANTHROPIC_API_KEY` | if anthropic | Claude API key (server-side only) |
-| `ANTHROPIC_MODEL` | no | Default `claude-sonnet-4-6`; override per account |
+| `ANTHROPIC_MODEL` | no | Default `claude-opus-5-5`; also `claude-sonnet-5-5` ($2/$10) or `claude-haiku-5-5` ($0.10/$0.50) |
 | `OPENROUTER_API_KEY` | if openrouter | OpenRouter key (server-side only) |
 | `OPENROUTER_MODEL` | no | Default `anthropic/claude-sonnet-4.6`; any `vendor/model` [slug](https://openrouter.ai/models) |
 | `JWT_SECRET` | yes | Signs the admin session cookie (≥16 chars) |
@@ -230,9 +230,9 @@ runtime.
 | `MAX_TURNS` / `MAX_MESSAGE_CHARS` | no | Abuse caps (60 / 2000) |
 | `MIN_ANSWERS_FOR_REPORT` | no | Real answers required before a report (default 1, floored at 1) |
 | `RL_MESSAGES_PER_MIN` / `RL_SESSIONS_PER_DAY` / `RL_ADMIN_LOGIN_PER_MIN` | no | Rate limits |
-| `CONVERSATION_MAX_TOKENS` / `REPORT_MAX_TOKENS` | no | Generation budgets (1500 / 4500) |
+| `CONVERSATION_MAX_TOKENS` / `REPORT_MAX_TOKENS` | no | Generation budgets (1500 / 16000). Thinking bills against `max_tokens` on current models, so the report ceiling is headroom, not a target |
 | `REPORT_TIMEOUT_MS` | no | Report LLM-call timeout (180000; any extra proxy must allow ≥ this) |
-| `PRICE_INPUT_PER_MTOK` / `PRICE_OUTPUT_PER_MTOK` | no | $/1M tokens for the admin cost estimate (3 / 15) |
+| `PRICE_INPUT_PER_MTOK` / `PRICE_OUTPUT_PER_MTOK` | no | $/1M tokens for the admin cost estimate (4 / 20 = `claude-opus-5-5`); change with the model |
 | `BILLING_ALERT_MIN_USD` | no | Daily credit-check alert threshold (5) |
 | `RETENTION_MONTHS` | no | Data retention window for the monthly purge (24) |
 | `ANALYTICS_RETENTION_DAYS` | no | Funnel-event retention, pruned by the same purge job (180) |

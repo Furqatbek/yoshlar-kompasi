@@ -47,16 +47,25 @@ const config = {
     provider: (process.env.LLM_PROVIDER || 'anthropic').toLowerCase(), // anthropic | openrouter
     // Shared generation budgets, applied regardless of provider.
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
-    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 4500),
+    // Headroom, not a target. On the current Claude models thinking is always
+    // on and cannot be switched off, and thinking tokens are billed as output
+    // and count against max_tokens — so a ceiling sized to the report itself
+    // (4500 was) gets eaten from the front and the report stops mid-sentence.
+    // Nothing is billed for room left unused, so this is free insurance; what
+    // it buys is that `stop_reason: max_tokens` stays the rare case the guard
+    // in services/claude.js is for, rather than the normal one.
+    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 16000),
     // The report generates up to reportMaxTokens in one non-streaming call —
     // at real model speeds that is often 1-3 minutes, far beyond the per-turn
     // timeout. Give it its own budget. (A TLS/reverse proxy in front must have
     // a read timeout at least this long.)
     reportTimeoutMs: int(process.env.REPORT_TIMEOUT_MS, 180000),
     // USD per 1M tokens for the active model — drives the admin cost estimate
-    // only (defaults are the claude-sonnet-4.6 list prices).
-    priceInPerMtok: Number(process.env.PRICE_INPUT_PER_MTOK || 3),
-    priceOutPerMtok: Number(process.env.PRICE_OUTPUT_PER_MTOK || 15),
+    // only. Defaults are claude-opus-5-5 list prices, matching the default
+    // model below; change both together or Statistika quotes one model's
+    // tokens at another's prices.
+    priceInPerMtok: Number(process.env.PRICE_INPUT_PER_MTOK || 4),
+    priceOutPerMtok: Number(process.env.PRICE_OUTPUT_PER_MTOK || 20),
   },
 
   // Anthropic / Claude (used when LLM_PROVIDER=anthropic).
@@ -64,11 +73,23 @@ const config = {
     apiKey: process.env.ANTHROPIC_API_KEY || '',
     baseUrl: (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/+$/, ''),
     version: process.env.ANTHROPIC_VERSION || '2023-06-01',
-    // Spec §4: start with claude-sonnet-4-6; A/B claude-haiku-4-5-20251001 for
-    // cost. Override per your Anthropic account access.
-    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+    // One report is one call, and that call is the whole product: a page of
+    // careful Uzbek about one named child, read by their parent. At roughly
+    // 6.4K input tokens (5.6K of it the cached system prompt, billed at a
+    // tenth) and a few thousand out, it costs a few cents against a 49,000 UZS
+    // report — so the model is chosen on how well it writes, not on price.
+    //
+    // The spec's claude-sonnet-4-6 is a generation behind and, at $3/$15 per
+    // MTok, dearer than the current claude-sonnet-5-5 at $2/$10 — there is no
+    // reading under which it is still the right default. Override per what
+    // your account can call:
+    //   claude-opus-5-5    $4/$20   the default
+    //   claude-sonnet-5-5  $2/$10   about half the bill
+    //   claude-haiku-5-5   $0.10/$0.50   a rounding error; read its Uzbek
+    //                                    before trusting it with a child
+    model: process.env.ANTHROPIC_MODEL || 'claude-opus-5-5',
     conversationMaxTokens: int(process.env.CONVERSATION_MAX_TOKENS, 1500),
-    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 4500),
+    reportMaxTokens: int(process.env.REPORT_MAX_TOKENS, 16000),
     timeoutMs: int(process.env.ANTHROPIC_TIMEOUT_MS, 60000),
   },
 

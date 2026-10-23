@@ -132,9 +132,9 @@ DOMAIN=careerkids.uz
 DOMAIN_ALIASES=www.careerkids.uz               # 301'd to DOMAIN; must be on the certificate
 PUBLIC_BASE_URL=https://careerkids.uz          # must match DOMAIN, no trailing slash
 
-LLM_PROVIDER=openrouter
-OPENROUTER_API_KEY=sk-or-...
-OPENROUTER_MODEL=anthropic/claude-sonnet-4.6
+LLM_PROVIDER=anthropic                         # or openrouter
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-opus-5-5                # see the note below
 
 JWT_SECRET=<openssl rand -base64 48>
 ADMIN_EMAIL=admin@careerkids.uz
@@ -161,6 +161,26 @@ names the character. `%` is worse than fatal: it parses, then percent-decodes,
 so pg sends a different password than the one in `.env`. If you need to change
 it after the fact, the volume has to be recreated too — Postgres only reads
 `POSTGRES_PASSWORD` when it initialises its data directory.
+
+**The model.** One report is one call — about 6.4K tokens in (5.6K of it the
+system prompt, which is cached and bills at a tenth) and a few thousand out, so
+a few cents against a 49,000 UZS report. That makes it a writing decision, not a
+cost one: this is a page of careful Uzbek about one named child, read by their
+parent. `claude-opus-5-5` ($4/$20 per MTok) is the default; `claude-sonnet-5-5`
+($2/$10) roughly halves the bill; `claude-haiku-5-5` ($0.10/$0.50) is a rounding
+error, worth trying only after someone has read its Uzbek. Set
+`PRICE_INPUT_PER_MTOK` / `PRICE_OUTPUT_PER_MTOK` to match, or the admin
+Statistika panel prices one model's tokens at another's rates. On OpenRouter the
+same models need `vendor/model` slugs with dot versions
+(`anthropic/claude-sonnet-4.6`) — the bare Anthropic id is rejected at boot.
+
+Two API facts that bound this: `temperature`, `top_p` and `top_k` are rejected
+on every current model, and assistant prefill with them — this app sends none of
+the four. Thinking is always on and cannot be switched off, and thinking tokens
+bill as output *and* count against `max_tokens`, which is why
+`REPORT_MAX_TOKENS` defaults to 16000 rather than a figure sized to the report.
+Too low a ceiling shows up as failed reports rather than short ones: a report cut
+off at the limit is refused, not stored.
 
 Three more worth a decision rather than a default:
 

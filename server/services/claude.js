@@ -136,17 +136,53 @@ async function completeAnthropic({ system, model, maxTokens, messages, timeoutMs
   } catch (err) {
     throw networkError(err);
   }
+  // Only the text blocks. A response can also carry `thinking` blocks, which
+  // on the current models are present on every call and empty unless asked to
+  // be summarized — concatenating the lot would prepend nothing useful at
+  // best, and leak reasoning into a parent's report at worst.
   const text = (data.content || [])
     .filter((b) => b && b.type === 'text')
     .map((b) => b.text)
     .join('')
     .trim();
+
+  // The checks the OpenRouter path has had all along, and this one hasn't.
+  // Both failures arrive as HTTP 200 with a plausible-looking body, so without
+  // them a blank or half-written report is stored, marked done, rendered to
+  // PDF and sent to a parent — the one outcome worse than an error.
+  //
+  // (1) Nothing to show. A safety classifier declining (`refusal`) or a
+  //     response that is all thinking and no text both land here.
+  const stopReason = data.stop_reason || null;
+  if (!text) {
+    const why = stopReason === 'refusal'
+      ? 'model javob berishdan bosh tortdi'
+      : 'model bo‘sh javob qaytardi';
+    throw new ClaudeError('Claude: ' + why + '.', {
+      status: 502,
+      // A refusal is about this request, so repeating it verbatim will be
+      // refused again; an empty body is usually transient.
+      retryable: stopReason !== 'refusal',
+    });
+  }
+  // (2) Cut off at the ceiling. The text that came back is real and reads as
+  //     finished right up to the point it stops, which is exactly why this
+  //     must not be stored: it ends mid-sentence, and nothing downstream can
+  //     tell. Raising REPORT_MAX_TOKENS is the fix; failing is the honest
+  //     interim.
+  if (stopReason === 'max_tokens') {
+    throw new ClaudeError(
+      'Claude: javob max_tokens chegarasida uzildi (REPORT_MAX_TOKENS ni oshiring).',
+      { status: 502, retryable: true }
+    );
+  }
+
   const usage = data.usage || {};
   return {
     text,
     inputTokens: usage.input_tokens || 0,
     outputTokens: usage.output_tokens || 0,
-    stopReason: data.stop_reason || null,
+    stopReason,
   };
 }
 
@@ -248,12 +284,22 @@ async function completeOpenRouter({ system, model, maxTokens, messages, timeoutM
   if (!text) {
     throw new ClaudeError('Model bo‘sh javob qaytardi.', { status: 502, retryable: true });
   }
+  // (3) Cut off at the ceiling — 'length' is the OpenAI-shaped spelling of
+  // Anthropic's 'max_tokens'. Same reason it must not be stored: the text
+  // reads as finished until the sentence it stops in the middle of.
+  const stopReason = (choice && choice.finish_reason) || null;
+  if (stopReason === 'length') {
+    throw new ClaudeError(
+      'Model javobi max_tokens chegarasida uzildi (REPORT_MAX_TOKENS ni oshiring).',
+      { status: 502, retryable: true }
+    );
+  }
   const usage = data.usage || {};
   return {
     text,
     inputTokens: usage.prompt_tokens || 0,
     outputTokens: usage.completion_tokens || 0,
-    stopReason: (choice && choice.finish_reason) || null,
+    stopReason,
   };
 }
 

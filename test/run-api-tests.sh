@@ -63,6 +63,9 @@ node test/unit/compose-env.test.js
 echo "==== unit: what a bad DATABASE_URL says ===="
 node test/unit/database-url.test.js
 
+echo "==== unit: when the model answers 200 with nothing usable ===="
+node test/unit/llm-guards.test.js
+
 echo "==== unit: the type is ours and complete ===="
 node test/unit/fonts.test.js
 
