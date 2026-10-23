@@ -4,6 +4,12 @@
 COMPOSE ?= docker compose
 BACKUP_DIR ?= backups
 
+# Stamped into the container so GET /healthz can say which build is running.
+# The image cannot work this out for itself: .git is excluded from the build
+# context, and "did my rebuild take effect?" is otherwise answered by squinting
+# at started_at. Falls back to empty outside a checkout.
+export GIT_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null)
+
 .PHONY: help
 help:
 	@echo "Docker (local):"

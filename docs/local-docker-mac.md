@@ -193,6 +193,15 @@ the container is older than this document — `git pull && docker compose up
 --build`. `started_at` says when this container booted; if it predates your last
 rebuild, the rebuild did not take.
 
+`commit` names the build exactly, which is the question you actually have.
+`make up` fills it in from your checkout; plain `docker compose up --build`
+leaves it `null`, because `.git` is not in the image's build context and the
+container cannot work it out for itself. To get it without `make`:
+
+```bash
+GIT_COMMIT=$(git rev-parse --short=12 HEAD) docker compose up -d --build
+```
+
 Then find out where the time goes. Every API response carries a `Server-Timing`
 header with the server's own share of it:
 
