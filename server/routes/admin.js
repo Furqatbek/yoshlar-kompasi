@@ -375,4 +375,136 @@ router.patch(
   })
 );
 
+// ---------------------------------------------------------------------------
+// The catalogues (§17 books, §16 tutors).
+//
+// Every write here lands UNAPPROVED, and approving is its own call. That is the
+// whole mechanism: the model is only ever shown approved rows, so the gap
+// between "somebody pasted a list" and "somebody checked it" is a state the
+// product can be in safely. A report generated during that gap says the list
+// has not been supplied — true, and better than a recommendation nobody vetted.
+//
+// There is deliberately no endpoint that creates an approved row in one step.
+
+const MAX_IMPORT = 500;
+
+router.get(
+  '/books',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const books = await repo.listBooks({ limit: Number(req.query.limit) || 500 });
+    res.json({
+      books,
+      // What the report would actually see right now, which is the number that
+      // matters and is not the same as books.length.
+      approved_count: books.filter((b) => b.approved && b.active).length,
+    });
+  })
+);
+
+// Bulk import of a supplied list. The source is required and is not optional
+// politeness: §17 turns on the list coming from somewhere nameable, and a row
+// whose provenance is "unknown" is one nobody can defend to a parent.
+router.post(
+  '/books/import',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const b = req.body || {};
+    const source = typeof b.source === 'string' ? b.source.trim() : '';
+    if (!source) throw badRequest('Ro‘yxat manbasini yozing (kim tasdiqlagan)');
+    if (source.length > 300) throw badRequest('Manba matni juda uzun');
+    const items = Array.isArray(b.books) ? b.books : null;
+    if (!items || !items.length) throw badRequest('Kitoblar ro‘yxati bo‘sh');
+    if (items.length > MAX_IMPORT) throw badRequest('Bir martada ' + MAX_IMPORT + ' tadan ko‘p emas');
+
+    const withTitle = items.filter((x) => x && typeof x.title === 'string' && x.title.trim());
+    if (!withTitle.length) throw badRequest('Hech bir qatorda kitob nomi yo‘q');
+
+    const { added, updated } = await repo.importBooks(withTitle, source);
+    res.status(201).json({
+      added, updated,
+      skipped: items.length - withTitle.length,
+      // Said plainly, because the import looking like it worked is exactly when
+      // somebody assumes the reports will start using it.
+      note: 'Qatorlar tasdiqlanmagan holda saqlandi. Ular hisobotlarda '
+        + 'ishlatilishidan oldin har birini tasdiqlash kerak.',
+    });
+  })
+);
+
+router.post(
+  '/books',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const b = req.body || {};
+    const title = typeof b.title === 'string' ? b.title.trim() : '';
+    const source = typeof b.source === 'string' ? b.source.trim() : '';
+    if (!title) throw badRequest('Kitob nomini yozing');
+    if (!source) throw badRequest('Manbani yozing (kim tasdiqlagan)');
+    const created = await repo.upsertBook({ ...b, title, source, approved: false });
+    res.status(201).json({ book: created });
+  })
+);
+
+router.post(
+  '/books/:id/approve',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const updated = await repo.setBookApproval(req.params.id, (req.body || {}).approved !== false);
+    if (!updated) throw notFound('Kitob topilmadi');
+    res.json({ book: updated });
+  })
+);
+
+router.delete(
+  '/books/:id',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    if (!(await repo.deleteBook(req.params.id))) throw notFound('Kitob topilmadi');
+    res.json({ ok: true });
+  })
+);
+
+router.get(
+  '/tutors',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const tutors = await repo.listTutors();
+    res.json({ tutors, approved_count: tutors.filter((t) => t.approved && t.active).length });
+  })
+);
+
+router.post(
+  '/tutors',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const b = req.body || {};
+    const subject = typeof b.subject === 'string' ? b.subject.trim() : '';
+    const source = typeof b.source === 'string' ? b.source.trim() : '';
+    if (!subject) throw badRequest('Yo‘nalishni yozing');
+    if (!source) throw badRequest('Manbani yozing (kim tasdiqlagan)');
+    const created = await repo.upsertTutor({ ...b, subject, source, approved: false });
+    res.status(201).json({ tutor: created });
+  })
+);
+
+router.post(
+  '/tutors/:id/approve',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    const updated = await repo.setTutorApproval(req.params.id, (req.body || {}).approved !== false);
+    if (!updated) throw notFound('O‘qituvchi topilmadi');
+    res.json({ tutor: updated });
+  })
+);
+
+router.delete(
+  '/tutors/:id',
+  adminAuth,
+  asyncHandler(async (req, res) => {
+    if (!(await repo.deleteTutor(req.params.id))) throw notFound('O‘qituvchi topilmadi');
+    res.json({ ok: true });
+  })
+);
+
 module.exports = router;

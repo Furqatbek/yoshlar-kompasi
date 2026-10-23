@@ -172,7 +172,60 @@ function modulesBlock(questions, state) {
     + out.join('\n\n') + '\n';
 }
 
-function buildReportRequest(name, partial, scored, modules) {
+// The approved catalogues (§17 books, §16 tutors), rendered for the request.
+//
+// Only ever called with repo.approvedBooks() / repo.approvedTutors(), which
+// return approved AND active rows and nothing else. An empty catalogue produces
+// an explicit "there is no list" rather than silence, for the same reason an
+// unfilled module does: a model shown nothing writes the section anyway, and
+// what it writes is a plausible Uzbek title for a book that does not exist.
+// §17 and §23 both require it said out loud.
+function cataloguesBlock(books, tutors) {
+  const out = [];
+
+  if (books && books.length) {
+    out.push('### Tasdiqlangan kitoblar ro‘yxati (' + books.length + ' ta)\n'
+      + 'Kitobxonlik tavsiyasini FAQAT shu ro‘yxatdan bering. Ro‘yxatda yo‘q '
+      + 'kitobni tavsiya qilmang va nom, muallif yoki syujet uydirmang.\n'
+      + books.map((b) => {
+        const bits = [b.title];
+        if (b.author) bits.push(b.author);
+        const age = b.age_min && b.age_max ? b.age_min + '–' + b.age_max + ' yosh'
+          : (b.age_min ? b.age_min + '+ yosh' : (b.age_max ? b.age_max + ' yoshgacha' : null));
+        if (age) bits.push(age);
+        if (b.genre) bits.push(b.genre);
+        if (b.language) bits.push(b.language);
+        return '- ' + bits.join(' — ');
+      }).join('\n'));
+  } else {
+    out.push('### Tasdiqlangan kitoblar ro‘yxati — kiritilmagan\n'
+      + 'Platformaga hali biror kitob ro‘yxati kiritilmagan. Shu sababli hech '
+      + 'qanday kitob nomi yoki muallifini yozmang. Kitobxonlik bo‘limida faqat '
+      + 'umumiy yo‘nalish (masalan, qanday mavzudagi kitoblar va kuniga qancha '
+      + 'o‘qish) haqida yozing va ro‘yxat kiritilishi kerakligini ayting.');
+  }
+
+  if (tutors && tutors.length) {
+    out.push('### Tasdiqlangan ustozlar katalogi (' + tutors.length + ' ta)\n'
+      + 'Qo‘shimcha yordam bo‘limida faqat shu yo‘nalishlarni ko‘rsating.\n'
+      + tutors.map((t) => {
+        const bits = [t.subject];
+        if (t.name) bits.push(t.name);
+        if (t.age_range) bits.push(t.age_range);
+        if (t.method) bits.push(t.method);
+        return '- ' + bits.join(' — ');
+      }).join('\n'));
+  } else {
+    out.push('### Tasdiqlangan ustozlar katalogi — kiritilmagan\n'
+      + 'Haqiqiy o‘qituvchilar katalogi kiritilmagan. Ism, narx, malaka, sharh '
+      + 'yoki bo‘sh vaqt yozmang. Faqat qaysi TURDAGI mutaxassis foydali '
+      + 'bo‘lishi mumkinligini va uyda mustaqil boshlash qadamini tushuntiring.');
+  }
+
+  return '\nKataloglar:\n\n' + out.join('\n\n') + '\n';
+}
+
+function buildReportRequest(name, partial, scored, modules, catalogues) {
   const partialRule = partial
     ? ' Diqqat: baholash qisman yakunlangan. Hisobot boshida ma’lumotlar ' +
       'to‘liq emasligini ayting. Javobsiz savollarni taxmin qilmang; ' +
@@ -215,6 +268,7 @@ function buildReportRequest(name, partial, scored, modules) {
     'qayd etilgan kuzatuvlar asosida tayyorlang. Hech narsa uydirmang. ' +
     results +
     modulesBlock(modules && modules.questions, modules && modules.state) +
+    cataloguesBlock(catalogues && catalogues.books, catalogues && catalogues.tutors) +
     '\nMarkdown formatida quyidagi sarlavhalarni aynan shu tartibda va aynan shu ' +
     'matn bilan ishlating:\n\n' +
     body +
@@ -228,6 +282,7 @@ module.exports = {
   invalidate,
   systemPrompt,
   modulesBlock,
+  cataloguesBlock,
   promptVersion,
   childContext,
   buildReportRequest,

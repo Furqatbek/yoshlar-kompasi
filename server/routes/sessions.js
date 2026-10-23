@@ -330,13 +330,19 @@ router.post(
       // The optional modules, which the report must either use or explicitly
       // say nothing about (§23). Fetched here rather than inside the prompt so
       // the prompt layer stays free of database calls.
-      const [moduleQuestions, moduleState] = await Promise.all([
+      // The approved catalogues (§17, §16). Books are age-filtered: §17 asks
+      // for books matched to the child's age, and sending a hundred to pick
+      // three from is input tokens spent on ninety-seven.
+      const [moduleQuestions, moduleState, books, tutors] = await Promise.all([
         repo.getModuleQuestions(),
         repo.getModuleState(session.id),
+        repo.approvedBooks({ age: Number.isInteger(child.age) ? child.age : null }),
+        repo.approvedTutors(),
       ]);
       await repo.addMessage(session.id, 'user',
         prompt.buildReportRequest(child.nickname, partial, scoredForReq,
-          { questions: moduleQuestions, state: moduleState }), true);
+          { questions: moduleQuestions, state: moduleState },
+          { books, tutors }), true);
     }
 
     const history = await repo.getMessages(session.id);

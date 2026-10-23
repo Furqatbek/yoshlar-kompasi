@@ -401,6 +401,55 @@ both what Payme speaks and the only kind of money worth trusting in a database.
 
 ---
 
+## Catalogues: books and tutors
+
+Two tables the model may quote from, and may never invent entries for. They
+exist because of §17 and §16 of the instructions, and because the failure they
+prevent is silent: asked for a book for an eight-year-old, a model will produce
+a plausible Uzbek title by a plausible author, a parent will go looking for it,
+and nothing will have logged a problem.
+
+**Both ship empty, and empty is a working state.** With no approved rows the
+report says the list has not been supplied yet and gives general reading
+guidance instead of titles. That is true, useful, and much better than a
+recommendation nobody checked.
+
+Only rows that are **approved AND active** ever reach the model. An import
+lands everything unapproved, whatever the payload says, so the window between
+"somebody pasted a list" and "somebody read it" is safe.
+
+```bash
+# 1. import a supplied list. `source` is required: a row nobody can vouch for
+#    is a row nobody can defend to a parent.
+curl -sS https://careerkids.uz/admin/books/import \
+  -H 'content-type: application/json' -b cookies.txt \
+  -d '{
+    "source": "Markaz kutubxonasi roʻyxati, 2026",
+    "books": [
+      {"title": "...", "author": "...", "age_min": 8, "age_max": 12,
+       "genre": "...", "language": "oʻzbek", "list_position": 1}
+    ]
+  }'
+# -> {"added":1,"updated":0,"skipped":0,"note":"... tasdiqlash kerak"}
+
+# 2. read them back, check them, approve one by one
+curl -sS https://careerkids.uz/admin/books -b cookies.txt        # approved_count
+curl -sS -X POST https://careerkids.uz/admin/books/<id>/approve \
+  -H 'content-type: application/json' -b cookies.txt -d '{"approved":true}'
+```
+
+Every field except `title` and `source` is optional and stays null when the
+source does not state it — §17 forbids guessing at a missing one. Books are
+filtered to the child's age when the report is written, so a hundred-book list
+costs input tokens on the handful that fit rather than all of it.
+
+Tutors (`/admin/tutors`) work the same way and carry `subject`, optional `name`,
+`age_range`, `method` and `goal`. There is deliberately **no column for price,
+availability or reviews**: §16 forbids inventing them, and an empty column is an
+invitation.
+
+---
+
 ## Reminders
 
 With `REMINDERS_ENABLED=true` the bot chases people who stopped partway. Run

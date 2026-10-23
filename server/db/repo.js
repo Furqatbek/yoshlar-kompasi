@@ -131,6 +131,153 @@ async function getAnswers(sessionId) {
 }
 
 // ---------------------------------------------------------------------------
+// The catalogues (§17 books, §16 tutors).
+//
+// Two readers, and the difference between them is the point:
+//
+//   listBooks / listTutors   — the admin panel. Everything, approved or not.
+//   approvedBooks / approvedTutors — what may reach the model. Approved AND
+//                            active only, and these are the ONLY functions the
+//                            report path calls.
+//
+// Keeping them apart means a bulk import cannot put an unchecked title in front
+// of a parent even for the minutes before somebody reviews it.
+
+const BOOK_FIELDS = ['title', 'author', 'age_min', 'age_max', 'genre',
+  'reading_level', 'language', 'list_position', 'source', 'approved', 'active', 'notes'];
+
+async function listBooks({ limit = 500 } = {}) {
+  const { rows } = await query(
+    `SELECT * FROM books ORDER BY list_position NULLS LAST, title ASC LIMIT $1`,
+    [Math.min(Number(limit) || 500, 2000)]
+  );
+  return rows;
+}
+
+// What the report may see. Age-bounded when an age is known: §17 asks for books
+// matched to the child's age, and sending the whole hundred would cost input
+// tokens on ninety books nobody will recommend.
+async function approvedBooks({ age = null, limit = 40 } = {}) {
+  const params = [Math.min(Number(limit) || 40, 200)];
+  let ageClause = '';
+  if (Number.isInteger(age)) {
+    params.push(age);
+    // A book with no stated age range stays eligible — §17 says a missing
+    // field must not be guessed at, and excluding it would be a guess that it
+    // does not fit.
+    ageClause = ` AND (age_min IS NULL OR age_min <= $2) AND (age_max IS NULL OR age_max >= $2)`;
+  }
+  const { rows } = await query(
+    `SELECT title, author, age_min, age_max, genre, reading_level, language, list_position
+       FROM books
+      WHERE approved = true AND active = true${ageClause}
+      ORDER BY list_position NULLS LAST, title ASC
+      LIMIT $1`,
+    params
+  );
+  return rows;
+}
+
+async function upsertBook(b) {
+  const { rows } = await query(
+    `INSERT INTO books (title, author, age_min, age_max, genre, reading_level,
+                        language, list_position, source, approved, active, notes)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+     ON CONFLICT (title, author) DO UPDATE SET
+       age_min = EXCLUDED.age_min, age_max = EXCLUDED.age_max,
+       genre = EXCLUDED.genre, reading_level = EXCLUDED.reading_level,
+       language = EXCLUDED.language, list_position = EXCLUDED.list_position,
+       source = EXCLUDED.source, notes = EXCLUDED.notes, updated_at = now()
+     RETURNING *`,
+    [b.title, b.author || null, b.age_min ?? null, b.age_max ?? null, b.genre || null,
+      b.reading_level || null, b.language || null, b.list_position ?? null,
+      b.source, b.approved === true, b.active !== false, b.notes || null]
+  );
+  return rows[0] || null;
+}
+
+// A bulk paste of a supplied list. Lands UNAPPROVED whatever the payload says:
+// the point of the flag is that a human looked, and an importer claiming its
+// own rows are approved would defeat it.
+async function importBooks(items, source) {
+  let added = 0, updated = 0;
+  await withTransaction(async (client) => {
+    for (const raw of items) {
+      const title = String((raw && raw.title) || '').trim();
+      if (!title) continue;
+      const res = await client.query(
+        `INSERT INTO books (title, author, age_min, age_max, genre, reading_level,
+                            language, list_position, source, approved, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,false,$10)
+         ON CONFLICT (title, author) DO UPDATE SET
+           age_min = COALESCE(EXCLUDED.age_min, books.age_min),
+           age_max = COALESCE(EXCLUDED.age_max, books.age_max),
+           genre = COALESCE(EXCLUDED.genre, books.genre),
+           reading_level = COALESCE(EXCLUDED.reading_level, books.reading_level),
+           language = COALESCE(EXCLUDED.language, books.language),
+           list_position = COALESCE(EXCLUDED.list_position, books.list_position),
+           updated_at = now()
+         RETURNING (xmax = 0) AS inserted`,
+        [title, (raw.author || '').trim() || null,
+          Number.isInteger(raw.age_min) ? raw.age_min : null,
+          Number.isInteger(raw.age_max) ? raw.age_max : null,
+          (raw.genre || '').trim() || null, (raw.reading_level || '').trim() || null,
+          (raw.language || '').trim() || null,
+          Number.isInteger(raw.list_position) ? raw.list_position : null,
+          source, (raw.notes || '').trim() || null]
+      );
+      if (res.rows[0] && res.rows[0].inserted) added += 1; else updated += 1;
+    }
+  });
+  return { added, updated };
+}
+
+async function setBookApproval(id, approved) {
+  const { rows } = await query(
+    'UPDATE books SET approved = $2, updated_at = now() WHERE id = $1 RETURNING *',
+    [id, !!approved]);
+  return rows[0] || null;
+}
+
+async function deleteBook(id) {
+  const { rowCount } = await query('DELETE FROM books WHERE id = $1', [id]);
+  return rowCount > 0;
+}
+
+async function listTutors() {
+  const { rows } = await query('SELECT * FROM tutors ORDER BY subject ASC, name ASC NULLS FIRST');
+  return rows;
+}
+
+async function approvedTutors() {
+  const { rows } = await query(
+    `SELECT subject, name, age_range, method, goal FROM tutors
+      WHERE approved = true AND active = true ORDER BY subject ASC`);
+  return rows;
+}
+
+async function upsertTutor(t) {
+  const { rows } = await query(
+    `INSERT INTO tutors (subject, name, age_range, method, goal, source, approved, active, notes)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+    [t.subject, t.name || null, t.age_range || null, t.method || null, t.goal || null,
+      t.source, t.approved === true, t.active !== false, t.notes || null]);
+  return rows[0] || null;
+}
+
+async function setTutorApproval(id, approved) {
+  const { rows } = await query(
+    'UPDATE tutors SET approved = $2, updated_at = now() WHERE id = $1 RETURNING *',
+    [id, !!approved]);
+  return rows[0] || null;
+}
+
+async function deleteTutor(id) {
+  const { rowCount } = await query('DELETE FROM tutors WHERE id = $1', [id]);
+  return rowCount > 0;
+}
+
+// ---------------------------------------------------------------------------
 // The two optional modules (§8 learning preferences, §9 homework environment).
 //
 // Everything here reads and writes module_answers / module_completions. None of
@@ -938,6 +1085,8 @@ async function optOutReminders(chatId) {
 module.exports = {
   saveAnswers, getAnswers, getAnswerRows,
   getModuleQuestions, getModuleState, saveModuleAnswers, setModuleCompletion,
+  listBooks, approvedBooks, upsertBook, importBooks, setBookApproval, deleteBook,
+  listTutors, approvedTutors, upsertTutor, setTutorApproval, deleteTutor,
   createChildAndSession, getSessionById, getSessionByToken, getChildById,
   addMessage, getMessages, applyTurn, setSessionStatus,
   upsertParent, linkChildToParent, updateParentContact,
