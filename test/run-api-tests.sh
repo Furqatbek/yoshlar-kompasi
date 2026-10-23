@@ -63,6 +63,9 @@ node test/unit/compose-env.test.js
 echo "==== unit: the type is ours and complete ===="
 node test/unit/fonts.test.js
 
+echo "==== unit: the product's name and the centre's numbers ===="
+node test/unit/brand.test.js
+
 echo "==== migrate + seed ===="
 (cd server && npm run migrate && npm run seed)
 

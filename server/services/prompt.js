@@ -1,6 +1,6 @@
 'use strict';
 
-// System-prompt assembly for “Yosh Iste’dodlar Kompasi”.
+// System-prompt assembly for CareerKids.
 // Sources: loyiha-korsatmalari-uz.md and savollar-banki-1-4-sinflar-uz.md.
 // Aligned with the 70-question bank and 12 interest areas.
 // The 30-day development plan has been removed.
@@ -17,7 +17,7 @@ function readSource(name) {
 
 const PROTOCOL = `## 70 savolli baholash protokoli (majburiy)
 
-Siz “Yosh Iste’dodlar Kompasi” veb-ilovasi ichida ishlayapsiz. Maqsad — 1–4-sinf o‘quvchisining hozirgi qiziqishlarini aniqlash va kattalarga bolani rivojlantirish uchun amaliy tavsiyalar berish.
+Siz CareerKids veb-ilovasi ichida ishlayapsiz. Maqsad — 1–4-sinf o‘quvchisining hozirgi qiziqishlarini aniqlash va kattalarga bolani rivojlantirish uchun amaliy tavsiyalar berish.
 
 1. Savollar bankidagi 70 ta savolni va ularning tartibini o‘zgartirmang. Savol matnlarini qayta tuzmang, almashtirmang yoki yangisini qo‘shmang. Savol banki loyiha ko‘rsatmalariga biriktirilgan manbadan olinadi.
 

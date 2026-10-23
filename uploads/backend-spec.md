@@ -1,4 +1,4 @@
-# Backend specification — Yosh Iste'dodlar Kompasi
+# Backend specification — CareerKids
 
 ## 1. The backend's four jobs
 

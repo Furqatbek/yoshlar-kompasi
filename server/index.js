@@ -34,8 +34,44 @@ app.use(compression({
 app.use(express.json({ limit: '32kb' }));
 app.use(cookieParser());
 
-// Health / readiness.
-app.get('/healthz', (req, res) => res.json({ ok: true }));
+// How long the server itself took, so "the app is slow" can be answered with a
+// number instead of a guess. The browser shows this under Network -> Timing;
+// anything the header does not account for happened on the wire or in the page.
+// A slow request also says so in the log, which is where a struggling database
+// shows up first.
+const SLOW_MS = Number(process.env.SLOW_REQUEST_MS || 500);
+app.use((req, res, next) => {
+  const t0 = process.hrtime.bigint();
+  res.on('finish', () => {
+    const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+    if (ms >= SLOW_MS && !req.path.startsWith('/healthz')) {
+      // eslint-disable-next-line no-console
+      console.warn('[slow] ' + req.method + ' ' + req.path + ' took ' + Math.round(ms) + 'ms');
+    }
+  });
+  const done = res.writeHead;
+  res.writeHead = function patched(...args) {
+    const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+    if (!res.headersSent) { try { res.setHeader('Server-Timing', 'app;dur=' + ms.toFixed(1)); } catch (_) { /* already sent */ } }
+    return done.apply(this, args);
+  };
+  next();
+});
+
+// Health / readiness. The build stamp answers "is the thing I deployed the
+// thing I am looking at?", which is otherwise guesswork across a rebuild.
+const BUILD = {
+  commit: (process.env.GIT_COMMIT || '').slice(0, 12) || null,
+  started_at: new Date().toISOString(),
+};
+app.get('/healthz', (req, res) => res.json({
+  ok: true,
+  ...BUILD,
+  // Both of these were slow once and are the first things to check if starting
+  // a sitting ever feels slow again.
+  model_called_on_start: false,
+  questions_sent_with_session: true,
+}));
 app.get('/readyz', async (req, res) => {
   try {
     await pool.query('SELECT 1');

@@ -174,6 +174,44 @@ or `ngrok http 8080`) and set `PUBLIC_BASE_URL` to the URL it gives you.
 **Payments** — `PAYMENTS_ENABLED=true` plus `PAYME_MERCHANT_ID` and
 `PAYME_MERCHANT_KEY`. Test against Payme's sandbox before anything real.
 
+## 7b. Is it slow — and is it even the build you think?
+
+"Slow" is three different problems and they have different answers. Ask the
+server what it did:
+
+```bash
+curl -s localhost:8080/healthz
+```
+
+```json
+{"ok":true,"started_at":"…","model_called_on_start":false,"questions_sent_with_session":true}
+```
+
+Those two flags are statements about the code that is running, not settings.
+`model_called_on_start: true` or a missing `questions_sent_with_session` means
+the container is older than this document — `git pull && docker compose up
+--build`. `started_at` says when this container booted; if it predates your last
+rebuild, the rebuild did not take.
+
+Then find out where the time goes. Every API response carries a `Server-Timing`
+header with the server's own share of it:
+
+```bash
+curl -s -o /dev/null -D- -X POST localhost:8080/api/sessions \
+  -H 'content-type: application/json' \
+  -d '{"consent":true,"nickname":"Sinov","grade":2}' | grep -i server-timing
+```
+
+`app;dur=15` means the server took 15ms and everything else the browser waited
+for was the network or the page itself. Starting a sitting is a database insert
+— it makes no model call — so anything above about 100ms here is the database
+or the container, not the application. Requests over 500ms also print a
+`[slow]` line in `docker compose logs app` (tune with `SLOW_REQUEST_MS`).
+
+If the server is fast and the page still feels slow, it is the page: open
+DevTools → Network, reload, and read the transfer sizes. A cold load is about
+180 KB over 13 requests.
+
 ## 8. If it will not start
 
 The app refuses to boot on a bad configuration rather than running half-broken,

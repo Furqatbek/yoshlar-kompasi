@@ -1,4 +1,4 @@
-# Yosh Iste'dodlar Kompasi — operations shortcuts.
+# CareerKids — operations shortcuts.
 # Docker targets use docker compose; local targets run the Node server directly.
 
 COMPOSE ?= docker compose

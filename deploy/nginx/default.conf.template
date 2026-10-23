@@ -1,4 +1,4 @@
-# Reverse proxy for Yoshlar Kompasi. ${DOMAIN} is substituted from the
+# Reverse proxy for CareerKids. ${DOMAIN} is substituted from the
 # environment by the official nginx image's template mechanism; nginx's own
 # runtime variables ($host, $request_uri, ...) are left untouched.
 

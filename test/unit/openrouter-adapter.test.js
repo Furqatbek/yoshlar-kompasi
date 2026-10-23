@@ -73,7 +73,7 @@ async function main() {
       OPENROUTER_BASE_URL: BASE,
       OPENROUTER_MODEL: 'anthropic/claude-sonnet-4.5',
       OPENROUTER_SITE_URL: 'https://kompas.example.uz',
-      OPENROUTER_SITE_NAME: 'Yoshlar Kompasi',
+      OPENROUTER_SITE_NAME: 'CareerKids',
     });
 
     ok('config.llm.provider = openrouter', config.llm.provider === 'openrouter', config.llm.provider);
@@ -101,7 +101,7 @@ async function main() {
     ok('POST to /chat/completions', lastReq.method === 'POST' && lastReq.url === '/api/v1/chat/completions', lastReq.method + ' ' + lastReq.url);
     ok('Authorization: Bearer <key>', lastReq.headers['authorization'] === 'Bearer sk-or-testkey', lastReq.headers['authorization']);
     ok('HTTP-Referer attribution header', lastReq.headers['http-referer'] === 'https://kompas.example.uz', lastReq.headers['http-referer']);
-    ok('X-Title attribution header', lastReq.headers['x-title'] === 'Yoshlar Kompasi', lastReq.headers['x-title']);
+    ok('X-Title attribution header', lastReq.headers['x-title'] === 'CareerKids', lastReq.headers['x-title']);
     ok('body.model set', lastReq.body.model === 'anthropic/claude-sonnet-4.5', lastReq.body.model);
     ok('body.max_tokens set', lastReq.body.max_tokens === 1500, String(lastReq.body.max_tokens));
     const m = lastReq.body.messages;

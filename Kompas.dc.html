@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Yosh Iste'dodlar Kompasi</title>
+<title>CareerKids</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <script src="./support.js"></script>
 </head>
@@ -81,7 +81,7 @@ input, textarea, button, select { font-family: var(--font-body); }
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
       <a href="#" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--color-text);">
         <span style="width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--color-accent); display: grid; place-items: center;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent);"></span></span>
-        <span style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: 19px; letter-spacing: -0.01em;">Yoshlar Kompasi</span>
+        <span style="font-family: Literata, Georgia, serif; font-weight: 600; font-size: 19px; letter-spacing: -0.01em;">CareerKids</span>
       </a>
     </div>
   </header>
@@ -156,7 +156,7 @@ input, textarea, button, select { font-family: var(--font-body); }
             <p style="margin: 14px 0 0; font-size: 15px; line-height: 1.5; color: var(--color-neutral-700);">Bitta belgi. Endi nima qilishni aytmaydi.</p>
           </div>
           <div style="border: 1px solid var(--color-accent-200); background: var(--color-accent-100); border-radius: 6px; padding: 20px;">
-            <p style="margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--color-accent);">Kompas</p>
+            <p style="margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--color-accent);">CareerKids</p>
             <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px;">
               <sc-for list="{{ lensCells }}" as="c" hint-placeholder-count="7">
                 <div style="aspect-ratio: 1; border-radius: 6px; background: {{ c.bg }}; border: 1px solid var(--color-accent); transition: background .8s ease;"></div>
@@ -906,7 +906,14 @@ input, textarea, button, select { font-family: var(--font-body); }
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
-            <span style="font-family: var(--font-heading); font-weight: 700; font-size: 14px;">{{ ctaPhone }}</span>
+            <!-- Dialable: most of this report is read on a phone, and a number
+                 you have to copy out is a number nobody calls. Printed, the
+                 href disappears and the digits remain. -->
+            <span style="display: flex; flex-direction: column; gap: 2px;">
+              <sc-for list="{{ phones }}" as="p" hint-placeholder-count="2">
+                <a href="{{ p.tel }}" style="font-family: var(--font-heading); font-weight: 700; font-size: 14px; color: inherit; text-decoration: none;">{{ p.label }}</a>
+              </sc-for>
+            </span>
             <button type="button" class="btn btn-primary no-print" onClick="{{ ctaClick }}">Bepul sinov darsiga yozilish</button>
           </div>
         </div>
@@ -1330,9 +1337,10 @@ input, textarea, button, select { font-family: var(--font-body); }
       <a href="#/admin" class="text-muted" style="color: inherit;">Markaz uchun: admin</a>
     </div>
     <div id="markaz" style="font-size: 14px; scroll-margin-top: 80px;">
-      <!-- [PLACEHOLDER: markaz nomi, shahri va real telefon raqami — Tweaks -> "Markaz telefoni" orqali almashtiriladi] -->
       <h6 style="margin: 0 0 var(--space-1); font-size: 11px;">Markaz bilan aloqa</h6>
-      <div style="font-family: var(--font-heading); font-weight: 700;">{{ ctaPhone }}</div>
+      <sc-for list="{{ phones }}" as="p" hint-placeholder-count="2">
+        <div><a href="{{ p.tel }}" style="font-family: var(--font-heading); font-weight: 700; color: inherit; text-decoration: none;">{{ p.label }}</a></div>
+      </sc-for>
     </div>
   </div>
 </footer>
@@ -1340,7 +1348,7 @@ input, textarea, button, select { font-family: var(--font-body); }
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;brandName&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Yosh Iste'dodlar Kompasi&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brend&quot;}, &quot;ctaPhone&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;+998 71 200-70-07&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brend&quot;}, &quot;showTestimonials&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Bo'limlar&quot;}, &quot;model&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;claude-sonnet-4-5&quot;, &quot;options&quot;: [&quot;claude-sonnet-4-5&quot;, &quot;claude-haiku-4-5&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;AI&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;brandName&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;CareerKids&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brend&quot;}, &quot;ctaPhones&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;+998935157343, +998935657343&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brend&quot;}, &quot;showTestimonials&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Bo&#x27;limlar&quot;}, &quot;model&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;claude-sonnet-4-5&quot;, &quot;options&quot;: [&quot;claude-sonnet-4-5&quot;, &quot;claude-haiku-4-5&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;AI&quot;}}">
 class Component extends DCLogic {
   state = {
     route: (typeof location !== 'undefined' && location.hash ? location.hash.replace(/^#/, '') : '/') || '/',
@@ -1372,7 +1380,26 @@ class Component extends DCLogic {
     cfgLoaded: false, cfgAuthRequired: false, cfgPaid: false, cfgPrice: 0, cfgAskPhone: false
   };
 
-  brand() { return this.props.brandName ?? "Yosh Iste'dodlar Kompasi"; }
+  brand() { return this.props.brandName ?? 'CareerKids'; }
+
+  // The centre's contact numbers, in E.164 — the form a tel: link needs. The
+  // pretty form is derived, never stored, because a display string with spaces
+  // and dashes in it is not a number you can dial from.
+  PHONES = ['+998935157343', '+998935657343'];
+  // Not fmtPhone: that name is taken by the contact gate's input mask, which
+  // formats the nine local digits a parent types under a fixed "+998" label.
+  // Handing it a full E.164 number silently produced "99 893-51-57" — a
+  // plausible-looking Uzbek number that was not the centre's.
+  fmtE164(e164) {
+    const m = /^\+998(\d{2})(\d{3})(\d{2})(\d{2})$/.exec(String(e164 || ''));
+    return m ? '+998 ' + m[1] + ' ' + m[2] + '-' + m[3] + '-' + m[4] : String(e164 || '');
+  }
+  phoneList() {
+    const list = this.props.ctaPhones
+      ? String(this.props.ctaPhones).split(',').map((x) => x.trim()).filter(Boolean)
+      : this.PHONES;
+    return list.map((e164) => ({ tel: 'tel:' + e164, label: this.fmtE164(e164) }));
+  }
   fmtDate(ts) { if (!ts) return ''; const d = new Date(ts); if (isNaN(d.getTime())) return ''; return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); }
 
   // --- API client -------------------------------------------------------
@@ -1936,8 +1963,17 @@ class Component extends DCLogic {
     }
   }
 
+  // How many questions the child has actually answered. This counted CHAT
+  // MESSAGES, which the sitting stopped producing when the inventory became a
+  // form — so after seventy answers it still returned zero, "Yakunlash" always
+  // opened the "no answers yet" dialog, and the report was unreachable. The
+  // server gate was fixed to count answers at the time; this was not.
+  //
+  // Skipped questions are stored with a null value and are not answers.
   _realAnswers() {
-    return (this.state.messages || []).filter((m) => m.role === 'user' && !m.meta).length;
+    const p = this.state.progress || {};
+    if (Number(p.answered) > 0) return Number(p.answered);
+    return Object.values(this.state.qAnswers || {}).filter((v) => v !== null && v !== undefined).length;
   }
 
   exitSession() {
@@ -1952,7 +1988,7 @@ class Component extends DCLogic {
   askFinish() {
     // A report is built from the child's answers — block the finish/contact flow
     // outright if nothing has been answered yet. Mirrors the server gate, which
-    // counts real (non-meta) answers only (not model-emitted [YAKUN] markers).
+    // counts rows in the answers table.
     if (this._realAnswers() === 0) return this.setState({ lowEngage: true });
     // Finishing early is allowed and honest about it: the report says how much
     // of the inventory it rests on. Only a completed sitting skips the warning.
@@ -2507,7 +2543,11 @@ class Component extends DCLogic {
     }));
 
     return {
-      brand: this.brand(), ctaPhone: this.props.ctaPhone ?? '+998 71 200-70-07',
+      brand: this.brand(),
+      // The centre's numbers, dialable. Written once in E.164 and formatted for
+      // display, so the two render sites cannot disagree and a tel: link can
+      // never be built from an already-prettified string.
+      phones: this.phoneList(),
       isLanding: route === '/' || route === '', isSetup: route === '/boshlash', isSession,
       // Landing copy follows the server's actual configuration. The page used
       // to promise a free report and ask for "only a name"; with the login
@@ -2744,7 +2784,22 @@ class Component extends DCLogic {
       beginCheckout: () => this.beginCheckout(),
       payError: S.payError,
       extra: rep.extra,
-      printNow: () => window.print(),
+      // "Save as PDF" in the browser's print dialog names the file after the
+      // document title, so every report used to save as the brand name and a
+      // parent with two children ended up with two identical filenames. Name it
+      // after the child and the date for the duration of the print, then put
+      // the title back.
+      printNow: () => {
+        const was = document.title;
+        const name = (repView && repView.name) || S.name || 'Hisobot';
+        const date = (repView && repView.date) ? this.fmtDate(repView.date) : this.fmtDate(Date.now());
+        document.title = this.brand() + ' — ' + name + ' — ' + date;
+        const restore = () => { document.title = was; window.removeEventListener('afterprint', restore); };
+        window.addEventListener('afterprint', restore);
+        window.print();
+        // Safari does not always fire afterprint; do not leave the tab renamed.
+        setTimeout(restore, 2000);
+      },
       ctaClick: () => { location.hash = '#/'; },
       admEmailVal: S.admEmail, onAdmEmail: e => this.setState({ admEmail: e.target.value, admError: '' }),
       admPassVal: S.admPass, onAdmPass: e => this.setState({ admPass: e.target.value, admError: '' }),

@@ -1,4 +1,4 @@
-# Yosh Iste'dodlar Kompasi
+# CareerKids
 
 An interest inventory for primary-school children (grades 1–4) in Uzbek. An
 adult (parent or teacher) reads 70 fixed statements aloud, the child rates each

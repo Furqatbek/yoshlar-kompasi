@@ -37,6 +37,7 @@ The runner migrates + seeds, boots the OpenRouter stub (`:5602`) and the app
 | `api/reminders-test.js` | Who gets chased and who does not: timing thresholds, the give-up window, paid reports excluded, opt-out and `/stop`, quiet hours, claim-once, and that a failed send releases the claim so it can be retried. Ages rows in the DB rather than waiting |
 | `api/questions-test.js` | The admin question bank: reading it, editing a question, disabling one (the row is kept, so answers already given are not orphaned), tuning a score threshold, and the consequence that matters — a bank edit reaches the prompt and changes its version, because an edited bank is a different instrument |
 | `api/payload-test.js` | What a cold visit downloads, and how many round trips the first question is behind. The landing was 610 KB over 15 requests, none of it compressed, with the runtime quietly downloading the 200 KB shell a second time and the inventory arriving in a request of its own — none of which is visible in a screenshot, in a content assertion, or on a laptop next to the server. It only shows up as "the page is slow", which is how it was reported. Thresholds are loose on purpose: they catch something switching off, not a few kilobytes |
+| `unit/brand.test.js` | The product's name and the centre's two phone numbers, as the page carries them. A rename looks finished long before it is — the title, the wordmark, the report header, the bot's self-introduction and the system prompt all say the name. The numbers are written once in E.164 and formatted for display, and that formatter once collided with an existing method of the same name (the contact gate's input mask, which expects the nine local digits a parent types): the page showed "99 893-51-57" under a correct `tel:` link — a plausible Uzbek number belonging to nobody. The duplicate-method check is there because of it |
 | `unit/fonts.test.js` | The typeface is self-hosted and the production CSP no longer allows Google's origins, which sets two traps: a re-added remote font fails in production only, and the italic face is a text subset of one fixed string on the landing page — edit the string without regenerating and the new letters render in Georgia mid-sentence. Both are asserted; neither is visible in a diff |
 | `api/funnel-test.js` | Funnel tracking end to end: the collector accepts only client-observable stages (a forged `finished` is dropped), server-recorded stages fire on the real requests, reloads do not inflate counts, and marking a lead enrolled closes the funnel. Runs **last** — it asserts absolute counts |
 
@@ -76,6 +77,7 @@ production CSP — run `npm run build:web` in `server/` first:
 node test/browser/render-check.js    # app mounts, zero console errors under prod CSP
 node test/browser/start-btn-test.js  # start-button pending state; same-tick double-click fires ONE request
 node test/browser/exit-test.js       # quit-without-report -> resume banner -> resume works
+node test/browser/finish-test.js     # answer -> Yakunlash -> contact -> report on screen, with a way to keep it
 node test/browser/back-to-back-test.js  # two children in a row: a clean form for the second, the first still resumable
 node test/browser/consent-test.js    # adult-consent box: blocked unchecked, re-locks on uncheck, sent to API
 node test/browser/auth-ui-test.js    # Telegram login card -> waiting state -> form unlocks from polling alone; survives reload
@@ -130,6 +132,16 @@ rendering bug rather than a missing letter. Also checks the chrome is dropped,
 the frame colour belongs to the letter rather than another accent, and that the
 letter is never split across a page break. Point it at the paid build with
 `API_PAID=…`.
+
+`finish-test.js` is the end of the sitting — the path the product exists for,
+and the one the suite never walked. It had been broken outright: the finish gate
+counted chat messages to decide whether the child had answered anything, and the
+sitting stopped producing chat messages when the inventory became a form. After
+seventy answers the count was still zero, "Yakunlash" always opened the "no
+answers yet" dialog, and no report could be reached at all. `exit-test` presses
+the same button with zero answers and asserts that dialog appears — correct for
+that case, and the bug's behaviour for every other; the API tests post to
+`/report` directly and never touch the button. So this one answers first.
 
 `back-to-back-test.js` is the teacher's afternoon: one child, then the next. It
 pins that returning to the setup screen opens a clean step 1 rather than the

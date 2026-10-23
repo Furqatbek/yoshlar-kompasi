@@ -1,4 +1,4 @@
--- Yosh Iste'dodlar Kompasi — initial schema (backend-spec §3).
+-- CareerKids — initial schema (backend-spec §3).
 -- UUIDs for all public-facing ids. Children's data is minimized by design:
 -- there is deliberately NO column for surname, address, school number or photo,
 -- so the schema makes storing them impossible.

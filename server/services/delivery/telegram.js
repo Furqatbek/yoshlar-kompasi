@@ -193,7 +193,7 @@ async function handleUpdate(update, deps) {
   if (!payload) {
     await sendMessage(
       chatId,
-      '<b>«Yosh Iste‘dodlar Kompasi» boti.</b>\n\n' +
+      '<b>«CareerKids» boti.</b>\n\n' +
         'Bu bot hisobotni yuboradi va mashg‘ulotni eslatadi. Boshlash saytda — ' +
         'u yerda «Telegram orqali kirish» tugmasini bosasiz.',
       siteButton('Saytni ochish', '/')

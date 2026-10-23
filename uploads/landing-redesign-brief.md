@@ -1,6 +1,6 @@
 # Landing page redesign — designer brief
 
-**Product:** Yosh Iste'dodlar Kompasi — an AI-guided talent-orientation session a
+**Product:** CareerKids — an AI-guided talent-orientation session a
 parent runs with their 7–10 year old, ending in a personalised report.
 **Deliverable:** a deep, scroll-driven landing page that turns a cold visitor
 into a parent who logs in and starts the session tonight.

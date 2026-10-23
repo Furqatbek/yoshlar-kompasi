@@ -1,4 +1,4 @@
-# Frontend specification — Yosh Iste'dodlar Kompasi (web version)
+# Frontend specification — CareerKids (web version)
 
 ## 1. What the frontend must achieve
 

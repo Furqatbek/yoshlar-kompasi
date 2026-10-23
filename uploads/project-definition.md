@@ -1,4 +1,4 @@
-# Yosh Iste'dodlar Kompasi — what this project is
+# CareerKids — what this project is
 
 The single source of truth for what we are building, who it is for, and what we
 refuse to do. Everything downstream — landing page, visual identity, copy,

@@ -73,7 +73,7 @@ const config = {
     model: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.6',
     // Optional attribution headers OpenRouter shows on your dashboard/rankings.
     siteUrl: process.env.OPENROUTER_SITE_URL || (process.env.PUBLIC_BASE_URL || ''),
-    siteName: process.env.OPENROUTER_SITE_NAME || 'Yoshlar Kompasi',
+    siteName: process.env.OPENROUTER_SITE_NAME || 'CareerKids',
     timeoutMs: int(process.env.OPENROUTER_TIMEOUT_MS, int(process.env.ANTHROPIC_TIMEOUT_MS, 60000)),
   },
 

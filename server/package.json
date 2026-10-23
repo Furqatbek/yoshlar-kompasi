@@ -2,7 +2,7 @@
   "name": "yoshlar-kompasi-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend for Yosh Iste'dodlar Kompasi — Claude proxy, persistence, lead capture, admin.",
+  "description": "Backend for CareerKids — Claude proxy, persistence, lead capture, admin.",
   "license": "UNLICENSED",
   "type": "commonjs",
   "engines": {

@@ -1,4 +1,4 @@
-# Deployment Guide — Yoshlar Kompasi
+# Deployment Guide — CareerKids
 
 Two supported setups:
 
