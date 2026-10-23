@@ -367,6 +367,10 @@ router.post(
       sports: parsed.sports, clubs: parsed.clubs,
       categories: scored.categories, topInterests: scored.top_interests,
       developingAreas: scored.developing_interests, dataCompleteness: scored.data_completeness,
+      // The v2.0 blocks: recommendations, the two optional modules, the reading
+      // programme and the limitations. The scores above are the server's; this
+      // is the model's prose.
+      payload: parsed.payload,
       partial, shareToken: shareTok, delivered: false,
     });
     if (!created) {

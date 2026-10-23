@@ -46,7 +46,7 @@ The child history feature falls out of this schema for free: `children → sessi
 
 ## 4. Claude integration
 
-**System prompt assembly.** At startup (or per request), concatenate `loyiha-korsatmalari-uz.md` + `savollar-banki-1-4-sinflar-uz.md` into one system string. Keep both files versioned in your repo; stamp `prompt_version` on every session so old reports remain explainable after prompt edits. Two lines must be added to the instructions file for the product to work end-to-end: the blockquote rule from the frontend spec ("Bolaga o'qib beriladigan matnni blockquote (>) qilib yozing"), and the structured-report rule below.
+**System prompt assembly.** (Superseded — kept for the reasoning.) The prompt is now one consolidated document, `careerkids-system-prompt-uz.md`, whose section 4 is a marker that `services/prompt.js` replaces with the LIVE question bank; `loyiha-korsatmalari-uz.md` was folded into it and removed. The rest of this paragraph still holds. Keep both files versioned in your repo; stamp `prompt_version` on every session so old reports remain explainable after prompt edits. Two lines must be added to the instructions file for the product to work end-to-end: the blockquote rule from the frontend spec ("Bolaga o'qib beriladigan matnni blockquote (>) qilib yozing"), and the structured-report rule below.
 
 **Conversation calls.** `POST https://api.anthropic.com/v1/messages` with headers `x-api-key`, `anthropic-version: 2023-06-01`, body `{model, max_tokens: 1500, system, messages}` where `messages` is the full stored history plus the new turn. Timeout ~60 s; on failure return a retryable error to the frontend without losing the user's message (store it first, call Claude second).
 

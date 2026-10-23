@@ -205,8 +205,10 @@ async function createReport(r) {
   const { rows } = await query(
     `INSERT INTO reports
        (session_id, child_id, content_md, sports, clubs, partial, share_token,
-        delivered, delivered_at, categories, top_interests, developing_areas, data_completeness)
-     VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9,$10::jsonb,$11::jsonb,$12::jsonb,$13)
+        delivered, delivered_at, categories, top_interests, developing_areas, data_completeness,
+        payload)
+     VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9,$10::jsonb,$11::jsonb,$12::jsonb,$13,
+        $14::jsonb)
      ON CONFLICT (session_id) DO NOTHING
      RETURNING *`,
     [
@@ -216,6 +218,10 @@ async function createReport(r) {
       !!r.delivered, r.delivered ? new Date() : null,
       JSON.stringify(r.categories || null), JSON.stringify(r.topInterests || []),
       JSON.stringify(r.developingAreas || []), r.dataCompleteness || null,
+      // null, not '{}': a report written before the v2 block existed never had
+      // these sections, and an empty object would read as "the model considered
+      // them and had nothing to say".
+      r.payload ? JSON.stringify(r.payload) : null,
     ]
   );
   return rows[0] || null;

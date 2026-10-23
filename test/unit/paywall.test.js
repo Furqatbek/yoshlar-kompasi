@@ -271,7 +271,33 @@ test('the report template and the paywall agree on what is free', () => {
     assert.strictEqual(headingIsFree, sec.free,
       sec.heading + ': template says free=' + sec.free + ', paywall says ' + headingIsFree);
   }
-  assert.strictEqual(SECTIONS.filter((s) => s.free).length, 2, 'exactly two sections are free');
+  // Named rather than counted: a count of three would still pass if the wrong
+  // three were free, and what a parent gets without paying is a product
+  // decision, not an incidental number.
+  //
+  // The child's own name and answer count, the summary that shows the report is
+  // about THEM, and the encouragement written to be read aloud to them.
+  // Charging a parent to read their child a kind paragraph is not a thing this
+  // product does. Everything a parent would act on is what the payment unlocks.
+  assert.deepStrictEqual(
+    SECTIONS.filter((s) => s.free).map((s) => s.key),
+    ['child', 'summary', 'encouragement']
+  );
+});
+
+// Every heading the model is told to write has to be classifiable, and the
+// model's apostrophe is not ours to choose: Uzbek Latin writes the glottal stop
+// as ', ', ʻ or ʼ depending on the keyboard. A heading that fails to match
+// becomes a paid section, silently, for a section meant to be free.
+test('a free heading stays free whichever apostrophe comes back', () => {
+  const variants = ['’', '‘', 'ʻ', 'ʼ', '\''];
+  for (const apo of variants) {
+    const heading = 'Bola haqida qisqacha ma' + apo + 'lumot';
+    assert.strictEqual(paywall.isFreeHeading(heading), true, JSON.stringify(heading));
+  }
+  // And a paid heading is not swept in by the folding.
+  assert.strictEqual(paywall.isFreeHeading('Fanlar bo‘yicha tavsiyalar'), false);
+  assert.strictEqual(paywall.isFreeHeading('Qo‘shimcha yordam'), false);
 });
 
 console.log('\n' + pass + ' passed, 0 failed');

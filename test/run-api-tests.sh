@@ -83,6 +83,12 @@ node test/unit/fonts.test.js
 echo "==== unit: the product's name and the centre's numbers ===="
 node test/unit/brand.test.js
 
+echo "==== unit: the thirteen headings, and who agrees about them ===="
+node test/unit/report-sections.test.js
+
+echo "==== unit: reading the model's JSON block, v1 and v2 ===="
+node test/unit/report-parse.test.js
+
 echo "==== unit: the report as a file ===="
 node test/unit/pdf.test.js
 

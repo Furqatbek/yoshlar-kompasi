@@ -123,11 +123,22 @@ async function j(method, path, body) {
   ok('  moving past the end is a no-op, not an error', topQ.status === 200, 'status=' + topQ.status);
 
   // ---- the report's own wording -------------------------------------------
+  // Checked against the shipped template rather than a number typed in here:
+  // the count went from seven to thirteen when §20 of the instructions landed,
+  // and a hardcoded 7 fails for the right reason exactly once, after which
+  // somebody edits it to 13 and it is stale again at the next change.
+  const { SECTIONS } = require('../../server/data/reportTemplate');
   const rep = await j('GET', '/admin/report-sections');
-  ok('the report brief is readable', rep.status === 200 && rep.data.sections.length === 7,
-    String(rep.data.sections && rep.data.sections.length));
+  const served = (rep.data.sections || []).map((x) => x.key);
+  ok('the report brief is readable',
+    rep.status === 200 && served.length === SECTIONS.length,
+    served.length + ' served, ' + SECTIONS.length + ' shipped');
+  ok('  every shipped section reached the database',
+    SECTIONS.every((s) => served.includes(s.key)),
+    JSON.stringify(SECTIONS.map((s) => s.key).filter((k) => !served.includes(k))));
   ok('  and says which sections are free',
-    rep.data.sections.filter((x) => x.free).length === 2,
+    JSON.stringify(rep.data.sections.filter((x) => x.free).map((x) => x.key))
+      === JSON.stringify(SECTIONS.filter((s) => s.free).map((s) => s.key)),
     JSON.stringify(rep.data.sections.filter((x) => x.free).map((x) => x.key)));
 
   const vBefore = (await j('GET', '/admin/questions')).data.prompt_version;
